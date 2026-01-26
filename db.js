@@ -145,7 +145,8 @@ db.serialize(() => {
           const cards = [
             // Home
             { menu: 'Home', title: 'Baidu', url: 'https://www.baidu.com', logo_url: '', desc: '全球最大的中文搜索引擎'  },
-            { menu: 'Home', title: 'Youtube', url: 'https://www.youtube.com', logo_url: 'https://img.icons8.com/ios-filled/100/ff1d06/youtube-play.png', desc: '全球最大的视频社区'  },
+            { menu: 'Home', title: 'Youtube', url: 'https://www.youtube.com', logo_url: 'https://youtube.com/favicon.ico）
+', desc: '全球最大的视频社区'  },
             { menu: 'Home', title: 'Gmail', url: 'https://mail.google.com', logo_url: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico', desc: ''  },
             { menu: 'Home', title: 'GitHub', url: 'https://github.com', logo_url: '', desc: '全球最大的代码托管平台'  },
             { menu: 'Home', title: 'ip.sb', url: 'https://ip.sb', logo_url: '', desc: 'ip地址查询'  },

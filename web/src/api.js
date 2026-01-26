@@ -14,6 +14,10 @@ export const addMenu = (data) => axios.post(`${BASE}/menus`, data, { headers: au
 export const updateMenu = (id, data) => axios.put(`${BASE}/menus/${id}`, data, { headers: authHeaders() });
 export const deleteMenu = (id) => axios.delete(`${BASE}/menus/${id}`, { headers: authHeaders() });
 
+// === 【关键】菜单排序 API (黑屏可能就是缺了这个) ===
+export const updateMenuOrder = (menuIds) => axios.post(`${BASE}/menus/sort`, { ids: menuIds }, { headers: authHeaders() });
+
+
 // 子菜单相关API
 export const getSubMenus = (menuId) => axios.get(`${BASE}/menus/${menuId}/submenus`);
 export const addSubMenu = (menuId, data) => axios.post(`${BASE}/menus/${menuId}/submenus`, data, { headers: authHeaders() });
@@ -28,6 +32,10 @@ export const getCards = (menuId, subMenuId = null) => {
 export const addCard = (data) => axios.post(`${BASE}/cards`, data, { headers: authHeaders() });
 export const updateCard = (id, data) => axios.put(`${BASE}/cards/${id}`, data, { headers: authHeaders() });
 export const deleteCard = (id) => axios.delete(`${BASE}/cards/${id}`, { headers: authHeaders() });
+
+// === 【关键】卡片排序 API (黑屏可能就是缺了这个) ===
+export const updateCardOrder = (cardIds) => axios.post(`${BASE}/cards/sort`, { ids: cardIds }, { headers: authHeaders() });
+
 
 export const uploadLogo = (file) => {
   const formData = new FormData();
@@ -50,4 +58,4 @@ export const deleteFriend = (id) => axios.delete(`${BASE}/friends/${id}`, { head
 // 用户API
 export const getUserProfile = () => axios.get(`${BASE}/users/profile`, { headers: authHeaders() });
 export const changePassword = (oldPassword, newPassword) => axios.put(`${BASE}/users/password`, { oldPassword, newPassword }, { headers: authHeaders() });
-export const getUsers = () => axios.get(`${BASE}/users`, { headers: authHeaders() }); 
+export const getUsers = () => axios.get(`${BASE}/users`, { headers: authHeaders() });

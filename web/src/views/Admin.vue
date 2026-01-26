@@ -184,435 +184,153 @@ function closeSider() {
   siderOpen.value = false;
 }
 </script>
-
 <style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* =========== 全局样式变量重构 =========== */
+.home-container {
+  /* 核心主色调：参考 React 代码中的 #00ff9d */
+  --primary-color: #00ff9d; 
+  --primary-gradient: linear-gradient(90deg, #00ff9d, #00b86e);
+  
+  /* 浅色模式背景 (React: #f0f0f0) */
+  --bg-color: #f0f0f0;
+  --text-color: #333;
+  
+  /* 浅色模式卡片 (React: rgba(0,0,0,0.04) + blur) */
+  --card-bg: rgba(255, 255, 255, 0.6); 
+  --card-border: 1px solid rgba(255, 255, 255, 0.4);
+  --header-bg: rgba(255, 255, 255, 0.7);
+  
   min-height: 100vh;
-  background: linear-gradient(135deg,#667eea,#764ba2);
-  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+  padding-top: 80px;
 }
 
-.login-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  padding: 0 40px 40px 40px;
-  width: 400px;
-  max-width: 90%;
+/* 暗黑模式适配 */
+.home-container.dark-mode {
+  /* 深色模式背景 (React: #121212) */
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  
+  /* 深色模式卡片 (React: rgba(255,255,255,0.06)) */
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: 1px solid rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(18, 18, 18, 0.7);
 }
 
-.login-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #2164e1;
-  margin-bottom: 32px;
-  letter-spacing: 2px;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.login-input {
-  padding: 12px 16px;
-  border: 1px solid #d0d7e2;
-  border-radius: 8px;
-  font-size: 16px;
-  background: #fff;
-  color: #222;
-  height: 48px;
-  line-height: 48px;
-  box-sizing: border-box;
-}
-
-.login-input:focus {
-  outline: 2px solid #2566d8;
-  border-color: #2566d8;
-}
-
-.login-btn {
-  background: #2566d8;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.login-btn:hover:not(:disabled) {
-  background: #174ea6;
-}
-
-.login-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.login-buttons {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.back-btn {
-  background: #f8f9fa;
-  color: #2b2b2b;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  justify-content: center;
-}
-
-.back-btn:hover {
-  background: #e9ecef;
-  color: #7e42ff;
-  border-color: #adb5bd;
-}
-
-.login-btn {
-  flex: 2;
-}
-
-.login-error {
-  color: #e74c3c;
-  text-align: center;
-  margin: 0;
-  font-size: 14px;
-}
-
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  background: #f5f6fa;
-  font-family: 'Segoe UI', Arial, sans-serif;
-}
-.admin-sider {
-  width: 180px;
-  background: #fff;
-  color: #222;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding-top: 32px;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+/* 1. 顶部 Header */
+.header-fixed {
   position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  z-index: 100;
-}
-.logo {
-  font-size: 2rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 32px;
-  letter-spacing: 2px;
-  color: #1349a6;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.2s;
-}
-.logo.clickable:hover {
-  color: #176efa;
-}
-.menu-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex: 1;
-}
-.menu-list li {
-  padding: 16px 32px;
-  cursor: pointer;
-  font-size: 16px;
-  border-left: 4px solid transparent;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
-  color: #222;
-}
-.menu-list li.active {
-  background: #eaf1ff;
-  border-left: 4px solid #2566d8;
-  color: #2566d8;
-  font-weight: bold;
-}
-.admin-main {
-  flex: 1;
-  background: #f5f6fa;
-  padding: 64px 0 0 180px;
-  min-width: 0;
-  overflow-x: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-.admin-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  top: 0; left: 0; right: 0;
   height: 64px;
-  padding: 0 48px 0 0;
-  background: #f5f6fa;
-  position: fixed;
-  top: 0;
-  left: 180px;
-  right: 0;
-  z-index: 101;
-  border-bottom: 1px solid #e3e6ef;
+  background: var(--header-bg);
+  backdrop-filter: blur(16px); /* 顶部毛玻璃 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.header-title {
-  flex: 1;
-  text-align: center;
-  margin-left: 180px;
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: 2px;
-  color: #222;
+
+.header-left { display: flex; align-items: center; gap: 12px; }
+.site-logo { height: 36px; width: auto; }
+.site-title { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px; }
+
+.header-right { display: flex; gap: 12px; align-items: center; }
+
+/* 图标按钮样式 */
+.icon-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-color); padding: 8px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s;
 }
-.header-actions {
+.icon-btn:hover { 
+  background: rgba(255,255,255,0.1); 
+  color: var(--primary-color);
+}
+
+/* 2. 搜索框 (仿 React 项目样式) */
+.search-section { padding: 30px 0; }
+.search-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border: var(--card-border);
+  border-radius: 50px;
+  padding: 6px 16px;
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1); /* 柔和阴影 */
+  transition: all 0.3s;
 }
-.home-icon {
-  display: flex;
-  align-items: center;
-  margin-right: 18px;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background 0.2s;
-  padding: 4px;
+/* 搜索框聚焦发光 */
+.search-container:focus-within { 
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.3); 
+  border-color: var(--primary-color);
 }
-.home-icon:hover {
-  background: #eaf1ff;
+
+.engine-select {
+  border: none; background: transparent; color: var(--text-color);
+  padding-right: 12px; margin-right: 8px;
+  border-right: 1px solid rgba(128,128,128,0.2);
+  outline: none; cursor: pointer; font-weight: bold;
 }
-.btn.logout-btn {
-  background: #f7caca;
-  color: #e74c3c;
-  border: 1px solid #f7caca;
-  border-radius: 10px;
-  padding: 6px 10px;
-  font-size: 15px;
-  font-weight: 500;
-  margin: 0;
-  transition: background 0.2s, color 0.2s;
+.search-input {
+  flex: 1; border: none; background: transparent;
+  padding: 12px 0; color: var(--text-color); font-size: 16px; outline: none;
 }
-.btn.logout-btn:hover {
-  background: #e74c3c;
-  color: #fff;
+.search-btn {
+  background: var(--primary-color); color: #000; /* 绿色背景黑字 */
+  width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 0 10px var(--primary-color);
 }
-.admin-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 0 0 0;
-  margin-top: 0;
+.search-btn:hover { transform: scale(1.1); }
+
+/* 下拉菜单 */
+.dropdown-menu {
+  position: absolute; top: 110%; right: 0;
+  background: rgba(30,30,30,0.9); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 8px 0; min-width: 180px; z-index: 1001;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
-.admin-footer {
-  margin-top: auto;
-  text-align: center;
-  padding: 2rem 0 1rem 0;
-  background: transparent;
+.menu-item { padding: 12px 20px; color: #fff; cursor: pointer; font-size: 14px; }
+.menu-item:hover { background: rgba(255,255,255,0.1); color: var(--primary-color); }
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+  z-index: 2000; display: flex; align-items: center; justify-content: center;
 }
-.admin-copyright {
-  color: #1d70cc;
-  font-size: 14px;
-  margin: 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+.modal-content {
+  background: #1e1e1e; color: #fff; padding: 30px; border-radius: 20px;
+  width: 320px; border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
-.footer-link {
-  color: #1d70cc;
-  text-decoration: none;
-  transition: color 0.2s;
+.modal-input {
+  width: 100%; padding: 12px; background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; margin-bottom: 15px;
 }
-.footer-link:hover {
-  color: #3218ed;
+.modal-btn {
+  width: 100%; padding: 12px; background: var(--primary-gradient);
+  border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer;
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
 }
-.password-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-.password-input {
-  width: 100%;
-  padding-right: 48px;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-.toggle-password {
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 48px;
-  width: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #2566d8;
-  margin: 0;
-  padding: 0;
-  z-index: 2;
-  transition: color 0.2s;
-}
-.toggle-password:hover {
-  color: #174ea6;
-  background: none;
-}
-.toggle-password svg {
-  display: block;
-  width: 22px;
-  height: 22px;
-  pointer-events: none;
-}
-.welcome-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 48px;
-}
-.welcome-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: 600;
-  color: #222;
-  margin-bottom: 32px;
-}
-.welcome-cards {
-  display: flex;
-  gap: 32px;
-}
-.welcome-card {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  padding: 32px 40px;
-  min-width: 260px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  border: 1.5px solid #e3e6ef;
-}
-.welcome-icon {
-  width: 48px;
-  height: 48px;
-  background: #f5f6fa;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 18px;
-}
-.welcome-label {
-  font-size: 1.1rem;
-  color: #222;
-  margin-bottom: 8px;
-}
-.welcome-value {
-  font-size: 2rem;
-  color: #1abc9c;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-@media (max-width: 900px) {
-  .welcome-cards {
-    flex-direction: column;
-    gap: 18px;
-    align-items: center;
-  }
-  .welcome-card {
-    min-width: 220px;
-    width: 90vw;
-    padding: 24px 10px;
-  }
-}
+
+.content-area { padding-bottom: 60px; }
+.footer { text-align: center; opacity: 0.6; padding: 20px; font-size: 12px; }
+
+/* 移动端适配 */
 @media (max-width: 768px) {
-  .admin-sider {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 70vw;
-    max-width: 260px;
-    height: 100vh;
-    z-index: 200;
-    transform: translateX(-100%);
-    transition: transform 0.3s;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.12);
-    background: #fff;
-  }
-  .admin-sider.open {
-    transform: translateX(0);
-  }
-  .admin-main {
-    padding: 64px 0 0 0 !important;
-  }
-  .admin-header {
-    left: 0 !important;
-    width: 100vw !important;
-    min-width: 0 !important;
-    padding: 0 8px 0 8px !important;
-    box-sizing: border-box;
-    flex-wrap: nowrap;
-    height: 56px;
-  }
-  .header-title {
-    font-size: 1.1rem !important;
-    margin-left: 0 !important;
-    text-align: left !important;
-    width: auto !important;
-    flex: 1 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: 1px;
-  }
-  .header-actions {
-    gap: 4px;
-    margin-left: 0;
-  }
-  .btn.logout-btn {
-    padding: 4px 8px;
-    font-size: 13px;
-    border-radius: 8px;
-  }
-  .menu-toggle {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    margin-right: 4px !important;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    color: #2566d8;
-    z-index: 300;
-  }
-  /* 表单和按钮间距优化 */
-  .input, .btn {
-    margin-bottom: 8px;
-  }
+  .site-title { display: none; }
+  .header-fixed { padding: 0 16px; }
 }
-.menu-toggle {
-  display: none;
-}
-</style> 
+</style>
+

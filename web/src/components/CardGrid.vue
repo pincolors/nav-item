@@ -1,445 +1,272 @@
 <template>
-  <div class="container card-grid" :class="animationClass">
-    <div v-for="(card, index) in cards" :key="card.id" 
-         class="link-item" 
-         :style="getCardStyle(index)">
-      <a :href="card.url" target="_blank" :title="getTooltip(card)">
-        <img class="link-icon" :src="getLogo(card)" alt="" @error="onImgError($event, card)" loading="lazy">
-        <span class="link-text">{{ truncate(card.title) }}</span>
-      </a>
-    </div>
+  <div class="grid-container">
+    <draggable 
+      :list="localCards" 
+      item-key="id" 
+      class="card-grid"
+      :disabled="!isEditMode"
+      @end="onDragEnd"
+      ghost-class="ghost"
+      filter=".action-buttons"
+      :scroll="true"
+      :scroll-sensitivity="200"
+      :scroll-speed="20"
+      :force-fallback="true"
+    >
+      <template #item="{ element }">
+        <div class="card-wrapper">
+          <component
+            :is="isEditMode ? 'div' : 'a'"
+            :href="!isEditMode ? element.url : undefined"
+            :target="!isEditMode ? '_blank' : undefined"
+            class="card-item"
+            :class="{ 'is-dragging': isEditMode }"
+            @click="handleClick($event)"
+          >
+            <div v-if="isEditMode" class="drag-handle" title="按住任意位置拖拽">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+            </div>
+
+            <div v-if="isEditMode" class="action-buttons">
+              <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)" title="设置">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+              </button>
+              <button class="icon-btn del-btn" @click.stop="$emit('delete', element.id)" title="删除">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+              </button>
+            </div>
+
+            <div class="card-icon-wrapper">
+              <div v-if="isLoading(element.id)" class="skeleton-icon"></div>
+              <img 
+                v-show="shouldShowImage(element.id)"
+                :src="getIconSrc(element)" 
+                class="real-icon"
+                :class="{ 'visible': isLoaded(element.id) }"
+                @load="onImgLoad(element.id)"
+                @error="onImgError(element.id, element)"
+              />
+              <div v-if="isFallback(element.id)" class="fallback-icon">
+                {{ (element.title || '?').charAt(0).toUpperCase() }}
+              </div>
+            </div>
+
+            <div class="card-info">
+              <div class="card-title">{{ element.title }}</div>
+              <div class="card-desc">{{ element.desc }}</div>
+            </div>
+          </component>
+        </div>
+      </template>
+      
+      <template #footer>
+         <div v-if="isEditMode" class="card-wrapper">
+           <div class="card-item add-card" @click="$emit('add')">
+             <div class="add-icon">+</div>
+             <div class="card-title" style="margin-top: 8px; opacity: 0.6;">添加站点</div>
+           </div>
+         </div>
+      </template>
+    </draggable>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, reactive } from 'vue';
+import draggable from 'vuedraggable';
 
-const props = defineProps({ cards: Array });
+const props = defineProps({ cards: Array, isEditMode: Boolean });
+const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
+const localCards = ref([...props.cards]);
+const iconState = reactive({});
 
-// 动画状态
-const animationClass = ref('');
-const animationType = ref('slideUp'); // 'slideUp' 或 'radial'
+watch(() => props.cards, (newVal) => { localCards.value = [...newVal]; });
 
-// 监听 cards 变化，触发动画
-watch(() => props.cards, (newCards, oldCards) => {
-  // 如果是新的卡片数据或者从有数据变成其他数据
-  if (newCards && newCards.length > 0) {
-    // 如果是首次加载或者数据发生了变化
-    const isDataChanged = !oldCards || oldCards.length === 0 || JSON.stringify(newCards) !== JSON.stringify(oldCards);
-    if (isDataChanged) {
-      // 延迟一下确保DOM更新完成
-      nextTick(() => {
-        triggerAnimation();
-      });
-    }
-  }
-}, { deep: true, immediate: false });
+function onDragEnd() { emit('update:cards', localCards.value); }
+function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 
-// 触发动画
-function triggerAnimation() {
-  // 随机选择动画类型，替换bounceIn为convergeIn
-  const animations = ['slideUp', 'radial', 'fadeIn', 'slideLeft', 'slideRight', 'convergeIn', 'flipIn'];
-  const randomIndex = Math.floor(Math.random() * animations.length);
-  animationType.value = animations[randomIndex];
-  animationClass.value = `animate-${animationType.value}`;
-  
-  // 动画结束后清除类名
-  setTimeout(() => {
-    animationClass.value = '';
-  }, 1200);
-}
-
-// 获取卡片样式（用于延迟动画）
-function getCardStyle(index) {
-  if (!animationClass.value) return {};
-  
-  // 在移动设备上不使用延迟动画
-  const isMobile = window.innerWidth <= 480;
-  if (isMobile) {
-    return {
-      animationDelay: '0s'
-    };
-  }
-  
-  if (animationType.value === 'slideUp') {
-    // 从下往上：按索引顺序延迟
-    return {
-      animationDelay: `${index * 0.05}s`
-    };
-  } else if (animationType.value === 'radial') {
-    // 从中心扩散：根据距离中心的位置计算延迟
-    const cols = window.innerWidth <= 768 ? 3 : (window.innerWidth <= 1200 ? 4 : 6);
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    const centerCol = Math.floor(cols / 2);
-    const distance = Math.abs(col - centerCol) + row;
-    return {
-      animationDelay: `${distance * 0.08}s`
-    };
-  } else if (animationType.value === 'fadeIn') {
-    // 淡入动画：随机延迟
-    return {
-      animationDelay: `${Math.random() * 0.5}s`
-    };
-  } else if (animationType.value === 'slideLeft') {
-    // 从左往右：按行延迟
-    const cols = window.innerWidth <= 768 ? 3 : (window.innerWidth <= 1200 ? 4 : 6);
-    const row = Math.floor(index / cols);
-    return {
-      animationDelay: `${row * 0.1}s`
-    };
-  } else if (animationType.value === 'slideRight') {
-    // 从右往左：按行延迟（反向）
-    const cols = window.innerWidth <= 768 ? 3 : (window.innerWidth <= 1200 ? 4 : 6);
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    return {
-      animationDelay: `${(row + (cols - col - 1) * 0.02) * 0.08}s`
-    };
-  } else if (animationType.value === 'convergeIn') {
-    // 从两边往中间靠拢：根据列的位置计算延迟
-    const cols = window.innerWidth <= 768 ? 3 : (window.innerWidth <= 1200 ? 4 : 6);
-    const col = index % cols;
-    const centerCol = Math.floor(cols / 2);
-    const distanceFromCenter = Math.abs(col - centerCol);
-    // 边缘的元素先出现，中间的最后出现
-    return {
-      animationDelay: `${(cols - distanceFromCenter - 1) * 0.08}s`
-    };
-  } else if (animationType.value === 'flipIn') {
-    // 翻转入场：按对角线延迟
-    const cols = window.innerWidth <= 768 ? 3 : (window.innerWidth <= 1200 ? 4 : 6);
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    return {
-      animationDelay: `${(row + col) * 0.06}s`
-    };
-  }
-  
-  return {};
-}
-
-function getLogo(card) {
-  if (card.custom_logo_path) return 'http://localhost:3000/uploads/' + card.custom_logo_path;
-  if (card.logo_url) return card.logo_url;
-  // 默认 favicon
-  try {
-    const url = new URL(card.url);
-    return url.origin + '/favicon.ico';
-  } catch {
-    return '/default-favicon.png';
-  }
-}
-
-function onImgError(e, card) {
-  e.target.src = '/default-favicon.png';
-}
-
-function getTooltip(card) {
-  let tip = '';
-  if (card.desc) tip += card.desc + '\n';
-  tip += card.url;
-  return tip;
-}
-
-function truncate(str) {
-  if (!str) return '';
-  return str.length > 20 ? str.slice(0, 20) + '...' : str;
-}
+const getState = (id) => !iconState[id] ? (iconState[id] = { step: 0, loaded: false, error: false }) : iconState[id];
+const getDomain = (url) => { try { return new URL(url).hostname; } catch (e) { return ''; } };
+const getIconSrc = (card) => {
+  const state = getState(card.id);
+  const domain = getDomain(card.url);
+  if (state.step === 0) { if (card.logo_url) return card.logo_url; state.step = 1; }
+  if (state.step === 1) return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  if (state.step === 2) return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+  return ''; 
+};
+const onImgLoad = (id) => getState(id).loaded = true;
+const onImgError = (id, card) => {
+  const state = getState(id);
+  state.loaded = false; 
+  state.step < 3 ? state.step++ : state.error = true;
+};
+const isLoading = (id) => { const state = getState(id); return state.step < 3 && !state.loaded; };
+const shouldShowImage = (id) => getState(id).step < 3;
+const isLoaded = (id) => getState(id).loaded;
+const isFallback = (id) => getState(id).step >= 3;
 </script>
 
 <style scoped>
-.container {
-  max-width: 55rem;
-  margin: 0 auto;
-  width: 100%;
+/* 1. 网格布局 */
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 15px;
-  opacity: 1;
-  transition: opacity 0.2s ease;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  
+  /* === 关键修正：确保 grid 不会限制滚动 === */
+  min-height: 100%; 
+  overflow: visible; 
 }
-@media (max-width: 1200px) {
-  .container {
-    grid-template-columns: repeat(4, 1fr);
-  }
+
+@media (min-width: 1200px) {
+  .card-grid { grid-template-columns: repeat(6, 1fr); }
 }
-@media (max-width: 768px) {
-  .container {
-    grid-template-columns: repeat(3, 1fr);
-  }
+
+.card-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.25 / 1;
+  perspective: 1200px;
 }
-@media (max-width: 480px) {
-  .container {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-.link-item {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 15px;
-  padding: 0;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  min-height: 85px;
-  height: 85px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.link-item:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-}
-.link-item a {
-  /* margin-top: 8px; */
-  text-decoration: none;
-  color: #ffffff;
-  font-weight: 500;
+
+/* 2. 卡片核心样式 */
+.card-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 0;
-  box-sizing: border-box;
-}
-.link-icon {
-  width: 25px;
-  height: 25px;
-  margin: 4px auto;
-  object-fit: contain;
-}
-.link-text {
-  padding-right: 4px;
-  padding-left: 4px;
-  font-size: 14px;
-  text-align: center;
-  word-break: break-all;
-  max-width: 100%;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: 24px;
+  color: var(--text-color);
+  text-decoration: none;
+  position: relative;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;
-  line-height: 1;
-  min-height: 1.5em;
+  user-select: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06), 0 14px 28px rgba(0, 0, 0, 0.10);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
 }
 
-/* 动画样式 */
-/* 从下往上滑入动画 */
-.animate-slideUp .link-item {
-  animation: slideUpIn 0.6s ease-out forwards;
-  opacity: 0;
-  transform: translateY(30px);
+/* 浮空底影 */
+.card-item::after {
+  content: "";
+  position: absolute;
+  left: 16px; right: 16px; bottom: -14px; height: 22px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.10) 35%, transparent 70%);
+  filter: blur(8px);
+  opacity: 0.65;
+  transition: all 0.35s ease;
+  z-index: -1;
 }
 
-@keyframes slideUpIn {
-  0% {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* 顶部高光 */
+.card-item::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.12) 25%, transparent 55%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+:deep(.dark-mode) .card-item::before {
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 40%);
+  opacity: 0.6;
 }
 
-/* 从中心扩散动画 */
-.animate-radial .link-item {
-  animation: radialIn 0.5s ease-out forwards;
-  opacity: 0;
-  transform: scale(0.3);
+/* 拖拽状态 */
+.card-item.is-dragging { cursor: grab; }
+.card-item.is-dragging:active { cursor: grabbing; }
+
+/* 悬浮交互 */
+.card-item:not(.is-dragging):hover {
+  transform: translateY(-10px) rotateX(2deg) scale(1.01);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.10), 0 36px 64px rgba(0, 0, 0, 0.16);
+  z-index: 2;
+}
+.card-item:not(.is-dragging):hover::after {
+  transform: translateY(8px) scale(1.08);
+  opacity: 0.95;
 }
 
-@keyframes radialIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* 3. 图标系统 */
+.card-icon-wrapper {
+  width: 72px; height: 72px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
 }
 
-/* 淡入动画 */
-.animate-fadeIn .link-item {
-  animation: fadeIn 0.6s ease-out forwards;
-  opacity: 0;
+.real-icon {
+  width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; transform: scale(0.8);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
+}
+.real-icon.visible { opacity: 1; transform: scale(1); }
+
+.fallback-icon {
+  width: 100%; height: 100%;
+  border-radius: 22px;
+  background: rgba(0, 255, 157, 0.12);
+  color: var(--primary-color);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; font-weight: 800;
+  box-shadow: 0 6px 14px rgba(0, 255, 157, 0.18);
 }
 
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.skeleton-icon {
+  position: absolute; inset: 0; border-radius: 22px;
+  background: linear-gradient(90deg, rgba(163,177,198,0.12) 25%, rgba(163,177,198,0.22) 37%, rgba(163,177,198,0.12) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+}
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
 }
 
-/* 从左滑入动画 */
-.animate-slideLeft .link-item {
-  animation: slideLeftIn 0.6s ease-out forwards;
-  opacity: 0;
-  transform: translateX(-50px);
+/* 4. 文本 */
+.card-info { text-align: center; width: 100%; padding: 0 12px; }
+.card-title {
+  font-size: 15px; font-weight: 700; margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: 0.3px; opacity: 0.9;
 }
+.card-desc { display: none !important; }
 
-@keyframes slideLeftIn {
-  0% {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* 5. 控件 */
+.drag-handle {
+  position: absolute; top: 10px; left: 10px; color: #a3b1c6; pointer-events: none;
 }
-
-/* 从右滑入动画 */
-.animate-slideRight .link-item {
-  animation: slideRightIn 0.6s ease-out forwards;
-  opacity: 0;
-  transform: translateX(50px);
+.action-buttons {
+  position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 10;
 }
-
-@keyframes slideRightIn {
-  0% {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.icon-btn {
+  width: 28px; height: 28px; border-radius: 8px; border: none;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: transparent; color: #a3b1c6;
 }
+.edit-btn:hover { color: var(--primary-color); transform: scale(1.1); background: rgba(0, 255, 157, 0.12); }
+.del-btn:hover { color: #ff4d4f; transform: scale(1.1); background: rgba(255, 77, 79, 0.12); }
 
-/* 从两边往中间靠拢动画 */
-.animate-convergeIn .link-item {
-  animation: convergeIn 0.7s ease-out forwards;
-  opacity: 0;
+.add-card {
+  border: 2px dashed rgba(163, 177, 198, 0.4); background: transparent; box-shadow: none;
 }
+.add-card:hover { border-color: var(--primary-color); background: rgba(0, 255, 157, 0.06); }
+.add-icon { font-size: 36px; color: var(--primary-color); font-weight: 300; }
 
-.animate-convergeIn .link-item:nth-child(6n+1),
-.animate-convergeIn .link-item:nth-child(6n+6) {
-  /* 最边缘的列（第1列和第6列） */
-  transform: translateX(-80px);
-}
+.ghost { opacity: 0.4; background: var(--primary-color); border: 2px solid var(--primary-color); box-shadow: none; }
 
-.animate-convergeIn .link-item:nth-child(6n+2),
-.animate-convergeIn .link-item:nth-child(6n+5) {
-  /* 次边缘的列（第2列和第5列） */
-  transform: translateX(-40px);
-}
-
-.animate-convergeIn .link-item:nth-child(6n+3),
-.animate-convergeIn .link-item:nth-child(6n+4) {
-  /* 中间的列（第3列和第4列） */
-  transform: translateY(-30px);
-}
-
-/* 在中等屏幕上（4列布局） */
-@media (max-width: 1200px) and (min-width: 769px) {
-  .animate-convergeIn .link-item:nth-child(4n+1),
-  .animate-convergeIn .link-item:nth-child(4n+4) {
-    transform: translateX(-60px);
-  }
-  
-  .animate-convergeIn .link-item:nth-child(4n+2),
-  .animate-convergeIn .link-item:nth-child(4n+3) {
-    transform: translateY(-30px);
-  }
-}
-
-/* 在小屏幕上（3列布局） */
 @media (max-width: 768px) {
-  .animate-convergeIn .link-item:nth-child(3n+1),
-  .animate-convergeIn .link-item:nth-child(3n+3) {
-    transform: translateX(-50px);
-  }
-  
-  .animate-convergeIn .link-item:nth-child(3n+2) {
-    transform: translateY(-30px);
-  }
-}
-
-@keyframes convergeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-    transform: translate(0, 0);
-  }
-}
-
-/* 翻转入场动画 */
-.animate-flipIn .link-item {
-  animation: flipIn 0.7s ease-out forwards;
-  opacity: 0;
-  transform: rotateY(-90deg);
-}
-
-@keyframes flipIn {
-  0% {
-    opacity: 0;
-    transform: rotateY(-90deg);
-  }
-  50% {
-    opacity: 1;
-    transform: rotateY(-45deg);
-  }
-  100% {
-    opacity: 1;
-    transform: rotateY(0deg);
-  }
-}
-
-/* 优化过渡效果 */
-.container:not(.animate-slideUp):not(.animate-radial):not(.animate-fadeIn) .link-item {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-/* 响应式动画调整 */
-@media (max-width: 768px) {
-  .animate-slideUp .link-item {
-    animation-duration: 0.4s;
-  }
-  
-  .animate-radial .link-item {
-    animation-duration: 0.4s;
-  }
-}
-
-/* 减少动画延迟在移动设备上 */
-@media (max-width: 480px) {
-  .animate-slideUp .link-item {
-    animation-delay: 0s !important;
-  }
-  
-  .animate-radial .link-item {
-    animation-delay: 0s !important;
-  }
-}
-
-/* 为移动设备提供更快的动画 */
-@media (prefers-reduced-motion: reduce) {
-  .animate-slideUp .link-item,
-  .animate-radial .link-item {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
+  .card-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; padding: 20px; }
+  .card-icon-wrapper { width: 60px; height: 60px; }
+  .fallback-icon { font-size: 30px; }
+  .card-item:hover { transform: translateY(-6px); }
 }
 </style>
