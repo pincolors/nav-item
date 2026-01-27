@@ -42,11 +42,12 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/users', userRoutes);
 
 // 注意：如果你的变量名是 app 就写 app，是 App 就写 App
-App.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`server is running at http://0.0.0.0:${PORT}`);
 });
 
 // ... 上面的代码 ...
-App.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`server is running at http://0.0.0.0:${PORT}`);
 }); // 👈 到这里就结束了，下面不要有任何符号
+
