@@ -46,8 +46,7 @@ App.listen(PORT, '0.0.0.0', () => {
   console.log(`server is running at http://0.0.0.0:${PORT}`);
 });
 
-<<<<<<< HEAD
-
-}); 
-=======
->>>>>>> 2a863ec79c996a4ef4ed71c036e7644e1c878639
+// ... 上面的代码 ...
+App.listen(PORT, '0.0.0.0', () => {
+  console.log(`server is running at http://0.0.0.0:${PORT}`);
+}); // 👈 到这里就结束了，下面不要有任何符号
