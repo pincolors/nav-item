@@ -41,6 +41,10 @@ app.use('/api/ads', adRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/users', userRoutes);
 
-app.listen(PORT, () => {
-  console.log(`server is running at http://localhost:${PORT}`);
+// 注意：如果你的变量名是 app 就写 app，是 App 就写 App
+App.listen(PORT, '0.0.0.0', () => {
+  console.log(`server is running at http://0.0.0.0:${PORT}`);
+});
+
+
 }); 
