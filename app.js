@@ -46,5 +46,8 @@ App.listen(PORT, '0.0.0.0', () => {
   console.log(`server is running at http://0.0.0.0:${PORT}`);
 });
 
+<<<<<<< HEAD
 
 }); 
+=======
+>>>>>>> 2a863ec79c996a4ef4ed71c036e7644e1c878639
