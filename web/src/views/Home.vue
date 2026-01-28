@@ -567,53 +567,25 @@ onMounted(async () => {
 }
 /* <style scoped    */
 
-.content-area {
-  max-width: 100%;
-  padding: 0 16px 60px;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
-.card {
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+  /* 手机端专用：缩小两侧边距，让卡片居中且空间更大 */
 @media (max-width: 768px) {
-  /* 您的原有媒体查询代码 */
-
-  /* 在这里追加或修改 */
-  .content-area {
-    padding: 0 8px 60px;
+  /* 针对外层容器 (根据你的代码习惯猜测是 header-inner 或 main-content) */
+  .header-inner, 
+  .cards-container, 
+  .content-wrapper { 
+    padding-left: 8px !important;  /* 原来可能是 16px 或 20px，改小一点 */
+    padding-right: 8px !important; /* 右边也改小，保持对称 */
+    width: auto !important;        /* 确保宽度自适应 */
   }
 
-  .card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .card {
-    min-width: 0;
-    padding: 12px;
-    border-radius: 12px;
-    box-shadow: 4px 4px 8px rgb(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.4);
-  }
-
-  .dark-mode .card {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  /* 针对 Grid 布局的微调 */
+  .cards-grid {
+    gap: 10px !important; /* 稍微缩小两个卡片中间的缝隙 */
   }
 }
+
   </style>
+
 
 
 
