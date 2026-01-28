@@ -1,17 +1,15 @@
 <template>
   <div class="home-container" :class="{ 'dark-mode': isDarkMode }">
     
-       <header class="header-fixed">
+    <header class="header-fixed">
       <div class="header-inner">
-                <div class="header-left">
+        <div class="header-left">
           <img :src="currentLogo" alt="WebNavHub" class="site-logo" @error="handleLogoError" />
           
           <div style="display: flex !important; flex-direction: column; justify-content: center; margin-left: 10px; line-height: 1.2;">
-            
             <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 18px;">
               WebNav <span style="color: #FF6B6B; margin-left: 4px;">Hub</span>
             </span>
-            
             <span style="display: block !important; font-size: 10px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
               Your Organized Internet Gateway
             </span>
@@ -52,7 +50,6 @@
         </div>
       </div>
     </header>
-
 
     <div class="menu-wrapper">
       <MenuBar 
@@ -138,6 +135,7 @@
     </footer>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { 
@@ -159,12 +157,8 @@ import SiteModal from '../components/SiteModal.vue';
 import QuickImportModal from '../components/QuickImportModal.vue';
 
 // ==================== 主题管理 ====================
-// 1. 定义 isDarkMode (只定义这一次！)
 const isDarkMode = ref(localStorage.getItem('theme') === 'dark');
 
-// 2. 定义 currentLogo (依赖 isDarkMode)
-// 暗色模式(True) -> 使用 logo-dark.svg
-// 亮色模式(False) -> 使用 logo-light.svg
 const currentLogo = computed(() => {
   return isDarkMode.value ? '/logo-dark.svg' : '/logo-light.svg';
 });
@@ -382,7 +376,6 @@ const handleBatchImport = async ({ menuId, sites, done }) => {
   }
 };
 
-// 管理员占位功能
 const openUserManagement = () => { alert('用户管理开发中...'); showUserMenu.value = false; };
 const openSystemSettings = () => { alert('系统设置开发中...'); showUserMenu.value = false; };
 
@@ -450,18 +443,20 @@ onMounted(async () => {
 <style scoped>
 /* 全局样式 */
 .home-container {
-  --primary-color: #00ff9d; --primary-gradient: linear-gradient(135deg, #00ff9d, #00b86e);
-  --bg-color: #e0e5ec; --card-bg: #e0e5ec; --text-color: #4a5568; 
-  --card-shadow: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-  --card-shadow-hover: 12px 12px 20px rgb(163, 177, 198, 0.7), -12px -12px 20px rgba(255, 255, 255, 0.6);
-  --card-border: none; --header-bg: rgba(224, 229, 236, 0.85);
+  /* 定义基本颜色变量 */
+  --primary-color: #00ff9d; 
+  --bg-color: #e0e5ec; 
+  --text-color: #4a5568; 
+  --card-bg: #e0e5ec; 
+  --header-bg: rgba(224, 229, 236, 0.85);
+  
   min-height: 100vh; background-color: var(--bg-color); color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease; padding-top: 70px;
 }
 .home-container.dark-mode {
-  --bg-color: #1a1b1e; --text-color: #e0e0e0; --card-bg: #25262b; 
-  --card-border: 1px solid rgba(255, 255, 255, 0.05);
-  --card-shadow: 0 4px 12px rgba(0,0,0,0.3); --card-shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+  --bg-color: #1a1b1e; 
+  --text-color: #e0e0e0; 
+  --card-bg: #25262b; 
   --header-bg: rgba(26, 27, 30, 0.8);
 }
 
@@ -507,7 +502,13 @@ onMounted(async () => {
 /* Sections */
 .menu-wrapper { margin: 0 0 20px; }
 .search-section { padding: 0 20px 30px; display: flex; justify-content: center; }
-.content-area { padding-bottom: 60px; }
+/* 内容区域样式：只需要保留 padding 等布局设置，内部 Grid 由组件接管 */
+.content-area { 
+  max-width: 100%;
+  padding: 0 16px 60px;
+  box-sizing: border-box;
+  overflow-x: hidden; /* 防止横向溢出 */
+}
 
 /* Search */
 .search-container {
@@ -551,107 +552,21 @@ onMounted(async () => {
   .header-inner { padding: 0; }
   .home-container { padding-top: 70px; }
   .modal-content { padding: 30px 20px; }
+  
+  /* 手机端边距适配，内容适配 */
+  .header-inner, 
+  .content-area { 
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
 }
 /* === 修复搜索下拉菜单白屏问题 === */
 .engine-select option {
-  /* 强制选项背景色跟随卡片背景 */
   background-color: var(--card-bg); 
-  /* 强制选项文字颜色 */
   color: var(--text-color);
 }
-
-/* 针对部分浏览器的深色模式兼容 */
 .dark-mode .engine-select option {
-  background-color: #25262b; /* 强制深灰背景 */
+  background-color: #25262b; 
   color: #e0e0e0;
 }
-/* <style scoped    */
-
-  /* 手机端专用：缩小两侧边距，让卡片居中且空间更大 */
-@media (max-width: 768px) {
-  /* 针对外层容器 (根据你的代码习惯猜测是 header-inner 或 main-content) */
-  .header-inner, 
-  .cards-container, 
-  .content-wrapper { 
-    padding-left: 8px !important;  /* 原来可能是 16px 或 20px，改小一点 */
-    padding-right: 8px !important; /* 右边也改小，保持对称 */
-    width: auto !important;        /* 确保宽度自适应 */
-  }
-
-  /* 针对 Grid 布局的微调 */
-  .cards-grid {
-    gap: 10px !important; /* 稍微缩小两个卡片中间的缝隙 */
-  }
-}
-   /* grok */ 
-.content-area {
-  max-width: 100%;
-  padding: 0 16px 60px;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
-.card {
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 768px) {
-  /* 您的原有媒体查询代码 */
-
-  /* 在这里追加或修改 */
-  .content-area {
-    padding: 0 8px 60px;
-  }
-
-  .card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .card {
-    min-width: 0;
-    padding: 12px;
-    border-radius: 12px;
-    box-shadow: 4px 4px 8px rgb(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.4);
-  }
-
-  .dark-mode .card {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-}
-
- .home-main {
-  padding-bottom: 60px;
-}
-
-/* 给整个区域一点空气感 */
-@media (hover: hover) {
-  .home-main {
-    background: radial-gradient(
-      circle at top,
-      rgba(255,255,255,0.04),
-      transparent 60%
-    );
-  }
-} 
-  </style>
-
-
-
-
-
-
-
-
-
+</style>
