@@ -3,10 +3,21 @@
     
        <header class="header-fixed">
       <div class="header-inner">
-        <div class="header-left">
+                <div class="header-left">
           <img :src="currentLogo" alt="WebNavHub" class="site-logo" @error="handleLogoError" />
-          <span class="site-title">WebNavHub</span>
+          
+          <div style="display: flex !important; flex-direction: column; justify-content: center; margin-left: 10px; line-height: 1.2;">
+            
+            <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 18px;">
+              WebNav <span style="color: #FF6B6B; margin-left: 4px;">Hub</span>
+            </span>
+            
+            <span style="display: block !important; font-size: 10px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
+              Your Organized Internet Gateway
+            </span>
+          </div>
         </div>
+
         <div class="header-right">
           <button class="icon-btn" @click="toggleTheme" title="切换主题">
             <svg v-if="isDarkMode" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -556,3 +567,4 @@ onMounted(async () => {
 }
 
 </style>
+
