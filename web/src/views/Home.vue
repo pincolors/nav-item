@@ -565,12 +565,8 @@ onMounted(async () => {
   background-color: #25262b; /* 强制深灰背景 */
   color: #e0e0e0;
 }
-<!-- ... 您的 <template> 和 <script setup> 部分 ... -->
-
 /* <style scoped    */
-/* 您的原有样式代码在这里，例如 .home-container 等 */
 
-/* 在这里追加我建议的修复代码 */
 .content-area {
   max-width: 100%;
   padding: 0 16px 60px;
@@ -618,5 +614,6 @@ onMounted(async () => {
   }
 }
   </style>
+
 
 
