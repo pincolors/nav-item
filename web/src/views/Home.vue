@@ -630,7 +630,58 @@ onMounted(async () => {
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 }
+/* === 紧急修复：手机端防溢出 === */
+@media (max-width: 768px) {
+  * {
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .content-area {
+    padding: 0 8px 60px;
+    overflow-x: hidden;
+  }
+
+  /* 强制卡片网格布局 */
+  :deep(.cards-grid) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* 强制卡片不溢出 */
+  :deep(.card-item) {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+  }
+
+  /* 文字省略 */
+  :deep(.card-title) {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+  }
+
+  /* 按钮增大 */
+  :deep(.card-action-btn),
+  :deep(.edit-btn),
+  :deep(.delete-btn) {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+  
   </style>
+
 
 
 
