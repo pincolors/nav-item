@@ -13,7 +13,16 @@
   <link rel="mask-icon" href="/masked-icon.svg" color="#00ff9d" />
   
   <meta name="theme-color" content="#ffffff" />
-  
+  <style>
+  html, body {
+    overflow-x: hidden !important; /* 强制禁止左右滑动 */
+    width: 100% !important;
+    position: relative;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
   <title>WebNavHub</title>
 </head>
 
@@ -21,4 +30,5 @@
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
+
 </html>
