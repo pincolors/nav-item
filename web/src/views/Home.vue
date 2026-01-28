@@ -630,8 +630,23 @@ onMounted(async () => {
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 }
- 
+
+ .home-main {
+  padding-bottom: 60px;
+}
+
+/* 给整个区域一点空气感 */
+@media (hover: hover) {
+  .home-main {
+    background: radial-gradient(
+      circle at top,
+      rgba(255,255,255,0.04),
+      transparent 60%
+    );
+  }
+} 
   </style>
+
 
 
 
