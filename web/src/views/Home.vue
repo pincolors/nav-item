@@ -583,8 +583,55 @@ onMounted(async () => {
     gap: 10px !important; /* 稍微缩小两个卡片中间的缝隙 */
   }
 }
+   /* grok */ 
+.content-area {
+  max-width: 100%;
+  padding: 0 16px 60px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
 
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  /* 您的原有媒体查询代码 */
+
+  /* 在这里追加或修改 */
+  .content-area {
+    padding: 0 8px 60px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    min-width: 0;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 4px 4px 8px rgb(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.4);
+  }
+
+  .dark-mode .card {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+}
   </style>
+
 
 
 
