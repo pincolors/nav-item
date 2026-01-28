@@ -630,57 +630,102 @@ onMounted(async () => {
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 }
-/* === 紧急修复：手机端防溢出 === */
+
+ /* === 手机端卡片防溢出优化（正确版本） === */
 @media (max-width: 768px) {
-  * {
-    min-width: 0;
+  /* 1. 外层容器优化 */
+  .content-area {
+    padding: 0 10px 60px;
+    width: 100%;
     box-sizing: border-box;
   }
 
-  .content-area {
-    padding: 0 8px 60px;
-    overflow-x: hidden;
-  }
-
-  /* 强制卡片网格布局 */
+  /* 2. 卡片网格强制使用深度选择器 */
+  :deep(.card-grid),
   :deep(.cards-grid) {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
     width: 100% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
   }
 
-  /* 强制卡片不溢出 */
+  /* 3. 单个卡片防溢出 */
+  :deep(.card),
   :deep(.card-item) {
     width: 100% !important;
     min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     overflow: hidden !important;
-    padding: 10px !important;
+    padding: 12px !important;
   }
 
-  /* 文字省略 */
-  :deep(.card-title) {
+  /* 4. 卡片标题文字省略 */
+  :deep(.card-title),
+  :deep(.site-title-text) {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
-    font-size: 13px !important;
+    max-width: 100% !important;
+    font-size: 14px !important;
   }
 
-  /* 按钮增大 */
+  /* 5. 卡片描述文字省略 */
+  :deep(.card-desc),
+  :deep(.site-desc) {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    font-size: 12px !important;
+  }
+
+  /* 6. 按钮区域增大点击面积 */
+  :deep(.card-actions) {
+    display: flex !important;
+    gap: 8px !important;
+  }
+
   :deep(.card-action-btn),
   :deep(.edit-btn),
-  :deep(.delete-btn) {
-    min-width: 44px !important;
-    min-height: 44px !important;
+  :deep(.delete-btn),
+  :deep(.card-edit),
+  :deep(.card-delete) {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
   }
 }
 
-  
+/* === another超小屏幕优化（宽度 < 375px）=== */
+@media (max-width: 375px) {
+  .content-area {
+    padding: 0 8px 60px;
+  }
+
+  :deep(.card-grid),
+  :deep(.cards-grid) {
+    gap: 8px !important;
+  }
+
+  :deep(.card),
+  :deep(.card-item) {
+    padding: 10px !important;
+  }
+}
+ 
   </style>
+
 
 
 
