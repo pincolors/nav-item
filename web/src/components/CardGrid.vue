@@ -127,6 +127,8 @@ const onImgError = (id) => { iconError[id] = true; };
   /* 确保卡片高度填满网格单元，这一点在 App.tsx 里很重要 */
   height: 100%; 
   perspective: 1000px;
+   /* 🚑 备用急救包：如果 Grid gap 失效，这个 margin 会强制推开距离 */
+  margin-bottom: 24px; 
 }
 
 /* ✨✨✨ 卡片样式：复刻 App.tsx 的 Paper 样式 ✨✨✨ 
@@ -286,4 +288,5 @@ const onImgError = (id) => { iconError[id] = true; };
   margin-bottom: 0;
 }
 </style>
+
 
