@@ -107,7 +107,8 @@ const onImgError = (id) => { iconError[id] = true; };
   width: 100%;
   /* 👇 这里是 App.tsx 手机适配的精髓：自动填充，最小140px，自适应列数 */
   grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
-  gap: 20px; /* 对应 App.tsx 的 gap: 3.5 (~28px)，稍微调小一点适应 Vue 布局 */
+  column-gap: 20px;  /* 左右间距 */
+  row-gap: 24px;     /* 上下间距 - 设置大一点，防止连在一起 */
   padding-bottom: 80px;
   
   /* 防止 Grid 限制滚动 */
@@ -285,3 +286,4 @@ const onImgError = (id) => { iconError[id] = true; };
   margin-bottom: 0;
 }
 </style>
+
