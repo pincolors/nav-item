@@ -3,7 +3,7 @@
     <draggable 
       :list="localCards" 
       item-key="id" 
-      class="card-grid-layout"
+      class="card-grid"
       :disabled="!isEditMode"
       @end="onDragEnd"
       ghost-class="ghost"
@@ -82,59 +82,55 @@ watch(() => props.cards, (newVal) => { localCards.value = [...newVal || []]; }, 
 function onDragEnd() { emit('update:cards', localCards.value); }
 function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 
+// 图标逻辑简化，参考 App.tsx 的处理方式
 const getIconSrc = (site) => {
   if (site.icon && site.icon.startsWith('http')) return site.icon;
-  if (site.logo_url) return site.logo_url;
+  if (site.logo_url) return site.logo_url; // 兼容旧字段
   try {
     const domain = new URL(site.url).hostname;
+    // 使用 Google API 作为默认 (App.tsx 逻辑)
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
   } catch (e) {
     return '';
   }
 };
+
 const onImgError = (id) => { iconError[id] = true; };
 </script>
 
-<style>
-/* 这里的类名必须和 template 里的 class="card-grid-layout" 对应 */
-.card-grid-layout {
-  display: grid !important; 
-  width: 100%;
-  
-  /* 手机端默认：强制 2 列，防止出现“1个、2个”混排的乱象 */
-  grid-template-columns: repeat(2, 1fr) !important;
-  
-  /* 间距控制：上下左右都拉开 */
-  gap: 16px !important;
-  
-  padding-bottom: 80px;
-  min-height: 100%;
-}
-
-/* 桌面端：当屏幕宽度足够时，自动铺满 */
-@media (min-width: 768px) {
-  .card-grid-layout {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-    gap: 24px !important;
-  }
-}
-</style>
-
 <style scoped>
-.grid-container {
+/* ✨✨✨ 核心修改：确保手机端行间距正常 ✨✨✨ */
+
+.card-grid {
+  display: grid;
   width: 100%;
-  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
+  gap: 24px 20px; /* 👈 简化为一个属性：上下24px 左右20px */
+  padding-bottom: 80px;
+  
+  /* 防止滚动问题 */
+  min-height: 100%; 
+  overflow: visible; 
+}
+
+/* 桌面端 */
+@media (min-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 28px 20px; /* 桌面端可以稍微大一点 */
+  }
 }
 
 .card-wrapper {
-  /* 这一步很关键：确保卡片占满 Grid 分配的格子 */
-  width: 100%;
-  height: 100%; 
-  aspect-ratio: 1.25 / 1; /* 强制统一宽高比，防止高低不平 */
+  /* ❌ 移除 margin-bottom，完全依赖 Grid gap */
+  /* margin-bottom: 24px; */ 
+  
+  /* ✅ 改用 min-height 而不是 height: 100% */
+  min-height: 140px; /* 确保最小高度，防止塌陷 */
   perspective: 1000px;
 }
 
-/* 卡片本体样式 */
+/* 卡片本身 */
 .card-item {
   display: flex;
   flex-direction: column;
@@ -142,88 +138,158 @@ const onImgError = (id) => { iconError[id] = true; };
   justify-content: center;
   text-align: center;
   
-  width: 100%;
-  height: 100%;
-  padding: 16px;
+  /* ✅ 使用 min-height 确保有高度，但允许内容撑开 */
+  min-height: 140px;
+  width: 100%; /* 确保填满网格单元 */
+  
+  padding: 20px;
   
   /* 玻璃拟态背景 */
-  background: rgba(255, 255, 255, 0.5); 
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   
   color: inherit;
   text-decoration: none;
   position: relative;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   cursor: pointer;
-  box-sizing: border-box; /* 防止 padding 撑大盒子 */
+  
+  /* 📱 防止拖拽滚动冲突 */
+  touch-action: pan-y; 
+  
+  /* ✅ 确保盒模型计算正确 */
+  box-sizing: border-box;
 }
 
-/* 暗黑模式适配 (通过父级 .dark-mode 传递) */
-:deep(.dark-mode) .card-item {
-  background: rgba(40, 40, 40, 0.6);
-  border-color: rgba(255, 255, 255, 0.05);
+/* 悬停效果 */
+.card-item:not(.is-dragging):hover {
+  transform: translateY(-5px) scale(1.02);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-.card-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+/* 拖拽中样式 */
+.card-item.is-dragging {
+  cursor: grabbing;
+  opacity: 1;
 }
 
-/* 图标容器 */
-.card-icon-wrapper {
-  width: 48px; 
-  height: 48px; 
-  margin-bottom: 10px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.real-icon {
-  width: 100%; height: 100%; object-fit: contain;
-}
-
-.fallback-icon {
-  font-size: 24px; font-weight: bold; color: #00ff9d;
-}
-
-.card-title {
-  font-size: 13px; font-weight: 700; width: 100%;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 2px;
-}
-.card-desc {
-  font-size: 11px; opacity: 0.6; width: 100%;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-/* 编辑控件 */
-.action-buttons {
-  position: absolute; top: 4px; right: 4px; display: flex; gap: 2px;
-}
-.icon-btn {
-  background: rgba(0,0,0,0.05); border: none; border-radius: 4px;
-  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-  color: inherit; cursor: pointer;
-}
-.drag-indicator {
-  position: absolute; top: 6px; left: 6px; opacity: 0.3;
-}
-.add-card { border: 2px dashed rgba(150,150,150,0.3); background: transparent; }
-.add-icon { font-size: 28px; color: #00ff9d; }
-
-/* 拖拽占位符 */
+/* 幽灵样式 */
 .ghost .card-item {
   opacity: 0.4;
   background: rgba(0, 255, 157, 0.1);
   border: 2px dashed #00ff9d;
 }
+
+/* === 内容区域 === */
+
+.card-icon-wrapper {
+  width: 64px; 
+  height: 64px; 
+  margin-bottom: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.05);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* ✅ 防止图标被压缩 */
+}
+
+.real-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s;
+}
+
+.fallback-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: #00ff9d;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.card-desc {
+  font-size: 12px;
+  opacity: 0.6;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === 编辑模式控件 === */
+.drag-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  opacity: 0.5;
+  background: rgba(0,0,0,0.2);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+}
+
+.action-buttons {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  z-index: 10; /* ✅ 确保按钮在最上层 */
+}
+
+.icon-btn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover { background: rgba(0,255,157,0.2); color: #00ff9d; }
+.del-btn:hover { background: rgba(255,68,68,0.2); color: #ff4444; }
+
+.add-card {
+  border: 2px dashed rgba(255,255,255,0.2);
+  background: transparent;
+}
+.add-card:hover {
+  border-color: #00ff9d;
+  background: rgba(0,255,157,0.05);
+}
+.add-icon {
+  font-size: 32px;
+  color: #00ff9d;
+  margin-bottom: 0;
+}
 </style>
+
