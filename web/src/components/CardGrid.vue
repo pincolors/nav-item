@@ -99,194 +99,40 @@ const onImgError = (id) => { iconError[id] = true; };
 </script>
 
 <style scoped>
-/* ✨✨✨ 核心修改区域：完全复刻 App.tsx 的 Grid 布局 ✨✨✨ 
-*/
+/* ...保留其他的 .card-item, .icon-btn 等样式... */
 
-.card-grid {
-  display: grid;
-  width: 100%;
-  /* 👇 这里是 App.tsx 手机适配的精髓：自动填充，最小140px，自适应列数 */
-  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
-  column-gap: 20px;  /* 左右间距 */
-  row-gap: 24px;     /* 上下间距 - 设置大一点，防止连在一起 */
-  padding-bottom: 80px;
-  
-  /* 防止 Grid 限制滚动 */
-  min-height: 100%; 
-  overflow: visible; 
+/* 👇 给卡片外壳加一个强制的底部边距，这是双重保险 */
+.card-wrapper {
+  height: 100%;
+  perspective: 1000px;
+  margin-bottom: 24px !important; /* 🔥 强制推开下方的卡片 */
 }
 
-/* 桌面端适配：App.tsx 默认是 6 列 */
+/* ...其他样式保持不变... */
+</style>
+
+<style>
+.card-grid {
+  display: grid !important; /* 强制启用 Grid */
+  width: 100%;
+  
+  /* 这里的 gap 是核心，分开上下左右 */
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  column-gap: 20px;
+  row-gap: 24px !important; /* 强制拉开行间距 */
+  
+  padding-bottom: 80px;
+  min-height: 100%;
+  overflow: visible;
+}
+
+/* 桌面端适配 */
 @media (min-width: 1024px) {
   .card-grid {
-    grid-template-columns: repeat(6, 1fr); 
+    grid-template-columns: repeat(6, 1fr);
   }
 }
-
-.card-wrapper {
-  /* 确保卡片高度填满网格单元，这一点在 App.tsx 里很重要 */
-  height: 100%; 
-  perspective: 1000px;
-   /* 🚑 备用急救包：如果 Grid gap 失效，这个 margin 会强制推开距离 */
-  margin-bottom: 24px; 
-}
-
-/* ✨✨✨ 卡片样式：复刻 App.tsx 的 Paper 样式 ✨✨✨ 
-*/
-.card-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center; /* 垂直居中 */
-  text-align: center;
-  
-  height: 100%;
-  padding: 20px; /* 对应 App.tsx 的 p: 2.5 */
-  
-  /* 玻璃拟态背景 */
-  background: rgba(255, 255, 255, 0.06); /* App.tsx: rgba(0,0,0,0.04) or dark mode equivalent */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  
-  border-radius: 16px; /* App.tsx: borderRadius: 4 (MUI scale) -> 16px */
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  
-  color: inherit;
-  text-decoration: none;
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  cursor: pointer;
-  
-  /* 📱 App.tsx 里的 touch-action: none 防止拖拽滚动冲突 */
-  touch-action: pan-y; 
-}
-
-/* 悬停效果 (App.tsx hover style) */
-.card-item:not(.is-dragging):hover {
-  transform: translateY(-5px) scale(1.02); /* App.tsx: translateY(-10px) scale(1.05) */
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* 拖拽中样式 */
-.card-item.is-dragging {
-  cursor: grabbing;
-  opacity: 1; /* 保持可见 */
-}
-
-/* 幽灵样式 (拖拽占位符) */
-.ghost .card-item {
-  opacity: 0.4;
-  background: rgba(0, 255, 157, 0.1);
-  border: 2px dashed #00ff9d;
-}
-
-/* === 内容区域 === */
-
-.card-icon-wrapper {
-  width: 64px; 
-  height: 64px; 
-  margin-bottom: 12px;
-  border-radius: 12px;
-  overflow: hidden;
-  /* 给图标加一个浅色背景容器，让它更整齐 */
-  background: rgba(255,255,255,0.05);
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.real-icon {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s;
-}
-
-.fallback-icon {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #00ff9d;
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 700;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 4px;
-}
-
-.card-desc {
-  font-size: 12px;
-  opacity: 0.6;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* === 编辑模式控件 === */
-.drag-indicator {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  opacity: 0.5;
-  background: rgba(0,0,0,0.2);
-  border-radius: 50%;
-  padding: 4px;
-  display: flex;
-}
-
-.action-buttons {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: flex;
-  gap: 4px;
-}
-
-.icon-btn {
-  background: rgba(255,255,255,0.1);
-  border: none;
-  border-radius: 6px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: inherit;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.edit-btn:hover { background: rgba(0,255,157,0.2); color: #00ff9d; }
-.del-btn:hover { background: rgba(255,68,68,0.2); color: #ff4444; }
-
-.add-card {
-  border: 2px dashed rgba(255,255,255,0.2);
-  background: transparent;
-}
-.add-card:hover {
-  border-color: #00ff9d;
-  background: rgba(0,255,157,0.05);
-}
-.add-icon {
-  font-size: 32px;
-  color: #00ff9d;
-  margin-bottom: 0;
-}
 </style>
+
 
 
