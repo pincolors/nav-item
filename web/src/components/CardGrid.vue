@@ -361,9 +361,6 @@ const onImgError = (id) => { iconError[id] = true; };
     opacity: 0.5;
   }
 }
-<style scoped>
-/* ... 前面的样式保持不变 ... */
-
 /* === 编辑模式控件 - 无背景彩色图标版本 === */
 .action-buttons {
   position: absolute;
@@ -479,8 +476,6 @@ const onImgError = (id) => { iconError[id] = true; };
 }
 
 /* ... 后面的样式保持不变 ... */
-</style>
-
 
 .add-card {
   border: 2px dashed rgba(0, 0, 0, 0.15);
@@ -509,6 +504,7 @@ const onImgError = (id) => { iconError[id] = true; };
   text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 </style>
+
 
 
 
