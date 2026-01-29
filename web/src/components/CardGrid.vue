@@ -105,32 +105,26 @@ const onImgError = (id) => { iconError[id] = true; };
   display: grid;
   width: 100%;
   grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
-  gap: 24px 20px; /* 👈 简化为一个属性：上下24px 左右20px */
+  gap: 24px 20px;
   padding-bottom: 80px;
   
-  /* 防止滚动问题 */
   min-height: 100%; 
   overflow: visible; 
 }
 
-/* 桌面端 */
 @media (min-width: 1024px) {
   .card-grid {
     grid-template-columns: repeat(6, 1fr); 
-    gap: 28px 20px; /* 桌面端可以稍微大一点 */
+    gap: 28px 20px;
   }
 }
 
 .card-wrapper {
-  /* ❌ 移除 margin-bottom，完全依赖 Grid gap */
-  /* margin-bottom: 24px; */ 
-  
-  /* ✅ 改用 min-height 而不是 height: 100% */
-  min-height: 140px; /* 确保最小高度，防止塌陷 */
+  min-height: 140px;
   perspective: 1000px;
 }
 
-/* 卡片本身 */
+/* ✨✨✨ 增强立体感：白色模式下的卡片样式 ✨✨✨ */
 .card-item {
   display: flex;
   flex-direction: column;
@@ -138,69 +132,158 @@ const onImgError = (id) => { iconError[id] = true; };
   justify-content: center;
   text-align: center;
   
-  /* ✅ 使用 min-height 确保有高度，但允许内容撑开 */
   min-height: 140px;
-  width: 100%; /* 确保填满网格单元 */
-  
+  width: 100%;
   padding: 20px;
   
-  /* 玻璃拟态背景 */
-  background: rgba(255, 255, 255, 0.06);
+  /* 🎨 白色模式立体感：多层阴影 + 边框光泽 */
+  background: rgba(255, 255, 255, 0.95); /* 更接近纯白 */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  
+  /* 📦 多层边框：外层浅灰 + 内层高光 */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 
+    /* 主阴影：柔和的底部投影 */
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    /* 次阴影：更深的边缘阴影 */
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    /* 内阴影：顶部高光效果 */
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   
   color: inherit;
   text-decoration: none;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
-  
-  /* 📱 防止拖拽滚动冲突 */
-  touch-action: pan-y; 
-  
-  /* ✅ 确保盒模型计算正确 */
   box-sizing: border-box;
+  touch-action: pan-y;
+  
+  /* 🌟 添加微妙的渐变背景增强层次 */
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(250, 250, 252, 1) 100%
+  );
 }
 
-/* 悬停效果 */
+/* 🎯 悬停效果：更强的立体感 */
 .card-item:not(.is-dragging):hover {
-  transform: translateY(-5px) scale(1.02);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-8px) scale(1.03); /* 更明显的抬升 */
+  
+  /* 悬停时加强阴影 */
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  
+  border-color: rgba(0, 255, 157, 0.3); /* 加入品牌色边框 */
+  
+  /* 悬停时背景稍微变亮 */
+  background: rgba(255, 255, 255, 1);
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(248, 250, 252, 1) 100%
+  );
+}
+
+/* 🌙 暗色模式适配：保持原有玻璃拟态效果 */
+@media (prefers-color-scheme: dark) {
+  .card-item {
+    background: rgba(255, 255, 255, 0.06);
+    background-image: none;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 4px 6px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .card-item:not(.is-dragging):hover {
+    background: rgba(255, 255, 255, 0.1);
+    background-image: none;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 12px 24px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
 }
 
 /* 拖拽中样式 */
 .card-item.is-dragging {
   cursor: grabbing;
-  opacity: 1;
+  opacity: 0.9;
+  box-shadow: 
+    0 12px 28px rgba(0, 0, 0, 0.15),
+    0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* 幽灵样式 */
 .ghost .card-item {
-  opacity: 0.4;
-  background: rgba(0, 255, 157, 0.1);
+  opacity: 0.5;
+  background: rgba(0, 255, 157, 0.08);
   border: 2px dashed #00ff9d;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 
-/* === 内容区域 === */
+/* === 内容区域：增强图标容器立体感 === */
 
 .card-icon-wrapper {
-  width: 64px; 
-  height: 64px; 
+  width: 72px; 
+  height: 72px; 
   margin-bottom: 12px;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(255,255,255,0.05);
+  
+  /* 🎨 图标容器也加立体效果 */
+  background: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 1) 0%,
+    rgba(241, 245, 249, 1) 100%
+  );
+  
   padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0; /* ✅ 防止图标被压缩 */
+  flex-shrink: 0;
+  
+  /* 微妙的内阴影 */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.3s;
+}
+
+/* 悬停时图标容器也有反馈 */
+.card-item:hover .card-icon-wrapper {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(248, 250, 252, 1) 100%
+  );
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* 暗色模式图标容器 */
+@media (prefers-color-scheme: dark) {
+  .card-icon-wrapper {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      inset 0 1px 2px rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .card-item:hover .card-icon-wrapper {
+    background: rgba(255, 255, 255, 0.12);
+  }
 }
 
 .real-icon {
@@ -210,15 +293,21 @@ const onImgError = (id) => { iconError[id] = true; };
   transition: transform 0.3s;
 }
 
+/* 悬停时图标微微放大 */
+.card-item:hover .real-icon {
+  transform: scale(1.1);
+}
+
 .fallback-icon {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 36px;
   font-weight: bold;
   color: #00ff9d;
+  text-shadow: 0 2px 4px rgba(0, 255, 157, 0.3);
 }
 
 .card-title {
@@ -229,6 +318,9 @@ const onImgError = (id) => { iconError[id] = true; };
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 4px;
+  
+  /* 白色模式下文字稍微深一点 */
+  color: rgba(0, 0, 0, 0.9);
 }
 
 .card-desc {
@@ -238,6 +330,16 @@ const onImgError = (id) => { iconError[id] = true; };
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-title {
+    color: rgba(255, 255, 255, 0.95);
+  }
+  .card-desc {
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 
 /* === 编辑模式控件 === */
@@ -245,11 +347,19 @@ const onImgError = (id) => { iconError[id] = true; };
   position: absolute;
   top: 8px;
   left: 8px;
-  opacity: 0.5;
-  background: rgba(0,0,0,0.2);
+  opacity: 0.4;
+  background: rgba(0, 0, 0, 0.08);
   border-radius: 50%;
   padding: 4px;
   display: flex;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .drag-indicator {
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0.5;
+  }
 }
 
 .action-buttons {
@@ -258,38 +368,76 @@ const onImgError = (id) => { iconError[id] = true; };
   right: 6px;
   display: flex;
   gap: 4px;
-  z-index: 10; /* ✅ 确保按钮在最上层 */
+  z-index: 10;
 }
 
 .icon-btn {
-  background: rgba(255,255,255,0.1);
-  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 6px;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: inherit;
+  color: rgba(0, 0, 0, 0.7);
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
-.edit-btn:hover { background: rgba(0,255,157,0.2); color: #00ff9d; }
-.del-btn:hover { background: rgba(255,68,68,0.2); color: #ff4444; }
+.icon-btn:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.edit-btn:hover { 
+  background: rgba(0, 255, 157, 0.15); 
+  color: #00ff9d;
+  border-color: rgba(0, 255, 157, 0.3);
+}
+
+.del-btn:hover { 
+  background: rgba(255, 68, 68, 0.15); 
+  color: #ff4444;
+  border-color: rgba(255, 68, 68, 0.3);
+}
 
 .add-card {
-  border: 2px dashed rgba(255,255,255,0.2);
+  border: 2px dashed rgba(0, 0, 0, 0.15);
   background: transparent;
+  box-shadow: none;
 }
+
 .add-card:hover {
   border-color: #00ff9d;
-  background: rgba(0,255,157,0.05);
+  background: rgba(0, 255, 157, 0.05);
+  box-shadow: 
+    0 4px 12px rgba(0, 255, 157, 0.1),
+    inset 0 1px 0 rgba(0, 255, 157, 0.1);
 }
+
+@media (prefers-color-scheme: dark) {
+  .add-card {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
 .add-icon {
   font-size: 32px;
   color: #00ff9d;
   margin-bottom: 0;
+  text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 </style>
+
+
 
