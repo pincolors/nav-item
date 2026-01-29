@@ -361,118 +361,126 @@ const onImgError = (id) => { iconError[id] = true; };
     opacity: 0.5;
   }
 }
-/* === 编辑模式控件 - 彩色图标版本 === */
+<style scoped>
+/* ... 前面的样式保持不变 ... */
+
+/* === 编辑模式控件 - 无背景彩色图标版本 === */
 .action-buttons {
   position: absolute;
   top: 6px;
   right: 6px;
   display: flex !important;
-  gap: 6px; /* 稍微加大间距 */
+  gap: 6px;
   z-index: 100;
   pointer-events: auto;
 }
 
 .icon-btn {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px; /* 圆角稍大 */
-  width: 32px;  /* 稍微大一点 */
+  /* 👇 白色模式：完全透明背景 */
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* 👈 去掉阴影 */
   flex-shrink: 0;
 }
 
 .icon-btn:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px) scale(1.05);
+  transform: scale(1.15); /* 👈 悬停时放大，不要阴影 */
 }
 
 .icon-btn:active {
-  transform: translateY(0) scale(0.95);
+  transform: scale(0.9);
 }
 
 /* 🔵 蓝色编辑笔 */
 .edit-btn {
-  color: #2196F3; /* 明亮的蓝色 */
+  color: #2196F3;
 }
 
 .edit-btn:hover { 
-  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-  color: #1976D2; /* 深蓝 */
-  border-color: #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  /* 👇 悬停时只加一个淡淡的圆形背景 */
+  background: rgba(33, 150, 243, 0.1);
+  color: #1565C0; /* 更深的蓝 */
 }
 
 /* 🔴 红色删除桶 */
 .del-btn {
-  color: #F44336; /* 明亮的红色 */
+  color: #F44336;
 }
 
 .del-btn:hover { 
-  background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
-  color: #D32F2F; /* 深红 */
-  border-color: #F44336;
-  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+  /* 👇 悬停时只加一个淡淡的圆形背景 */
+  background: rgba(244, 67, 54, 0.1);
+  color: #C62828; /* 更深的红 */
 }
 
-/* 暗色模式适配 */
+/* 暗色模式：保留半透明背景（暗色下需要背景才能看清） */
 @media (prefers-color-scheme: dark) {
   .icon-btn {
-    background: rgba(30, 30, 30, 0.95);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
-  /* 暗色模式下保持彩色 */
+  .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px) scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
   .edit-btn {
-    color: #64B5F6; /* 亮蓝 */
+    color: #64B5F6;
   }
   
   .edit-btn:hover {
-    background: rgba(33, 150, 243, 0.2);
+    background: rgba(33, 150, 243, 0.25);
     color: #90CAF9;
     border-color: #42A5F5;
   }
   
   .del-btn {
-    color: #EF5350; /* 亮红 */
+    color: #EF5350;
   }
   
   .del-btn:hover {
-    background: rgba(244, 67, 54, 0.2);
+    background: rgba(244, 67, 54, 0.25);
     color: #E57373;
     border-color: #EF5350;
   }
 }
 
-/* 拖拽指示器也改成灰色，确保可见 */
+/* 拖拽指示器 */
 .drag-indicator {
   position: absolute;
   top: 8px;
   left: 8px;
-  opacity: 0.5;
-  background: rgba(120, 120, 120, 0.3); /* 👈 改成中性灰 */
+  opacity: 0.4;
+  background: rgba(120, 120, 120, 0.2);
   border-radius: 50%;
   padding: 4px;
   display: flex;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: none; /* 👈 也去掉阴影 */
   pointer-events: none;
-  color: rgba(0, 0, 0, 0.6); /* 👈 图标颜色也改深 */
+  color: rgba(0, 0, 0, 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
   .drag-indicator {
-    background: rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.5);
   }
 }
 
 /* ... 后面的样式保持不变 ... */
+</style>
+
 
 .add-card {
   border: 2px dashed rgba(0, 0, 0, 0.15);
@@ -501,6 +509,7 @@ const onImgError = (id) => { iconError[id] = true; };
   text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 </style>
+
 
 
 
