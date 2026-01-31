@@ -23,26 +23,41 @@
             @click="handleClick($event)"
           >
             <div v-if="isEditMode" class="drag-indicator">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path>
+              </svg>
             </div>
 
             <div v-if="isEditMode" class="action-buttons">
-              <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)" title="编辑">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
               </button>
-              <button class="icon-btn del-btn" @click.stop="$emit('delete', element.id)">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <button class="icon-btn del-btn" @click.stop="$emit('delete', element.id)" title="删除">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </svg>
               </button>
             </div>
 
             <div class="card-icon-wrapper">
+              <!-- 🎨 骨架屏加载动画 -->
+              <div v-if="loadingIcons[element.id]" class="icon-skeleton"></div>
+              
+              <!-- 🖼️ 真实图标 -->
               <img 
-                v-if="!iconError[element.id]"
+                v-else-if="!iconError[element.id]"
                 :src="getIconSrc(element)" 
                 class="real-icon"
+                @load="onImgLoad(element.id)"
                 @error="onImgError(element.id)"
                 loading="lazy"
+                decoding="async"
+                :alt="element.title || element.name"
               />
+              
+              <!-- 🔤 后备字母图标 -->
               <div v-else class="fallback-icon">
                 {{ (element.title || element.name || '?').charAt(0).toUpperCase() }}
               </div>
@@ -67,36 +82,226 @@
     </draggable>
   </div>
 </template>
-
 <script setup>
-import { ref, watch, reactive } from 'vue';
+import { ref, watch, reactive, onMounted } from 'vue';
 import draggable from 'vuedraggable';
 
-const props = defineProps({ cards: Array, isEditMode: Boolean });
+const props = defineProps({ 
+  cards: Array, 
+  isEditMode: Boolean 
+});
+
 const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
 const localCards = ref([...props.cards || []]);
 const iconError = reactive({});
+const loadingIcons = reactive({});
+const iconCache = new Map();
+const failedAttempts = reactive({}); // 🆕 记录失败次数
 
-watch(() => props.cards, (newVal) => { localCards.value = [...newVal || []]; }, { deep: true });
+watch(() => props.cards, (newVal) => { 
+  localCards.value = [...newVal || []];
+  preloadIcons(newVal);
+}, { deep: true });
 
-function onDragEnd() { emit('update:cards', localCards.value); }
-function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
+onMounted(() => {
+  initializeLoadingStates();
+  preloadIcons(props.cards);
+});
 
-// 图标逻辑简化，参考 App.tsx 的处理方式
+function initializeLoadingStates() {
+  if (!props.cards) return;
+  props.cards.forEach(card => {
+    loadingIcons[card.id] = true;
+    failedAttempts[card.id] = 0; // 初始化失败计数
+  });
+}
+
+function preloadIcons(cards) {
+  if (!cards) return;
+  
+  cards.forEach(card => {
+    const iconUrl = getIconSrc(card);
+    
+    if (!iconUrl || iconCache.has(iconUrl)) {
+      loadingIcons[card.id] = false;
+      return;
+    }
+    
+    const img = new Image();
+    img.src = iconUrl;
+    
+    img.onload = () => {
+      iconCache.set(iconUrl, true);
+      loadingIcons[card.id] = false;
+    };
+    
+    img.onerror = () => {
+      // 🆕 自动尝试下一个 API
+      handleIconError(card);
+    };
+  });
+}
+
+function onDragEnd() { 
+  emit('update:cards', localCards.value); 
+}
+
+function handleClick(e) { 
+  if (props.isEditMode) e.preventDefault(); 
+}
+
+// 🚀 多级降级获取图标
 const getIconSrc = (site) => {
+  // 1️⃣ 优先使用用户自定义图标
   if (site.icon && site.icon.startsWith('http')) return site.icon;
-  if (site.logo_url) return site.logo_url; // 兼容旧字段
+  if (site.logo_url) return site.logo_url;
+  
   try {
     const domain = new URL(site.url).hostname;
-    // 使用 Google API 作为默认 (App.tsx 逻辑)
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    const attemptCount = failedAttempts[site.id] || 0;
+    
+    // 2️⃣ 多个 API 按顺序尝试
+    const apis = [
+      // 第1次尝试：DuckDuckGo（最快，覆盖率85%）
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+      
+      // 第2次尝试：Google（较慢但覆盖率95%）
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      
+      // 第3次尝试：Favicon Kit（覆盖率90%）
+      `https://api.faviconkit.com/${domain}/128`,
+      
+      // 第4次尝试：Google 高清版（最全，但最慢）
+      `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${site.url}&size=128`,
+      
+      // 第5次尝试：直接从网站获取
+      `https://${domain}/favicon.ico`
+    ];
+    
+    // 根据失败次数返回不同的 API
+    return apis[Math.min(attemptCount, apis.length - 1)];
+    
   } catch (e) {
     return '';
   }
 };
 
-const onImgError = (id) => { iconError[id] = true; };
+// 🆕 图标加载失败处理（自动切换 API）
+const handleIconError = (card) => {
+  const currentAttempt = failedAttempts[card.id] || 0;
+  
+  // 最多尝试 5 次（对应 5 个 API）
+  if (currentAttempt < 4) {
+    failedAttempts[card.id] = currentAttempt + 1;
+    
+    // 延迟一点点，避免同时发送太多请求
+    setTimeout(() => {
+      // 触发重新加载（使用下一个 API）
+      const newUrl = getIconSrc(card);
+      const img = new Image();
+      img.src = newUrl;
+      
+      img.onload = () => {
+        iconCache.set(newUrl, true);
+        loadingIcons[card.id] = false;
+        // 🔄 强制组件重新渲染
+        iconError[card.id] = false;
+      };
+      
+      img.onerror = () => {
+        handleIconError(card); // 递归尝试下一个
+      };
+    }, 100 * (currentAttempt + 1)); // 递增延迟：100ms, 200ms, 300ms...
+    
+  } else {
+    // 所有 API 都失败了，显示后备字母图标
+    loadingIcons[card.id] = false;
+    iconError[card.id] = true;
+    console.warn(`❌ 所有图标 API 都失败了: ${card.title || card.name}`);
+  }
+};
+
+const onImgLoad = (id) => {
+  loadingIcons[id] = false;
+};
+
+const onImgError = (id) => {
+  const card = localCards.value.find(c => c.id === id);
+  if (card) {
+    handleIconError(card);
+  }
+};
+
+  // ... 前面代码不变 ...
+
+// 🆕 持久化缓存到 localStorage
+const CACHE_KEY = 'icon-api-cache';
+const apiCache = reactive(loadCacheFromStorage());
+
+function loadCacheFromStorage() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    return cached ? JSON.parse(cached) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCacheToStorage() {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(apiCache));
+  } catch (e) {
+    console.warn('缓存保存失败:', e);
+  }
+}
+
+// 🆕 优化后的获取函数（使用缓存）
+const getIconSrc = (site) => {
+  if (site.icon && site.icon.startsWith('http')) return site.icon;
+  if (site.logo_url) return site.logo_url;
+  
+  try {
+    const domain = new URL(site.url).hostname;
+    
+    // 🔍 检查缓存：如果之前成功过，直接使用成功的 API
+    if (apiCache[domain]) {
+      return apiCache[domain];
+    }
+    
+    const attemptCount = failedAttempts[site.id] || 0;
+    const apis = [
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      `https://api.faviconkit.com/${domain}/128`,
+      `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${site.url}&size=128`,
+      `https://${domain}/favicon.ico`
+    ];
+    
+    return apis[Math.min(attemptCount, apis.length - 1)];
+    
+  } catch (e) {
+    return '';
+  }
+};
+
+// 🆕 成功加载后保存到缓存
+const onImgLoad = (id) => {
+  loadingIcons[id] = false;
+  
+  const card = localCards.value.find(c => c.id === id);
+  if (card) {
+    try {
+      const domain = new URL(card.url).hostname;
+      const successUrl = getIconSrc(card);
+      apiCache[domain] = successUrl;
+      saveCacheToStorage(); // 持久化
+    } catch (e) {
+      // 忽略
+    }
+  }
+};
 </script>
+
 
 <style scoped>
 /* ✨✨✨ 核心修改：确保手机端行间距正常 ✨✨✨ */
@@ -137,20 +342,15 @@ const onImgError = (id) => { iconError[id] = true; };
   padding: 20px;
   
   /* 🎨 白色模式立体感：多层阴影 + 边框光泽 */
-  background: rgba(255, 255, 255, 0.95); /* 更接近纯白 */
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   
   border-radius: 16px;
-  
-  /* 📦 多层边框：外层浅灰 + 内层高光 */
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 
-    /* 主阴影：柔和的底部投影 */
     0 2px 8px rgba(0, 0, 0, 0.04),
-    /* 次阴影：更深的边缘阴影 */
     0 4px 16px rgba(0, 0, 0, 0.06),
-    /* 内阴影：顶部高光效果 */
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   
   color: inherit;
@@ -161,7 +361,6 @@ const onImgError = (id) => { iconError[id] = true; };
   box-sizing: border-box;
   touch-action: pan-y;
   
-  /* 🌟 添加微妙的渐变背景增强层次 */
   background-image: linear-gradient(
     135deg,
     rgba(255, 255, 255, 1) 0%,
@@ -169,19 +368,13 @@ const onImgError = (id) => { iconError[id] = true; };
   );
 }
 
-/* 🎯 悬停效果：更强的立体感 */
 .card-item:not(.is-dragging):hover {
-  transform: translateY(-8px) scale(1.03); /* 更明显的抬升 */
-  
-  /* 悬停时加强阴影 */
+  transform: translateY(-8px) scale(1.03);
   box-shadow: 
     0 8px 24px rgba(0, 0, 0, 0.08),
     0 16px 48px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 1);
-  
-  border-color: rgba(0, 255, 157, 0.3); /* 加入品牌色边框 */
-  
-  /* 悬停时背景稍微变亮 */
+  border-color: rgba(0, 255, 157, 0.3);
   background: rgba(255, 255, 255, 1);
   background-image: linear-gradient(
     135deg,
@@ -190,7 +383,6 @@ const onImgError = (id) => { iconError[id] = true; };
   );
 }
 
-/* 🌙 暗色模式适配：保持原有玻璃拟态效果 */
 @media (prefers-color-scheme: dark) {
   .card-item {
     background: rgba(255, 255, 255, 0.06);
@@ -211,7 +403,6 @@ const onImgError = (id) => { iconError[id] = true; };
   }
 }
 
-/* 拖拽中样式 */
 .card-item.is-dragging {
   cursor: grabbing;
   opacity: 0.9;
@@ -220,7 +411,6 @@ const onImgError = (id) => { iconError[id] = true; };
     0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 幽灵样式 */
 .ghost .card-item {
   opacity: 0.5;
   background: rgba(0, 255, 157, 0.08);
@@ -231,13 +421,12 @@ const onImgError = (id) => { iconError[id] = true; };
 /* === 内容区域：增强图标容器立体感 === */
 
 .card-icon-wrapper {
-  width: 72px; 
-  height: 72px; 
+  width: 64px; 
+  height: 64px; 
   margin-bottom: 12px;
   border-radius: 12px;
   overflow: hidden;
   
-  /* 🎨 图标容器也加立体效果 */
   background: linear-gradient(
     135deg,
     rgba(248, 250, 252, 1) 0%,
@@ -250,16 +439,15 @@ const onImgError = (id) => { iconError[id] = true; };
   justify-content: center;
   flex-shrink: 0;
   
-  /* 微妙的内阴影 */
   box-shadow: 
     0 2px 4px rgba(0, 0, 0, 0.04),
     inset 0 1px 2px rgba(0, 0, 0, 0.05);
   
   border: 1px solid rgba(0, 0, 0, 0.04);
   transition: all 0.3s;
+  position: relative; /* 🆕 为骨架屏定位 */
 }
 
-/* 悬停时图标容器也有反馈 */
 .card-item:hover .card-icon-wrapper {
   background: linear-gradient(
     135deg,
@@ -271,7 +459,6 @@ const onImgError = (id) => { iconError[id] = true; };
     inset 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-/* 暗色模式图标容器 */
 @media (prefers-color-scheme: dark) {
   .card-icon-wrapper {
     background: rgba(255, 255, 255, 0.08);
@@ -286,6 +473,40 @@ const onImgError = (id) => { iconError[id] = true; };
   }
 }
 
+/* 🆕 骨架屏加载动画 */
+.icon-skeleton {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(200, 200, 200, 0.2) 25%,
+    rgba(200, 200, 200, 0.3) 50%,
+    rgba(200, 200, 200, 0.2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .icon-skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 75%
+    );
+  }
+}
+
 .real-icon {
   width: 100%;
   height: 100%;
@@ -293,7 +514,6 @@ const onImgError = (id) => { iconError[id] = true; };
   transition: transform 0.3s;
 }
 
-/* 悬停时图标微微放大 */
 .card-item:hover .real-icon {
   transform: scale(1.1);
 }
@@ -304,7 +524,7 @@ const onImgError = (id) => { iconError[id] = true; };
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
+  font-size: 28px;
   font-weight: bold;
   color: #00ff9d;
   text-shadow: 0 2px 4px rgba(0, 255, 157, 0.3);
@@ -318,8 +538,6 @@ const onImgError = (id) => { iconError[id] = true; };
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 4px;
-  
-  /* 白色模式下文字稍微深一点 */
   color: rgba(0, 0, 0, 0.9);
 }
 
@@ -348,20 +566,22 @@ const onImgError = (id) => { iconError[id] = true; };
   top: 8px;
   left: 8px;
   opacity: 0.4;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(120, 120, 120, 0.2);
   border-radius: 50%;
   padding: 4px;
   display: flex;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+  pointer-events: none;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
   .drag-indicator {
-    background: rgba(255, 255, 255, 0.1);
-    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.5);
   }
 }
-/* === 编辑模式控件 - 无背景彩色图标版本 === */
+
 .action-buttons {
   position: absolute;
   top: 6px;
@@ -373,7 +593,6 @@ const onImgError = (id) => { iconError[id] = true; };
 }
 
 .icon-btn {
-  /* 👇 白色模式：完全透明背景 */
   background: transparent;
   border: none;
   border-radius: 8px;
@@ -384,41 +603,36 @@ const onImgError = (id) => { iconError[id] = true; };
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: none; /* 👈 去掉阴影 */
+  box-shadow: none;
   flex-shrink: 0;
 }
 
 .icon-btn:hover {
-  transform: scale(1.15); /* 👈 悬停时放大，不要阴影 */
+  transform: scale(1.15);
 }
 
 .icon-btn:active {
   transform: scale(0.9);
 }
 
-/* 🔵 蓝色编辑笔 */
 .edit-btn {
   color: #2196F3;
 }
 
 .edit-btn:hover { 
-  /* 👇 悬停时只加一个淡淡的圆形背景 */
   background: rgba(33, 150, 243, 0.1);
-  color: #1565C0; /* 更深的蓝 */
+  color: #1565C0;
 }
 
-/* 🔴 红色删除桶 */
 .del-btn {
   color: #F44336;
 }
 
 .del-btn:hover { 
-  /* 👇 悬停时只加一个淡淡的圆形背景 */
   background: rgba(244, 67, 54, 0.1);
-  color: #C62828; /* 更深的红 */
+  color: #C62828;
 }
 
-/* 暗色模式：保留半透明背景（暗色下需要背景才能看清） */
 @media (prefers-color-scheme: dark) {
   .icon-btn {
     background: rgba(255, 255, 255, 0.08);
@@ -453,30 +667,6 @@ const onImgError = (id) => { iconError[id] = true; };
   }
 }
 
-/* 拖拽指示器 */
-.drag-indicator {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  opacity: 0.4;
-  background: rgba(120, 120, 120, 0.2);
-  border-radius: 50%;
-  padding: 4px;
-  display: flex;
-  box-shadow: none; /* 👈 也去掉阴影 */
-  pointer-events: none;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-@media (prefers-color-scheme: dark) {
-  .drag-indicator {
-    background: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.5);
-  }
-}
-
-/* ... 后面的样式保持不变 ... */
-
 .add-card {
   border: 2px dashed rgba(0, 0, 0, 0.15);
   background: transparent;
@@ -504,9 +694,3 @@ const onImgError = (id) => { iconError[id] = true; };
   text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 </style>
-
-
-
-
-
-
