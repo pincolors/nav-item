@@ -255,6 +255,7 @@ function handleDelete(id) {
 .menu-list.sortable-drag .menu-item-wrapper:not(.sortable-chosen):not(.sortable-ghost) {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+/* ... 之前的代码 ... */
 
 .menu-item {
   position: relative;
@@ -269,14 +270,14 @@ function handleDelete(id) {
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* 🎨 亮色模式：深灰色（未选中） */
-  color: rgba(0, 0, 0, 0.75);
+  /* 🎨 [修改] 亮色模式：加深颜色 (原 0.75 -> 0.85) */
+  color: rgba(0, 0, 0, 0.85); 
   
   cursor: pointer;
   padding: 10px 20px;
   border-radius: 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.8;
+  opacity: 0.8; /* 这里的整体透明度可以保持，或者改为 1 让字更实 */
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -288,10 +289,13 @@ function handleDelete(id) {
 
 .menu-item:hover {
   background: rgba(128,128,128,0.05);
-  /* 🎨 亮色模式悬停：深色 */
-  color: rgba(0, 0, 0, 0.150);
+  /* 🎨 [修改] 亮色模式悬停：改为纯黑，最清晰 (原 0.150 -> 1.0) */
+  color: #000000;
   opacity: 1;
 }
+
+/* ... 之后的代码 ... */
+
 
 .menu-item.is-pressing {
   background: rgba(6, 182, 212, 0.1);
@@ -704,3 +708,4 @@ function handleDelete(id) {
   backface-visibility: hidden;
 }
 </style>
+
