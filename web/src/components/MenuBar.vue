@@ -270,7 +270,7 @@ function handleDelete(id) {
   font-family: system-ui, -apple-system, sans-serif;
   
   /* 🎨 亮色模式：深灰色（未选中） */
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.75);
   
   cursor: pointer;
   padding: 10px 20px;
@@ -289,7 +289,7 @@ function handleDelete(id) {
 .menu-item:hover {
   background: rgba(128,128,128,0.05);
   /* 🎨 亮色模式悬停：深色 */
-  color: rgba(0, 0, 0, 0.75);
+  color: rgba(0, 0, 0, 0.150);
   opacity: 1;
 }
 
