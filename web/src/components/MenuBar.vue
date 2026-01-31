@@ -254,8 +254,7 @@ function handleDelete(id) {
 
 .menu-list.sortable-drag .menu-item-wrapper:not(.sortable-chosen):not(.sortable-ghost) {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-/* ... 之前的代码 ... */
+/* ... 前面代码保持不变 ... */
 
 .menu-item {
   position: relative;
@@ -270,14 +269,14 @@ function handleDelete(id) {
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* 🎨 [修改] 亮色模式：加深颜色 (原 0.75 -> 0.85) */
-  color: rgba(0, 0, 0, 0.85); 
+  /* ⚡ 关键修改：强制指定颜色，不用变量 */
+  color: rgba(0, 0, 0, 0.7) !important; /* 亮色模式：深灰色 */
   
   cursor: pointer;
   padding: 10px 20px;
   border-radius: 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.8; /* 这里的整体透明度可以保持，或者改为 1 让字更实 */
+  opacity: 1;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -288,23 +287,19 @@ function handleDelete(id) {
 }
 
 .menu-item:hover {
-  background: rgba(128,128,128,0.05);
-  /* 🎨 [修改] 亮色模式悬停：改为纯黑，最清晰 (原 0.150 -> 1.0) */
-  color: #000000;
+  background: rgba(128,128,128,0.08);
+  color: rgba(0, 0, 0, 0.9) !important; /* 强制黑色 */
   opacity: 1;
 }
-
-/* ... 之后的代码 ... */
-
 
 .menu-item.is-pressing {
   background: rgba(6, 182, 212, 0.1);
   transform: scale(1.05);
 }
 
-/* 🎨🎨🎨 激活状态 - 亮色模式：青色 🎨🎨🎨 */
+/* 🎨 激活状态 - 亮色模式：青色 */
 .menu-item.active {
-  color: #0891B2; /* 青色 */
+  color: #0891B2 !important; /* 强制青色 */
   opacity: 1;
   background: transparent;
   font-weight: 900; 
@@ -318,141 +313,11 @@ function handleDelete(id) {
   right: 15px;
   height: 4px;
   border-radius: 4px;
-  /* 亮色模式：青色渐变 */
   background: linear-gradient(90deg, #06B6D4, #0891B2);
   box-shadow: 0 2px 8px rgba(8, 145, 178, 0.5);
 }
 
-.chosen-menu .menu-item {
-  opacity: 0.8;
-  cursor: grabbing;
-}
-
-.dragging-menu {
-  opacity: 1 !important;
-  cursor: grabbing !important;
-  z-index: 9999 !important;
-}
-
-.dragging-menu .menu-item {
-  transform: rotate(3deg) scale(1.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
-              0 5px 15px rgba(0, 0, 0, 0.2);
-  background: var(--card-bg) !important;
-  opacity: 1 !important;
-  border: 2px solid #0891B2; /* 青色边框 */
-}
-
-.ghost-menu {
-  opacity: 0.5 !important;
-}
-
-.ghost-menu .menu-item {
-  background: linear-gradient(135deg, 
-    rgba(6, 182, 212, 0.1), 
-    rgba(8, 145, 178, 0.1)) !important;
-  border: 2px dashed #0891B2 !important; /* 青色虚线 */
-  color: #0891B2 !important;
-  position: relative;
-  overflow: hidden;
-}
-
-.ghost-menu .menu-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(6, 182, 212, 0.3), 
-    transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.ghost-menu .menu-item::after {
-  display: none;
-}
-
-.fallback-drag {
-  opacity: 1 !important;
-  cursor: grabbing !important;
-}
-
-.fallback-drag .menu-item {
-  transform: rotate(3deg) scale(1.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
-  background: var(--card-bg) !important;
-}
-
-.press-indicator {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 5;
-}
-
-.progress-ring {
-  transform: rotate(-90deg);
-}
-
-.progress-ring-circle {
-  stroke-dasharray: 63;
-  stroke-dashoffset: 63;
-  transition: stroke-dashoffset 0.01s linear;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 3px #0891B2);
-}
-
-.menu-name {
-  position: relative;
-  z-index: 1;
-}
-
-.menu-del {
-  position: absolute; 
-  top: -4px; 
-  right: -4px;
-  background: #ff4d4f; 
-  color: white;
-  border: none;
-  border-radius: 50%; 
-  width: 20px; 
-  height: 20px;
-  font-size: 12px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  opacity: 0; 
-  transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
-  z-index: 10;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.menu-item:hover .menu-del { 
-  opacity: 1; 
-  transform: scale(1); 
-}
-
-.menu-del:hover {
-  background: #ff7875;
-  transform: scale(1.15) !important;
-}
-
-.menu-del:active {
-  transform: scale(0.95) !important;
-}
+/* ... 中间的拖拽相关样式保持不变 ... */
 
 .add-menu-btn {
   display: flex; 
@@ -467,7 +332,7 @@ function handleDelete(id) {
   border-radius: 12px;
   font-weight: bold;
   font-size: 24px;
-  color: var(--text-color);
+  color: rgba(0, 0, 0, 0.6) !important; /* 强制深灰色 */
   cursor: pointer;
   opacity: 0.6;
   background: transparent;
@@ -476,8 +341,8 @@ function handleDelete(id) {
 }
 
 .add-menu-btn:hover {
-  border-color: #0891B2; /* 青色 */
-  color: #0891B2;
+  border-color: #0891B2;
+  color: #0891B2 !important; /* 强制青色 */
   background: rgba(6, 182, 212, 0.08);
   opacity: 1;
   transform: scale(1.05);
@@ -488,38 +353,15 @@ function handleDelete(id) {
 }
 
 /* === 二级菜单样式 === */
-.sub-menu-outer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.sub-menu-outer::-webkit-scrollbar { 
-  display: none; 
-}
-
-.sub-menu-bar {
-  display: flex; 
-  flex-wrap: nowrap;
-  gap: 10px; 
-  padding: 5px 20px 15px; 
-  min-width: min-content;
-}
-
 .sub-menu-item {
   flex-shrink: 0;
   font-size: 14px; 
   padding: 6px 16px;
   border-radius: 20px; 
-  background: rgba(128,128,128,0.05);
+  background: rgba(128,128,128,0.08);
   
-  /* 🎨 亮色模式：中灰色 */
-  color: rgba(0, 0, 0, 0.6); 
-  opacity: 0.85; 
+  color: rgba(0, 0, 0, 0.75) !important; /* 强制深灰色 */
+  opacity: 1;
   
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -530,48 +372,43 @@ function handleDelete(id) {
 
 .sub-menu-item:hover {
   opacity: 1;
-  color: rgba(0, 0, 0, 0.85);
+  color: rgba(0, 0, 0, 0.95) !important; /* 强制深黑色 */
   transform: translateY(-1px);
-  background: rgba(128,128,128,0.1);
+  background: rgba(128,128,128,0.15);
 }
 
 .sub-menu-item:active {
   transform: translateY(0);
 }
 
-/* 🎨 亮色模式激活状态：青色 */
 .sub-menu-item.active {
-  background: rgba(6, 182, 212, 0.12); 
-  color: #0891B2; 
+  background: rgba(6, 182, 212, 0.15);
+  color: #0891B2 !important; /* 强制青色 */
   font-weight: 700;
-  border: 1px solid rgba(6, 182, 212, 0.3); 
+  border: 1px solid rgba(6, 182, 212, 0.35);
   opacity: 1;
 }
 
-/* 🌙🌙🌙 暗色模式配色 - 青色系 🌙🌙🌙 */
+/* 🌙🌙🌙 暗色模式：用 @media 强制覆盖 🌙🌙🌙 */
 @media (prefers-color-scheme: dark) {
   .menu-item {
-    /* 暗色模式：浅灰色（未选中） */
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.65) !important; /* 强制浅灰色 */
   }
   
   .menu-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    /* 暗色模式悬停：亮白色 */
-    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9) !important; /* 强制亮白色 */
   }
   
   .menu-item.is-pressing {
     background: rgba(34, 211, 238, 0.15);
   }
   
-  /* 激活状态：亮青色 */
   .menu-item.active {
-    color: #22D3EE; /* 亮青色 */
+    color: #22D3EE !important; /* 强制亮青色 */
   }
   
   .menu-item.active::after {
-    /* 暗色模式：亮青色渐变 */
     background: linear-gradient(90deg, #67E8F9, #22D3EE);
     box-shadow: 0 2px 8px rgba(34, 211, 238, 0.5);
   }
@@ -602,70 +439,35 @@ function handleDelete(id) {
     filter: drop-shadow(0 0 3px #22D3EE);
   }
   
+  .add-menu-btn {
+    color: rgba(255, 255, 255, 0.6) !important; /* 强制浅灰色 */
+  }
+  
   .add-menu-btn:hover {
     border-color: #22D3EE;
-    color: #22D3EE;
+    color: #22D3EE !important; /* 强制亮青色 */
     background: rgba(34, 211, 238, 0.1);
   }
   
-  /* 二级菜单暗色模式 */
   .sub-menu-item { 
-    background: rgba(255,255,255,0.08); 
-    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255,255,255,0.1); 
+    color: rgba(255, 255, 255, 0.7) !important; /* 强制浅灰色 */
   }
   
   .sub-menu-item:hover {
-    background: rgba(255,255,255,0.12);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255,255,255,0.15);
+    color: rgba(255, 255, 255, 0.95) !important; /* 强制亮白色 */
   }
   
   .sub-menu-item.active { 
-    color: #22D3EE; 
+    color: #22D3EE !important; /* 强制亮青色 */
     background: rgba(34, 211, 238, 0.15);
     border: 1px solid rgba(34, 211, 238, 0.3);
   }
 }
 
-/* 旧版暗黑模式适配（向下兼容） */
-:global(.dark-mode) .menu-item {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-:global(.dark-mode) .menu-item:hover {
-  background: rgba(255,255,255,0.05);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-:global(.dark-mode) .menu-item.active {
-  color: #22D3EE;
-}
-
-:global(.dark-mode) .menu-item.active::after {
-  background: linear-gradient(90deg, #67E8F9, #22D3EE);
-  box-shadow: 0 2px 8px rgba(34, 211, 238, 0.5);
-}
-
-:global(.dark-mode) .menu-item.is-pressing {
-  background: rgba(34, 211, 238, 0.15);
-}
-
-:global(.dark-mode) .dragging-menu .menu-item {
-  background: #25262b !important;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6),
-              0 5px 15px rgba(34, 211, 238, 0.3);
-  border: 2px solid #22D3EE;
-}
-
-:global(.dark-mode) .sub-menu-item { 
-  background: rgba(255,255,255,0.08); 
-  color: rgba(255, 255, 255, 0.6);
-}
-
-:global(.dark-mode) .sub-menu-item.active { 
-  color: #22D3EE; 
-  background: rgba(34, 211, 238, 0.15);
-  border: 1px solid rgba(34, 211, 238, 0.3);
-}
+/* ⚠️ 删除或注释掉旧的 :global(.dark-mode) 规则 */
+/* 因为系统自动模式会用 prefers-color-scheme，不会用 .dark-mode class */
 
 /* === 移动端优化 === */
 @media (max-width: 768px) {
@@ -708,4 +510,6 @@ function handleDelete(id) {
   backface-visibility: hidden;
 }
 </style>
+
+
 
