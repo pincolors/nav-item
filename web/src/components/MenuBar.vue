@@ -202,13 +202,14 @@ function handleDelete(id) {
   emit('delete', id)
 }
 </scrit>
+  
   <style scoped>
 /* ===============================
    🎨 主题变量（关键）
 =============================== */
 
 /* ☀️ 默认亮色 */
-:root {
+:global(:root) {
   --menu-text: rgba(0, 0, 0, 0.75);
   --menu-text-hover: rgba(0, 0, 0, 0.95);
   --menu-text-active: #0891B2;
@@ -218,6 +219,18 @@ function handleDelete(id) {
 
   --menu-drag-border: #0891B2;
   --menu-progress: #0891B2;
+}
+
+:global(:root.dark) {
+  --menu-text: rgba(255, 255, 255, 0.75);
+  --menu-text-hover: rgba(255, 255, 255, 0.95);
+  --menu-text-active: #22D3EE;
+
+  --menu-bg-hover: rgba(255, 255, 255, 0.08);
+  --menu-bg-press: rgba(34, 211, 238, 0.15);
+
+  --menu-drag-border: #22D3EE;
+  --menu-progress: #22D3EE;
 }
 
 /* 🌙 页面夜间（你自己控制） */
@@ -423,6 +436,7 @@ function handleDelete(id) {
   background: var(--menu-bg-press);
 }
 </style>
+
 
 
 
