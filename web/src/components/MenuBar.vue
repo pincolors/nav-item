@@ -213,12 +213,27 @@ function handleDelete(id) {
 </script>
 
 <style scoped>
+/* 🔒 强制亮色模式变量 */
 .menu-scroll-wrapper {
+  --text-primary: rgba(0, 0, 0, 0.85);
+  --text-secondary: rgba(0, 0, 0, 0.75);
+  --text-hover: rgba(0, 0, 0, 0.95);
+  --accent-color: #0891B2;
+  --accent-light: #06B6D4;
+  --bg-color: #ffffff;
+  --bg-hover: rgba(128, 128, 128, 0.08);
+  --bg-hover-strong: rgba(128, 128, 128, 0.15);
+  
   width: 100%;
   display: flex;
   flex-direction: column;
   background: transparent;
   overflow: hidden;
+  
+  /* 强制亮色模式 */
+  color-scheme: light !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .menu-outer {
@@ -230,6 +245,7 @@ function handleDelete(id) {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   scroll-behavior: smooth;
+  color-scheme: light !important;
 }
 
 .menu-outer::-webkit-scrollbar { 
@@ -244,6 +260,7 @@ function handleDelete(id) {
   padding: 0 20px 10px 20px;
   align-items: center;
   min-width: min-content;
+  color-scheme: light !important;
 }
 
 .menu-item-wrapper {
@@ -269,8 +286,10 @@ function handleDelete(id) {
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* ⚡ 亮色模式：深灰色（未选中） */
-  color: rgba(0, 0, 0, 0.7) !important;
+  /* 强制亮色模式颜色 */
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  forced-color-adjust: none;
   
   cursor: pointer;
   padding: 10px 20px;
@@ -280,6 +299,8 @@ function handleDelete(id) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  background: transparent !important;
+  color-scheme: light !important;
 }
 
 .menu-item.is-edit-mode {
@@ -287,21 +308,23 @@ function handleDelete(id) {
 }
 
 .menu-item:hover {
-  background: rgba(128,128,128,0.08);
-  color: rgba(0, 0, 0, 0.9) !important;
+  background: var(--bg-hover) !important;
+  color: var(--text-hover) !important;
+  -webkit-text-fill-color: var(--text-hover) !important;
   opacity: 1;
 }
 
 .menu-item.is-pressing {
-  background: rgba(6, 182, 212, 0.1);
+  background: rgba(6, 182, 212, 0.1) !important;
   transform: scale(1.05);
 }
 
-/* 🎨 激活状态 - 亮色模式：青色 */
+/* 🎨 激活状态 */
 .menu-item.active {
-  color: #0891B2 !important;
+  color: var(--accent-color) !important;
+  -webkit-text-fill-color: var(--accent-color) !important;
   opacity: 1;
-  background: transparent;
+  background: transparent !important;
   font-weight: 900; 
 }
 
@@ -313,7 +336,7 @@ function handleDelete(id) {
   right: 15px;
   height: 4px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #06B6D4, #0891B2);
+  background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
   box-shadow: 0 2px 8px rgba(8, 145, 178, 0.5);
 }
 
@@ -332,9 +355,11 @@ function handleDelete(id) {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
               0 5px 15px rgba(0, 0, 0, 0.2);
-  background: var(--card-bg) !important;
+  background: var(--bg-color) !important;
   opacity: 1 !important;
-  border: 2px solid #0891B2;
+  border: 2px solid var(--accent-color);
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
 
 .ghost-menu {
@@ -345,8 +370,9 @@ function handleDelete(id) {
   background: linear-gradient(135deg, 
     rgba(6, 182, 212, 0.1), 
     rgba(8, 145, 178, 0.1)) !important;
-  border: 2px dashed #0891B2 !important;
-  color: #0891B2 !important;
+  border: 2px dashed var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  -webkit-text-fill-color: var(--accent-color) !important;
   position: relative;
   overflow: hidden;
 }
@@ -382,7 +408,7 @@ function handleDelete(id) {
 .fallback-drag .menu-item {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
-  background: var(--card-bg) !important;
+  background: var(--bg-color) !important;
 }
 
 .press-indicator {
@@ -403,20 +429,23 @@ function handleDelete(id) {
   stroke-dashoffset: 63;
   transition: stroke-dashoffset 0.01s linear;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 3px #0891B2);
+  filter: drop-shadow(0 0 3px var(--accent-color));
 }
 
 .menu-name {
   position: relative;
   z-index: 1;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
 .menu-del {
   position: absolute; 
   top: -4px; 
   right: -4px;
-  background: #ff4d4f; 
-  color: white;
+  background: #ff4d4f !important; 
+  color: white !important;
+  -webkit-text-fill-color: white !important;
   border: none;
   border-radius: 50%; 
   width: 20px; 
@@ -440,7 +469,7 @@ function handleDelete(id) {
 }
 
 .menu-del:hover {
-  background: #ff7875;
+  background: #ff7875 !important;
   transform: scale(1.15) !important;
 }
 
@@ -457,22 +486,25 @@ function handleDelete(id) {
   height: 44px;
   flex-shrink: 0;
   margin-left: 10px;
-  border: 2px dashed rgba(128,128,128,0.3);
+  border: 2px dashed rgba(128,128,128,0.3) !important;
   border-radius: 12px;
   font-weight: bold;
   font-size: 24px;
-  color: rgba(0, 0, 0, 0.6) !important;
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
   cursor: pointer;
   opacity: 0.6;
-  background: transparent;
+  background: transparent !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
+  forced-color-adjust: none;
 }
 
 .add-menu-btn:hover {
-  border-color: #0891B2;
-  color: #0891B2 !important;
-  background: rgba(6, 182, 212, 0.08);
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  -webkit-text-fill-color: var(--accent-color) !important;
+  background: rgba(6, 182, 212, 0.08) !important;
   opacity: 1;
   transform: scale(1.05);
 }
@@ -489,6 +521,7 @@ function handleDelete(id) {
   overflow-y: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  color-scheme: light !important;
 }
 
 .sub-menu-outer::-webkit-scrollbar { 
@@ -501,6 +534,7 @@ function handleDelete(id) {
   gap: 10px; 
   padding: 5px 20px 15px; 
   min-width: min-content;
+  color-scheme: light !important;
 }
 
 .sub-menu-item {
@@ -508,21 +542,25 @@ function handleDelete(id) {
   font-size: 14px; 
   padding: 6px 16px;
   border-radius: 20px; 
-  background: rgba(128,128,128,0.08);
-  color: rgba(0, 0, 0, 0.75) !important;
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
   opacity: 1;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
   font-weight: 600; 
   white-space: nowrap;
   border: none;
+  forced-color-adjust: none;
+  color-scheme: light !important;
 }
 
 .sub-menu-item:hover {
   opacity: 1;
-  color: rgba(0, 0, 0, 0.95) !important;
+  color: var(--text-hover) !important;
+  -webkit-text-fill-color: var(--text-hover) !important;
   transform: translateY(-1px);
-  background: rgba(128,128,128,0.15);
+  background: var(--bg-hover-strong) !important;
 }
 
 .sub-menu-item:active {
@@ -530,87 +568,100 @@ function handleDelete(id) {
 }
 
 .sub-menu-item.active {
-  background: rgba(6, 182, 212, 0.15);
-  color: #0891B2 !important;
+  background: rgba(6, 182, 212, 0.15) !important;
+  color: var(--accent-color) !important;
+  -webkit-text-fill-color: var(--accent-color) !important;
   font-weight: 700;
-  border: 1px solid rgba(6, 182, 212, 0.35);
+  border: 1px solid rgba(6, 182, 212, 0.35) !important;
   opacity: 1;
 }
 
-/* 🌙 暗色模式 */
+/* 🌙 即使系统切换到暗色模式，也强制保持亮色主题 */
 @media (prefers-color-scheme: dark) {
+  .menu-scroll-wrapper {
+    color-scheme: light !important;
+    background: transparent !important;
+  }
+  
+  .menu-outer,
+  .menu-list,
+  .sub-menu-outer,
+  .sub-menu-bar {
+    color-scheme: light !important;
+    background: transparent !important;
+  }
+  
   .menu-item {
-    color: rgba(255, 255, 255, 0.65) !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    background: transparent !important;
   }
   
   .menu-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.9) !important;
-  }
-  
-  .menu-item.is-pressing {
-    background: rgba(34, 211, 238, 0.15);
+    color: var(--text-hover) !important;
+    -webkit-text-fill-color: var(--text-hover) !important;
+    background: var(--bg-hover) !important;
   }
   
   .menu-item.active {
-    color: #22D3EE !important;
+    color: var(--accent-color) !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+    background: transparent !important;
   }
   
   .menu-item.active::after {
-    background: linear-gradient(90deg, #67E8F9, #22D3EE);
-    box-shadow: 0 2px 8px rgba(34, 211, 238, 0.5);
+    background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
+  }
+  
+  .menu-name {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
   }
   
   .dragging-menu .menu-item {
-    background: #25262b !important;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6),
-                0 5px 15px rgba(34, 211, 238, 0.3);
-    border: 2px solid #22D3EE;
+    background: white !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
   }
   
   .ghost-menu .menu-item {
-    background: linear-gradient(135deg, 
-      rgba(34, 211, 238, 0.1), 
-      rgba(103, 232, 249, 0.1)) !important;
-    border: 2px dashed #22D3EE !important;
-    color: #22D3EE !important;
+    color: var(--accent-color) !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
   }
   
-  .ghost-menu .menu-item::before {
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(34, 211, 238, 0.3), 
-      transparent);
-  }
-  
-  .progress-ring-circle {
-    filter: drop-shadow(0 0 3px #22D3EE);
-  }
-  
-  .add-menu-btn {
-    color: rgba(255, 255, 255, 0.6) !important;
-  }
-  
-  .add-menu-btn:hover {
-    border-color: #22D3EE;
-    color: #22D3EE !important;
-    background: rgba(34, 211, 238, 0.1);
-  }
-  
-  .sub-menu-item { 
-    background: rgba(255,255,255,0.1); 
-    color: rgba(255, 255, 255, 0.7) !important;
+  .sub-menu-item {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
   }
   
   .sub-menu-item:hover {
-    background: rgba(255,255,255,0.15);
-    color: rgba(255, 255, 255, 0.95) !important;
+    background: var(--bg-hover-strong) !important;
+    color: var(--text-hover) !important;
+    -webkit-text-fill-color: var(--text-hover) !important;
   }
   
-  .sub-menu-item.active { 
-    color: #22D3EE !important;
-    background: rgba(34, 211, 238, 0.15);
-    border: 1px solid rgba(34, 211, 238, 0.3);
+  .sub-menu-item.active {
+    background: rgba(6, 182, 212, 0.15) !important;
+    color: var(--accent-color) !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+  }
+  
+  .add-menu-btn {
+    color: var(--text-secondary) !important;
+    -webkit-text-fill-color: var(--text-secondary) !important;
+    background: transparent !important;
+  }
+  
+  .add-menu-btn:hover {
+    color: var(--accent-color) !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+  }
+  
+  .menu-del {
+    background: #ff4d4f !important;
+    color: white !important;
+    -webkit-text-fill-color: white !important;
   }
 }
 
