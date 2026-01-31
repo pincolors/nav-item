@@ -232,74 +232,6 @@ const onImgError = (id) => {
   }
 };
 
-  // ... 前面代码不变 ...
-
-// 🆕 持久化缓存到 localStorage
-const CACHE_KEY = 'icon-api-cache';
-const apiCache = reactive(loadCacheFromStorage());
-
-function loadCacheFromStorage() {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    return cached ? JSON.parse(cached) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveCacheToStorage() {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(apiCache));
-  } catch (e) {
-    console.warn('缓存保存失败:', e);
-  }
-}
-
-// 🆕 优化后的获取函数（使用缓存）
-const getIconSrc = (site) => {
-  if (site.icon && site.icon.startsWith('http')) return site.icon;
-  if (site.logo_url) return site.logo_url;
-  
-  try {
-    const domain = new URL(site.url).hostname;
-    
-    // 🔍 检查缓存：如果之前成功过，直接使用成功的 API
-    if (apiCache[domain]) {
-      return apiCache[domain];
-    }
-    
-    const attemptCount = failedAttempts[site.id] || 0;
-    const apis = [
-      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
-      `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
-      `https://api.faviconkit.com/${domain}/128`,
-      `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${site.url}&size=128`,
-      `https://${domain}/favicon.ico`
-    ];
-    
-    return apis[Math.min(attemptCount, apis.length - 1)];
-    
-  } catch (e) {
-    return '';
-  }
-};
-
-// 🆕 成功加载后保存到缓存
-const onImgLoad = (id) => {
-  loadingIcons[id] = false;
-  
-  const card = localCards.value.find(c => c.id === id);
-  if (card) {
-    try {
-      const domain = new URL(card.url).hostname;
-      const successUrl = getIconSrc(card);
-      apiCache[domain] = successUrl;
-      saveCacheToStorage(); // 持久化
-    } catch (e) {
-      // 忽略
-    }
-  }
-};
 </script>
 
 
@@ -694,3 +626,4 @@ const onImgLoad = (id) => {
   text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
 }
 </style>
+
