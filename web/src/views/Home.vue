@@ -50,19 +50,21 @@
         </div>
       </div>
     </header>
-
+     
     <div class="menu-wrapper">
-      <MenuBar 
-        :menus="menus" 
-        :activeId="activeMenu?.id" 
-        :activeSubMenuId="activeSubMenu?.id"
-        :is-edit-mode="isLoggedIn"
-        @select="handleMenuSelect"
-        @update:menus="handleMenuSort"
-        @add="addMenu"
-        @delete="deleteMenu"
-      />
-    </div>
+  <MenuBar 
+    :menus="menus" 
+    :activeId="activeMenu?.id" 
+    :activeSubMenuId="activeSubMenu?.id"
+    :is-edit-mode="isLoggedIn"
+    :is-dark-mode="isDarkMode"
+    @select="handleMenuSelect"
+    @update:menus="handleMenuSort"
+    @add="addMenu"
+    @delete="deleteMenu"
+  />
+</div>
+
     
     <div class="search-section">
       <div class="search-box-wrapper">
@@ -570,4 +572,5 @@ onMounted(async () => {
   color: #e0e0e0;
 }
 </style>
+
 
