@@ -34,7 +34,8 @@
                 active: activeId === menu.id, 
                 'is-edit-mode': isEditMode,
                 'is-dragging-item': isDragging,
-                'is-pressing': pressingId === menu.id
+                'is-pressing': pressingId === menu.id,
+                'dark-mode-item': isDarkMode 
               }"
               @click="handleClick(menu)"
               @touchstart="handleTouchStart(menu)"
@@ -46,12 +47,11 @@
             >
               <span class="menu-name">{{ menu.name }}</span>
               
-              <!-- 长按进度指示器 -->
               <div v-if="isEditMode && pressingId === menu.id" class="press-indicator">
                 <svg class="progress-ring" width="24" height="24">
                   <circle
                     class="progress-ring-circle"
-                    stroke="var(--primary-color)"
+                    stroke="var(--accent-color)"
                     stroke-width="2"
                     fill="transparent"
                     r="10"
@@ -62,7 +62,6 @@
                 </svg>
               </div>
               
-              <!-- 删除按钮 -->
               <button 
                 v-if="isEditMode" 
                 class="menu-del" 
@@ -91,7 +90,6 @@
       </draggable>
     </div>
 
-    <!-- 二级菜单 -->
     <div v-if="activeMenu && activeMenu.subMenus && activeMenu.subMenus.length" class="sub-menu-outer">
       <div class="sub-menu-bar">
         <button
@@ -214,17 +212,22 @@ function handleDelete(id) {
 </script>
 
 <style scoped>
-/* 🎨 亮色模式变量（默认） */
+/* =========================================
+   1. 定义 CSS 变量
+   ========================================= */
+
+/* 默认（亮色）模式变量 */
 .menu-scroll-wrapper {
-  --text-primary: rgba(0, 0, 0, 0.85);
+  --text-primary: rgba(0, 0, 0, 0.85);       /* 加深颜色，确保白色背景清晰 */
   --text-secondary: rgba(0, 0, 0, 0.75);
-  --text-hover: rgba(0, 0, 0, 0.95);
-  --accent-color: #0891B2;
+  --text-hover: #000000;                     /* 悬停纯黑 */
+  --accent-color: #0891B2;                   /* 青色 */
   --accent-light: #06B6D4;
   --bg-color: #ffffff;
   --bg-hover: rgba(128, 128, 128, 0.08);
   --bg-hover-strong: rgba(128, 128, 128, 0.15);
   --border-dashed: rgba(128, 128, 128, 0.3);
+  --card-bg-drag: #ffffff;                   /* 拖拽时的卡片背景 */
   
   width: 100%;
   display: flex;
@@ -232,21 +235,37 @@ function handleDelete(id) {
   background: transparent;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 🌙 暗色模式变量（通过 class 控制） */
+/* 🌙 暗色模式变量（容器级） */
 .menu-scroll-wrapper.dark-theme {
   --text-primary: rgba(255, 255, 255, 0.85);
   --text-secondary: rgba(255, 255, 255, 0.75);
-  --text-hover: rgba(255, 255, 255, 0.95);
+  --text-hover: #ffffff;
   --accent-color: #22D3EE;
   --accent-light: #67E8F9;
-  --bg-color: rgba(30, 30, 30, 0.95);
+  --bg-color: transparent;
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-hover-strong: rgba(255, 255, 255, 0.15);
   --border-dashed: rgba(255, 255, 255, 0.3);
+  --card-bg-drag: #1e1e1e;                   /* 暗色拖拽时的卡片背景 */
 }
+
+/* 🚀 关键修复：ITEM 级别的变量覆盖 
+  当拖拽发生时，元素被移动到 body，它会丢失 .menu-scroll-wrapper 的上下文。
+  所以我们把变量再次定义在 .menu-item.dark-mode-item 上。
+*/
+.menu-item.dark-mode-item {
+  --text-primary: rgba(255, 255, 255, 0.85);
+  --text-hover: #ffffff;
+  --accent-color: #22D3EE;
+  --card-bg-drag: #1f2937;  /* 强制深灰背景，防止变白 */
+  --bg-hover-strong: rgba(255, 255, 255, 0.15);
+}
+
+/* =========================================
+   2. 布局样式
+   ========================================= */
 
 .menu-outer {
   width: 100%;
@@ -258,10 +277,7 @@ function handleDelete(id) {
   scrollbar-width: none;
   scroll-behavior: smooth;
 }
-
-.menu-outer::-webkit-scrollbar { 
-  display: none; 
-}
+.menu-outer::-webkit-scrollbar { display: none; }
 
 .menu-list {
   display: flex;
@@ -274,13 +290,8 @@ function handleDelete(id) {
 }
 
 .menu-item-wrapper {
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-              opacity 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
   will-change: transform;
-}
-
-.menu-list.sortable-drag .menu-item-wrapper:not(.sortable-chosen):not(.sortable-ghost) {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .menu-item {
@@ -291,19 +302,13 @@ function handleDelete(id) {
   gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
-  
   font-size: 18px; 
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* 强制锁定颜色 - 多重保险 */
+  /* 应用变量 */
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  text-fill-color: var(--text-primary) !important;
-  forced-color-adjust: none !important;
-  print-color-adjust: exact !important;
-  -webkit-print-color-adjust: exact !important;
-  color-adjust: exact !important;
   
   cursor: pointer;
   padding: 10px 20px;
@@ -311,21 +316,15 @@ function handleDelete(id) {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
   user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  background: transparent !important;
+  background: transparent; /* 默认透明，拖拽时才加背景 */
 }
 
-.menu-item.is-edit-mode {
-  padding-right: 28px;
-}
+.menu-item.is-edit-mode { padding-right: 28px; }
 
 .menu-item:hover {
   background: var(--bg-hover) !important;
   color: var(--text-hover) !important;
   -webkit-text-fill-color: var(--text-hover) !important;
-  text-fill-color: var(--text-hover) !important;
-  opacity: 1;
 }
 
 .menu-item.is-pressing {
@@ -333,12 +332,10 @@ function handleDelete(id) {
   transform: scale(1.05);
 }
 
-/* 🎨 激活状态 */
+/* 激活状态 */
 .menu-item.active {
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  text-fill-color: var(--accent-color) !important;
-  opacity: 1;
   background: transparent !important;
   font-weight: 900; 
 }
@@ -355,294 +352,147 @@ function handleDelete(id) {
   box-shadow: 0 2px 8px var(--accent-color);
 }
 
+/* =========================================
+   3. 拖拽样式 (核心修复区)
+   ========================================= */
+
 .chosen-menu .menu-item {
   opacity: 0.8;
   cursor: grabbing;
 }
 
-.dragging-menu {
-  opacity: 1 !important;
-  cursor: grabbing !important;
+/* 拖拽时的样式：强制使用变量 */
+.dragging-menu, 
+.fallback-drag {
   z-index: 9999 !important;
 }
 
-.dragging-menu .menu-item {
-  transform: rotate(3deg) scale(1.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
-              0 5px 15px rgba(0, 0, 0, 0.2) !important;
-  background: var(--bg-color) !important;
-  opacity: 1 !important;
-  border: 2px solid var(--accent-color) !important;
+.dragging-menu .menu-item,
+.fallback-drag .menu-item {
+  /* 读取 dark-mode-item 上定义的 --card-bg-drag */
+  background: var(--card-bg-drag) !important; 
+  
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  text-fill-color: var(--text-primary) !important;
+  
+  /* 加上边框防止在同色背景下看不清 */
+  border: 2px solid var(--accent-color) !important;
+  
+  transform: rotate(3deg) scale(1.1);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
+  opacity: 1 !important;
 }
 
-.ghost-menu {
-  opacity: 0.5 !important;
-}
-
+/* 幽灵占位符样式 */
+.ghost-menu { opacity: 0.5 !important; }
 .ghost-menu .menu-item {
   background: var(--bg-hover-strong) !important;
   border: 2px dashed var(--accent-color) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  text-fill-color: var(--accent-color) !important;
   position: relative;
   overflow: hidden;
 }
 
-.ghost-menu .menu-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    var(--accent-color), 
-    transparent);
-  opacity: 0.2;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.ghost-menu .menu-item::after {
-  display: none;
-}
-
-.fallback-drag {
-  opacity: 1 !important;
-  cursor: grabbing !important;
-}
-
-.fallback-drag .menu-item {
-  transform: rotate(3deg) scale(1.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
-  background: var(--bg-color) !important;
-}
+/* =========================================
+   4. 其他组件样式
+   ========================================= */
 
 .press-indicator {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 5;
 }
-
-.progress-ring {
-  transform: rotate(-90deg);
-}
-
+.progress-ring { transform: rotate(-90deg); }
 .progress-ring-circle {
   stroke: var(--accent-color) !important;
-  stroke-dasharray: 63;
-  stroke-dashoffset: 63;
   transition: stroke-dashoffset 0.01s linear;
   stroke-linecap: round;
   filter: drop-shadow(0 0 3px var(--accent-color));
 }
 
-.menu-name {
-  position: relative;
-  z-index: 1;
-  color: inherit !important;
-  -webkit-text-fill-color: inherit !important;
-  text-fill-color: inherit !important;
-}
-
 .menu-del {
-  position: absolute; 
-  top: -4px; 
-  right: -4px;
-  background: #ff4d4f !important; 
-  color: white !important;
+  position: absolute; top: -4px; right: -4px;
+  background: #ff4d4f !important; color: white !important;
   -webkit-text-fill-color: white !important;
-  text-fill-color: white !important;
-  border: none;
-  border-radius: 50%; 
-  width: 20px; 
-  height: 20px;
-  font-size: 12px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  opacity: 0; 
-  transition: opacity 0.2s, transform 0.2s;
+  border: none; border-radius: 50%; 
+  width: 20px; height: 20px; font-size: 12px; 
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
   box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
-  z-index: 10;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
+  z-index: 10; cursor: pointer; padding: 0; line-height: 1;
 }
-
-.menu-item:hover .menu-del { 
-  opacity: 1; 
-  transform: scale(1); 
-}
-
-.menu-del:hover {
-  background: #ff7875 !important;
-  transform: scale(1.15) !important;
-}
-
-.menu-del:active {
-  transform: scale(0.95) !important;
-}
+.menu-item:hover .menu-del { opacity: 1; transform: scale(1); }
+.menu-del:hover { background: #ff7875 !important; transform: scale(1.15) !important; }
+.menu-del:active { transform: scale(0.95) !important; }
 
 .add-menu-btn {
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  min-width: 44px; 
-  width: 44px; 
-  height: 44px;
-  flex-shrink: 0;
-  margin-left: 10px;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; width: 44px; height: 44px;
+  flex-shrink: 0; margin-left: 10px;
   border: 2px dashed var(--border-dashed) !important;
   border-radius: 12px;
-  font-weight: bold;
-  font-size: 24px;
+  font-weight: bold; font-size: 24px;
   color: var(--text-secondary) !important;
   -webkit-text-fill-color: var(--text-secondary) !important;
-  text-fill-color: var(--text-secondary) !important;
-  cursor: pointer;
-  opacity: 0.6;
-  background: transparent !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0;
-  forced-color-adjust: none !important;
-  print-color-adjust: exact !important;
-  -webkit-print-color-adjust: exact !important;
+  cursor: pointer; opacity: 0.6; background: transparent !important;
+  transition: all 0.25s; padding: 0;
 }
-
 .add-menu-btn:hover {
   border-color: var(--accent-color) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  text-fill-color: var(--accent-color) !important;
   background: var(--bg-hover) !important;
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-.add-menu-btn:active {
-  transform: scale(0.95);
+  opacity: 1; transform: scale(1.05);
 }
 
 .sub-menu-outer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  overflow-x: auto;
-  overflow-y: hidden;
+  width: 100%; display: flex; justify-content: center;
+  overflow-x: auto; overflow-y: hidden;
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
-
-.sub-menu-outer::-webkit-scrollbar { 
-  display: none; 
-}
-
+.sub-menu-outer::-webkit-scrollbar { display: none; }
 .sub-menu-bar {
-  display: flex; 
-  flex-wrap: nowrap;
-  gap: 10px; 
-  padding: 5px 20px 15px; 
-  min-width: min-content;
+  display: flex; flex-wrap: nowrap; gap: 10px; 
+  padding: 5px 20px 15px; min-width: min-content;
 }
-
 .sub-menu-item {
-  flex-shrink: 0;
-  font-size: 14px; 
-  padding: 6px 16px;
+  flex-shrink: 0; font-size: 14px; padding: 6px 16px;
   border-radius: 20px; 
   background: var(--bg-hover) !important;
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  text-fill-color: var(--text-primary) !important;
-  opacity: 1;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-  font-weight: 600; 
-  white-space: nowrap;
-  border: none;
-  forced-color-adjust: none !important;
-  print-color-adjust: exact !important;
-  -webkit-print-color-adjust: exact !important;
+  opacity: 1; cursor: pointer;
+  transition: all 0.2s; font-weight: 600; 
+  white-space: nowrap; border: none;
 }
-
 .sub-menu-item:hover {
-  opacity: 1;
   color: var(--text-hover) !important;
   -webkit-text-fill-color: var(--text-hover) !important;
-  text-fill-color: var(--text-hover) !important;
   transform: translateY(-1px);
   background: var(--bg-hover-strong) !important;
 }
-
-.sub-menu-item:active {
-  transform: translateY(0);
-}
-
 .sub-menu-item.active {
   background: var(--bg-hover-strong) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  text-fill-color: var(--accent-color) !important;
   font-weight: 700;
   border: 1px solid var(--accent-color) !important;
-  opacity: 1;
 }
 
 @media (max-width: 768px) {
-  .menu-item {
-    font-size: 16px;
-    padding: 8px 16px;
-  }
-  
-  .menu-item.is-edit-mode {
-    padding-right: 24px;
-  }
-  
-  .sub-menu-item {
-    font-size: 13px;
-    padding: 5px 14px;
-  }
-  
-  .menu-del {
-    width: 18px;
-    height: 18px;
-    font-size: 11px;
-  }
+  .menu-item { font-size: 16px; padding: 8px 16px; }
+  .menu-item.is-edit-mode { padding-right: 24px; }
+  .sub-menu-item { font-size: 13px; padding: 5px 14px; }
 }
 
-.menu-list *,
-.menu-item *,
-.sub-menu-item *,
-.add-menu-btn * {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  forced-color-adjust: none !important;
-  print-color-adjust: exact !important;
-  -webkit-print-color-adjust: exact !important;
+.menu-list *, .menu-item *, .sub-menu-item * {
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
-
-.menu-item-wrapper,
-.dragging-menu,
-.ghost-menu {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+.menu-item-wrapper, .dragging-menu, .ghost-menu {
+  -webkit-transform: translateZ(0); transform: translateZ(0);
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
