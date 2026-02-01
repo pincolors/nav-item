@@ -1,5 +1,5 @@
 <template>
-  <div class="menu-scroll-wrapper">
+  <div class="menu-scroll-wrapper" :class="{ 'dark-theme': isDarkMode }">
     <div class="menu-outer" ref="menuOuterRef">
       <draggable 
         v-model="localMenus"
@@ -117,7 +117,8 @@ const props = defineProps({
   menus: { type: Array, required: true },
   activeId: [Number, String],
   activeSubMenuId: [Number, String],
-  isEditMode: { type: Boolean, default: false }
+  isEditMode: { type: Boolean, default: false },
+  isDarkMode: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['select', 'update:menus', 'add', 'delete']);
@@ -213,7 +214,7 @@ function handleDelete(id) {
 </script>
 
 <style scoped>
-/* 🔒 强制亮色模式变量 */
+/* 🎨 亮色模式变量（默认） */
 .menu-scroll-wrapper {
   --text-primary: rgba(0, 0, 0, 0.85);
   --text-secondary: rgba(0, 0, 0, 0.75);
@@ -223,16 +224,28 @@ function handleDelete(id) {
   --bg-color: #ffffff;
   --bg-hover: rgba(128, 128, 128, 0.08);
   --bg-hover-strong: rgba(128, 128, 128, 0.15);
+  --border-dashed: rgba(128, 128, 128, 0.3);
   
   width: 100%;
   display: flex;
   flex-direction: column;
   background: transparent;
   overflow: hidden;
-  
-  /* 移除强制亮色模式，让背景可以跟随系统 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* 🌙 暗色模式变量（通过 class 控制） */
+.menu-scroll-wrapper.dark-theme {
+  --text-primary: rgba(255, 255, 255, 0.85);
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-hover: rgba(255, 255, 255, 0.95);
+  --accent-color: #22D3EE;
+  --accent-light: #67E8F9;
+  --bg-color: rgba(30, 30, 30, 0.95);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-hover-strong: rgba(255, 255, 255, 0.15);
+  --border-dashed: rgba(255, 255, 255, 0.3);
 }
 
 .menu-outer {
@@ -283,7 +296,7 @@ function handleDelete(id) {
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* 强制亮色模式文字颜色 */
+  /* 使用 CSS 变量，自动适应主题 */
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
   forced-color-adjust: none;
@@ -311,7 +324,7 @@ function handleDelete(id) {
 }
 
 .menu-item.is-pressing {
-  background: rgba(6, 182, 212, 0.1);
+  background: var(--bg-hover-strong);
   transform: scale(1.05);
 }
 
@@ -333,7 +346,7 @@ function handleDelete(id) {
   height: 4px;
   border-radius: 4px;
   background: linear-gradient(90deg, var(--accent-light), var(--accent-color));
-  box-shadow: 0 2px 8px rgba(8, 145, 178, 0.5);
+  box-shadow: 0 2px 8px var(--accent-color);
 }
 
 .chosen-menu .menu-item {
@@ -351,7 +364,7 @@ function handleDelete(id) {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
               0 5px 15px rgba(0, 0, 0, 0.2);
-  background: var(--bg-color);
+  background: var(--bg-color) !important;
   opacity: 1 !important;
   border: 2px solid var(--accent-color);
   color: var(--text-primary) !important;
@@ -363,9 +376,7 @@ function handleDelete(id) {
 }
 
 .ghost-menu .menu-item {
-  background: linear-gradient(135deg, 
-    rgba(6, 182, 212, 0.1), 
-    rgba(8, 145, 178, 0.1)) !important;
+  background: var(--bg-hover-strong) !important;
   border: 2px dashed var(--accent-color) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
@@ -382,8 +393,9 @@ function handleDelete(id) {
   height: 100%;
   background: linear-gradient(90deg, 
     transparent, 
-    rgba(6, 182, 212, 0.3), 
+    var(--accent-color), 
     transparent);
+  opacity: 0.2;
   animation: shimmer 1.5s infinite;
 }
 
@@ -404,7 +416,7 @@ function handleDelete(id) {
 .fallback-drag .menu-item {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
-  background: var(--bg-color);
+  background: var(--bg-color) !important;
 }
 
 .press-indicator {
@@ -421,6 +433,7 @@ function handleDelete(id) {
 }
 
 .progress-ring-circle {
+  stroke: var(--accent-color);
   stroke-dasharray: 63;
   stroke-dashoffset: 63;
   transition: stroke-dashoffset 0.01s linear;
@@ -482,7 +495,7 @@ function handleDelete(id) {
   height: 44px;
   flex-shrink: 0;
   margin-left: 10px;
-  border: 2px dashed rgba(128,128,128,0.3);
+  border: 2px dashed var(--border-dashed);
   border-radius: 12px;
   font-weight: bold;
   font-size: 24px;
@@ -500,7 +513,7 @@ function handleDelete(id) {
   border-color: var(--accent-color);
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  background: rgba(6, 182, 212, 0.08);
+  background: var(--bg-hover);
   opacity: 1;
   transform: scale(1.05);
 }
@@ -561,97 +574,12 @@ function handleDelete(id) {
 }
 
 .sub-menu-item.active {
-  background: rgba(6, 182, 212, 0.15);
+  background: var(--bg-hover-strong);
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
   font-weight: 700;
-  border: 1px solid rgba(6, 182, 212, 0.35);
+  border: 1px solid var(--accent-color);
   opacity: 1;
-}
-
-/* 🌙 暗色模式 - 背景跟随系统，但文字强制为亮色 */
-@media (prefers-color-scheme: dark) {
-  .menu-scroll-wrapper {
-    /* 更新暗色模式的颜色变量 */
-    --text-primary: rgba(255, 255, 255, 0.85);
-    --text-secondary: rgba(255, 255, 255, 0.75);
-    --text-hover: rgba(255, 255, 255, 0.95);
-    --accent-color: #22D3EE;
-    --accent-light: #67E8F9;
-    --bg-color: rgba(30, 30, 30, 0.95); /* 深色背景 */
-    --bg-hover: rgba(255, 255, 255, 0.08);
-    --bg-hover-strong: rgba(255, 255, 255, 0.15);
-  }
-  
-  /* 菜单项悬停时的背景 */
-  .menu-item:hover {
-    background: var(--bg-hover);
-  }
-  
-  .menu-item.is-pressing {
-    background: rgba(34, 211, 238, 0.15);
-  }
-  
-  .menu-item.active::after {
-    background: linear-gradient(90deg, var(--accent-light), var(--accent-color));
-    box-shadow: 0 2px 8px rgba(34, 211, 238, 0.5);
-  }
-  
-  /* 拖拽时的卡片背景 */
-  .dragging-menu .menu-item {
-    background: var(--bg-color) !important; /* 使用深色背景 */
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6),
-                0 5px 15px rgba(34, 211, 238, 0.3);
-    border: 2px solid var(--accent-color);
-  }
-  
-  .fallback-drag .menu-item {
-    background: var(--bg-color) !important;
-  }
-  
-  /* 幽灵菜单 */
-  .ghost-menu .menu-item {
-    background: linear-gradient(135deg, 
-      rgba(34, 211, 238, 0.1), 
-      rgba(103, 232, 249, 0.1)) !important;
-    border: 2px dashed var(--accent-color) !important;
-  }
-  
-  .ghost-menu .menu-item::before {
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(34, 211, 238, 0.3), 
-      transparent);
-  }
-  
-  /* 进度环 */
-  .progress-ring-circle {
-    filter: drop-shadow(0 0 3px var(--accent-color));
-  }
-  
-  /* 二级菜单 */
-  .sub-menu-item {
-    background: var(--bg-hover);
-  }
-  
-  .sub-menu-item:hover {
-    background: var(--bg-hover-strong);
-  }
-  
-  .sub-menu-item.active {
-    background: rgba(34, 211, 238, 0.15);
-    border: 1px solid rgba(34, 211, 238, 0.3);
-  }
-  
-  /* 添加按钮 */
-  .add-menu-btn {
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-  }
-  
-  .add-menu-btn:hover {
-    border-color: var(--accent-color);
-    background: rgba(34, 211, 238, 0.1);
-  }
 }
 
 @media (max-width: 768px) {
