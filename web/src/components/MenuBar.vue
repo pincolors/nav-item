@@ -296,10 +296,14 @@ function handleDelete(id) {
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* 使用 CSS 变量，自动适应主题 */
+  /* 强制锁定颜色 - 多重保险 */
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  forced-color-adjust: none;
+  text-fill-color: var(--text-primary) !important;
+  forced-color-adjust: none !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+  color-adjust: exact !important;
   
   cursor: pointer;
   padding: 10px 20px;
@@ -309,7 +313,7 @@ function handleDelete(id) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  background: transparent;
+  background: transparent !important;
 }
 
 .menu-item.is-edit-mode {
@@ -317,14 +321,15 @@ function handleDelete(id) {
 }
 
 .menu-item:hover {
-  background: var(--bg-hover);
+  background: var(--bg-hover) !important;
   color: var(--text-hover) !important;
   -webkit-text-fill-color: var(--text-hover) !important;
+  text-fill-color: var(--text-hover) !important;
   opacity: 1;
 }
 
 .menu-item.is-pressing {
-  background: var(--bg-hover-strong);
+  background: var(--bg-hover-strong) !important;
   transform: scale(1.05);
 }
 
@@ -332,8 +337,9 @@ function handleDelete(id) {
 .menu-item.active {
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
+  text-fill-color: var(--accent-color) !important;
   opacity: 1;
-  background: transparent;
+  background: transparent !important;
   font-weight: 900; 
 }
 
@@ -345,7 +351,7 @@ function handleDelete(id) {
   right: 15px;
   height: 4px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--accent-light), var(--accent-color));
+  background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
   box-shadow: 0 2px 8px var(--accent-color);
 }
 
@@ -363,12 +369,13 @@ function handleDelete(id) {
 .dragging-menu .menu-item {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
-              0 5px 15px rgba(0, 0, 0, 0.2);
+              0 5px 15px rgba(0, 0, 0, 0.2) !important;
   background: var(--bg-color) !important;
   opacity: 1 !important;
-  border: 2px solid var(--accent-color);
+  border: 2px solid var(--accent-color) !important;
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
+  text-fill-color: var(--text-primary) !important;
 }
 
 .ghost-menu {
@@ -380,6 +387,7 @@ function handleDelete(id) {
   border: 2px dashed var(--accent-color) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
+  text-fill-color: var(--accent-color) !important;
   position: relative;
   overflow: hidden;
 }
@@ -433,7 +441,7 @@ function handleDelete(id) {
 }
 
 .progress-ring-circle {
-  stroke: var(--accent-color);
+  stroke: var(--accent-color) !important;
   stroke-dasharray: 63;
   stroke-dashoffset: 63;
   transition: stroke-dashoffset 0.01s linear;
@@ -446,6 +454,7 @@ function handleDelete(id) {
   z-index: 1;
   color: inherit !important;
   -webkit-text-fill-color: inherit !important;
+  text-fill-color: inherit !important;
 }
 
 .menu-del {
@@ -455,6 +464,7 @@ function handleDelete(id) {
   background: #ff4d4f !important; 
   color: white !important;
   -webkit-text-fill-color: white !important;
+  text-fill-color: white !important;
   border: none;
   border-radius: 50%; 
   width: 20px; 
@@ -495,25 +505,29 @@ function handleDelete(id) {
   height: 44px;
   flex-shrink: 0;
   margin-left: 10px;
-  border: 2px dashed var(--border-dashed);
+  border: 2px dashed var(--border-dashed) !important;
   border-radius: 12px;
   font-weight: bold;
   font-size: 24px;
   color: var(--text-secondary) !important;
   -webkit-text-fill-color: var(--text-secondary) !important;
+  text-fill-color: var(--text-secondary) !important;
   cursor: pointer;
   opacity: 0.6;
-  background: transparent;
+  background: transparent !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
-  forced-color-adjust: none;
+  forced-color-adjust: none !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
 }
 
 .add-menu-btn:hover {
-  border-color: var(--accent-color);
+  border-color: var(--accent-color) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  background: var(--bg-hover);
+  text-fill-color: var(--accent-color) !important;
+  background: var(--bg-hover) !important;
   opacity: 1;
   transform: scale(1.05);
 }
@@ -549,24 +563,28 @@ function handleDelete(id) {
   font-size: 14px; 
   padding: 6px 16px;
   border-radius: 20px; 
-  background: var(--bg-hover);
+  background: var(--bg-hover) !important;
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
+  text-fill-color: var(--text-primary) !important;
   opacity: 1;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
   font-weight: 600; 
   white-space: nowrap;
   border: none;
-  forced-color-adjust: none;
+  forced-color-adjust: none !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
 }
 
 .sub-menu-item:hover {
   opacity: 1;
   color: var(--text-hover) !important;
   -webkit-text-fill-color: var(--text-hover) !important;
+  text-fill-color: var(--text-hover) !important;
   transform: translateY(-1px);
-  background: var(--bg-hover-strong);
+  background: var(--bg-hover-strong) !important;
 }
 
 .sub-menu-item:active {
@@ -574,11 +592,12 @@ function handleDelete(id) {
 }
 
 .sub-menu-item.active {
-  background: var(--bg-hover-strong);
+  background: var(--bg-hover-strong) !important;
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
+  text-fill-color: var(--accent-color) !important;
   font-weight: 700;
-  border: 1px solid var(--accent-color);
+  border: 1px solid var(--accent-color) !important;
   opacity: 1;
 }
 
@@ -604,12 +623,18 @@ function handleDelete(id) {
   }
 }
 
-.menu-list * {
+.menu-list *,
+.menu-item *,
+.sub-menu-item *,
+.add-menu-btn * {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+  forced-color-adjust: none !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
 }
 
 .menu-item-wrapper,
