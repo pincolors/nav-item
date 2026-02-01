@@ -230,8 +230,7 @@ function handleDelete(id) {
   background: transparent;
   overflow: hidden;
   
-  /* 强制亮色模式 */
-  color-scheme: light !important;
+  /* 移除强制亮色模式，让背景可以跟随系统 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -245,7 +244,6 @@ function handleDelete(id) {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   scroll-behavior: smooth;
-  color-scheme: light !important;
 }
 
 .menu-outer::-webkit-scrollbar { 
@@ -260,7 +258,6 @@ function handleDelete(id) {
   padding: 0 20px 10px 20px;
   align-items: center;
   min-width: min-content;
-  color-scheme: light !important;
 }
 
 .menu-item-wrapper {
@@ -286,7 +283,7 @@ function handleDelete(id) {
   font-weight: 800; 
   font-family: system-ui, -apple-system, sans-serif;
   
-  /* 强制亮色模式颜色 */
+  /* 强制亮色模式文字颜色 */
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
   forced-color-adjust: none;
@@ -299,8 +296,7 @@ function handleDelete(id) {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  background: transparent !important;
-  color-scheme: light !important;
+  background: transparent;
 }
 
 .menu-item.is-edit-mode {
@@ -308,14 +304,14 @@ function handleDelete(id) {
 }
 
 .menu-item:hover {
-  background: var(--bg-hover) !important;
+  background: var(--bg-hover);
   color: var(--text-hover) !important;
   -webkit-text-fill-color: var(--text-hover) !important;
   opacity: 1;
 }
 
 .menu-item.is-pressing {
-  background: rgba(6, 182, 212, 0.1) !important;
+  background: rgba(6, 182, 212, 0.1);
   transform: scale(1.05);
 }
 
@@ -324,7 +320,7 @@ function handleDelete(id) {
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
   opacity: 1;
-  background: transparent !important;
+  background: transparent;
   font-weight: 900; 
 }
 
@@ -336,7 +332,7 @@ function handleDelete(id) {
   right: 15px;
   height: 4px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
+  background: linear-gradient(90deg, var(--accent-light), var(--accent-color));
   box-shadow: 0 2px 8px rgba(8, 145, 178, 0.5);
 }
 
@@ -355,7 +351,7 @@ function handleDelete(id) {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
               0 5px 15px rgba(0, 0, 0, 0.2);
-  background: var(--bg-color) !important;
+  background: var(--bg-color);
   opacity: 1 !important;
   border: 2px solid var(--accent-color);
   color: var(--text-primary) !important;
@@ -408,7 +404,7 @@ function handleDelete(id) {
 .fallback-drag .menu-item {
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
-  background: var(--bg-color) !important;
+  background: var(--bg-color);
 }
 
 .press-indicator {
@@ -486,7 +482,7 @@ function handleDelete(id) {
   height: 44px;
   flex-shrink: 0;
   margin-left: 10px;
-  border: 2px dashed rgba(128,128,128,0.3) !important;
+  border: 2px dashed rgba(128,128,128,0.3);
   border-radius: 12px;
   font-weight: bold;
   font-size: 24px;
@@ -494,17 +490,17 @@ function handleDelete(id) {
   -webkit-text-fill-color: var(--text-secondary) !important;
   cursor: pointer;
   opacity: 0.6;
-  background: transparent !important;
+  background: transparent;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
   forced-color-adjust: none;
 }
 
 .add-menu-btn:hover {
-  border-color: var(--accent-color) !important;
+  border-color: var(--accent-color);
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
-  background: rgba(6, 182, 212, 0.08) !important;
+  background: rgba(6, 182, 212, 0.08);
   opacity: 1;
   transform: scale(1.05);
 }
@@ -521,7 +517,6 @@ function handleDelete(id) {
   overflow-y: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  color-scheme: light !important;
 }
 
 .sub-menu-outer::-webkit-scrollbar { 
@@ -534,7 +529,6 @@ function handleDelete(id) {
   gap: 10px; 
   padding: 5px 20px 15px; 
   min-width: min-content;
-  color-scheme: light !important;
 }
 
 .sub-menu-item {
@@ -542,7 +536,7 @@ function handleDelete(id) {
   font-size: 14px; 
   padding: 6px 16px;
   border-radius: 20px; 
-  background: var(--bg-hover) !important;
+  background: var(--bg-hover);
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
   opacity: 1;
@@ -552,7 +546,6 @@ function handleDelete(id) {
   white-space: nowrap;
   border: none;
   forced-color-adjust: none;
-  color-scheme: light !important;
 }
 
 .sub-menu-item:hover {
@@ -560,7 +553,7 @@ function handleDelete(id) {
   color: var(--text-hover) !important;
   -webkit-text-fill-color: var(--text-hover) !important;
   transform: translateY(-1px);
-  background: var(--bg-hover-strong) !important;
+  background: var(--bg-hover-strong);
 }
 
 .sub-menu-item:active {
@@ -568,100 +561,96 @@ function handleDelete(id) {
 }
 
 .sub-menu-item.active {
-  background: rgba(6, 182, 212, 0.15) !important;
+  background: rgba(6, 182, 212, 0.15);
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
   font-weight: 700;
-  border: 1px solid rgba(6, 182, 212, 0.35) !important;
+  border: 1px solid rgba(6, 182, 212, 0.35);
   opacity: 1;
 }
 
-/* 🌙 即使系统切换到暗色模式，也强制保持亮色主题 */
+/* 🌙 暗色模式 - 背景跟随系统，但文字强制为亮色 */
 @media (prefers-color-scheme: dark) {
   .menu-scroll-wrapper {
-    color-scheme: light !important;
-    background: transparent !important;
+    /* 更新暗色模式的颜色变量 */
+    --text-primary: rgba(255, 255, 255, 0.85);
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-hover: rgba(255, 255, 255, 0.95);
+    --accent-color: #22D3EE;
+    --accent-light: #67E8F9;
+    --bg-color: rgba(30, 30, 30, 0.95); /* 深色背景 */
+    --bg-hover: rgba(255, 255, 255, 0.08);
+    --bg-hover-strong: rgba(255, 255, 255, 0.15);
   }
   
-  .menu-outer,
-  .menu-list,
-  .sub-menu-outer,
-  .sub-menu-bar {
-    color-scheme: light !important;
-    background: transparent !important;
-  }
-  
-  .menu-item {
-    color: var(--text-primary) !important;
-    -webkit-text-fill-color: var(--text-primary) !important;
-    background: transparent !important;
-  }
-  
+  /* 菜单项悬停时的背景 */
   .menu-item:hover {
-    color: var(--text-hover) !important;
-    -webkit-text-fill-color: var(--text-hover) !important;
-    background: var(--bg-hover) !important;
+    background: var(--bg-hover);
   }
   
-  .menu-item.active {
-    color: var(--accent-color) !important;
-    -webkit-text-fill-color: var(--accent-color) !important;
-    background: transparent !important;
+  .menu-item.is-pressing {
+    background: rgba(34, 211, 238, 0.15);
   }
   
   .menu-item.active::after {
-    background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
+    background: linear-gradient(90deg, var(--accent-light), var(--accent-color));
+    box-shadow: 0 2px 8px rgba(34, 211, 238, 0.5);
   }
   
-  .menu-name {
-    color: inherit !important;
-    -webkit-text-fill-color: inherit !important;
-  }
-  
+  /* 拖拽时的卡片背景 */
   .dragging-menu .menu-item {
-    background: white !important;
-    color: var(--text-primary) !important;
-    -webkit-text-fill-color: var(--text-primary) !important;
+    background: var(--bg-color) !important; /* 使用深色背景 */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6),
+                0 5px 15px rgba(34, 211, 238, 0.3);
+    border: 2px solid var(--accent-color);
   }
   
+  .fallback-drag .menu-item {
+    background: var(--bg-color) !important;
+  }
+  
+  /* 幽灵菜单 */
   .ghost-menu .menu-item {
-    color: var(--accent-color) !important;
-    -webkit-text-fill-color: var(--accent-color) !important;
+    background: linear-gradient(135deg, 
+      rgba(34, 211, 238, 0.1), 
+      rgba(103, 232, 249, 0.1)) !important;
+    border: 2px dashed var(--accent-color) !important;
   }
   
+  .ghost-menu .menu-item::before {
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(34, 211, 238, 0.3), 
+      transparent);
+  }
+  
+  /* 进度环 */
+  .progress-ring-circle {
+    filter: drop-shadow(0 0 3px var(--accent-color));
+  }
+  
+  /* 二级菜单 */
   .sub-menu-item {
-    background: var(--bg-hover) !important;
-    color: var(--text-primary) !important;
-    -webkit-text-fill-color: var(--text-primary) !important;
+    background: var(--bg-hover);
   }
   
   .sub-menu-item:hover {
-    background: var(--bg-hover-strong) !important;
-    color: var(--text-hover) !important;
-    -webkit-text-fill-color: var(--text-hover) !important;
+    background: var(--bg-hover-strong);
   }
   
   .sub-menu-item.active {
-    background: rgba(6, 182, 212, 0.15) !important;
-    color: var(--accent-color) !important;
-    -webkit-text-fill-color: var(--accent-color) !important;
+    background: rgba(34, 211, 238, 0.15);
+    border: 1px solid rgba(34, 211, 238, 0.3);
   }
   
+  /* 添加按钮 */
   .add-menu-btn {
-    color: var(--text-secondary) !important;
-    -webkit-text-fill-color: var(--text-secondary) !important;
-    background: transparent !important;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
   }
   
   .add-menu-btn:hover {
-    color: var(--accent-color) !important;
-    -webkit-text-fill-color: var(--accent-color) !important;
-  }
-  
-  .menu-del {
-    background: #ff4d4f !important;
-    color: white !important;
-    -webkit-text-fill-color: white !important;
+    border-color: var(--accent-color);
+    background: rgba(34, 211, 238, 0.1);
   }
 }
 
