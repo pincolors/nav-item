@@ -506,12 +506,30 @@ onMounted(async () => {
 .menu-wrapper { margin: 0 0 20px; }
 .search-section { padding: 0 20px 30px; display: flex; justify-content: center; }
 /* 内容区域样式：只需要保留 padding 等布局设置，内部 Grid 由组件接管 */
-.content-area { 
-  max-width: 100%;
-  padding: 0 16px 60px;
+/* 找到 .content-area 并替换为以下内容 */
+
+.content-area {
+  width: 100%;
+  /* 1. 限制最大宽度 (建议和你的 Header 保持一致，比如 1200px - 1440px) */
+  max-width: 1400px; 
+  
+  /* 2. 核心：上下 0，左右自动 => 实现居中 */
+  margin: 0 auto;    
+  
+  /* 3. 给电脑端增加更多留白 (比如左右各 50px) */
+  padding: 0 50px 60px; 
+  
   box-sizing: border-box;
-  overflow-x: hidden; /* 防止横向溢出 */
+  overflow-x: hidden;
 }
+
+/* 4. 适配手机端：手机屏幕小，不需要那么宽的留白 */
+@media (max-width: 768px) {
+  .content-area {
+    padding: 0 16px 60px; /* 手机保持小边距 */
+  }
+}
+
 
 /* Search */
 .search-container {
@@ -573,6 +591,7 @@ onMounted(async () => {
   color: #e0e0e0;
 }
 </style>
+
 
 
 
