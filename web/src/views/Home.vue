@@ -94,6 +94,7 @@
       <CardGrid 
         :cards="filteredCards" 
         :is-edit-mode="isLoggedIn"
+        :is-dark-mode="isDarkMode"
         @update:cards="handleCardSort"
         @edit="openEditModal"
         @delete="deleteCard"
@@ -572,5 +573,6 @@ onMounted(async () => {
   color: #e0e0e0;
 }
 </style>
+
 
 
