@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-container">
+  <div class="grid-container" :class="{ 'dark-theme': isDarkMode }">
     <draggable 
       :list="localCards" 
       item-key="id" 
@@ -42,10 +42,8 @@
             </div>
 
             <div class="card-icon-wrapper">
-              <!-- 🎨 骨架屏加载动画 -->
               <div v-if="loadingIcons[element.id]" class="icon-skeleton"></div>
               
-              <!-- 🖼️ 真实图标 -->
               <img 
                 v-else-if="!iconError[element.id]"
                 :src="getIconSrc(element)" 
@@ -57,7 +55,6 @@
                 :alt="element.title || element.name"
               />
               
-              <!-- 🔤 后备字母图标 -->
               <div v-else class="fallback-icon">
                 {{ (element.title || element.name || '?').charAt(0).toUpperCase() }}
               </div>
@@ -82,13 +79,16 @@
     </draggable>
   </div>
 </template>
+
 <script setup>
 import { ref, watch, reactive, onMounted } from 'vue';
 import draggable from 'vuedraggable';
 
 const props = defineProps({ 
   cards: Array, 
-  isEditMode: Boolean 
+  isEditMode: Boolean,
+  // 1️⃣ 新增：接收暗黑模式状态
+  isDarkMode: Boolean 
 });
 
 const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
@@ -96,7 +96,7 @@ const localCards = ref([...props.cards || []]);
 const iconError = reactive({});
 const loadingIcons = reactive({});
 const iconCache = new Map();
-const failedAttempts = reactive({}); // 🆕 记录失败次数
+const failedAttempts = reactive({}); 
 
 watch(() => props.cards, (newVal) => { 
   localCards.value = [...newVal || []];
@@ -112,7 +112,7 @@ function initializeLoadingStates() {
   if (!props.cards) return;
   props.cards.forEach(card => {
     loadingIcons[card.id] = true;
-    failedAttempts[card.id] = 0; // 初始化失败计数
+    failedAttempts[card.id] = 0; 
   });
 }
 
@@ -136,7 +136,6 @@ function preloadIcons(cards) {
     };
     
     img.onerror = () => {
-      // 🆕 自动尝试下一个 API
       handleIconError(card);
     };
   });
@@ -150,9 +149,7 @@ function handleClick(e) {
   if (props.isEditMode) e.preventDefault(); 
 }
 
-// 🚀 多级降级获取图标
 const getIconSrc = (site) => {
-  // 1️⃣ 优先使用用户自定义图标
   if (site.icon && site.icon.startsWith('http')) return site.icon;
   if (site.logo_url) return site.logo_url;
   
@@ -160,64 +157,40 @@ const getIconSrc = (site) => {
     const domain = new URL(site.url).hostname;
     const attemptCount = failedAttempts[site.id] || 0;
     
-    // 2️⃣ 多个 API 按顺序尝试
     const apis = [
-      // 第1次尝试：DuckDuckGo（最快，覆盖率85%）
       `https://icons.duckduckgo.com/ip3/${domain}.ico`,
-      
-      // 第2次尝试：Google（较慢但覆盖率95%）
       `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
-      
-      // 第3次尝试：Favicon Kit（覆盖率90%）
       `https://api.faviconkit.com/${domain}/128`,
-      
-      // 第4次尝试：Google 高清版（最全，但最慢）
       `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${site.url}&size=128`,
-      
-      // 第5次尝试：直接从网站获取
       `https://${domain}/favicon.ico`
     ];
     
-    // 根据失败次数返回不同的 API
     return apis[Math.min(attemptCount, apis.length - 1)];
-    
   } catch (e) {
     return '';
   }
 };
 
-// 🆕 图标加载失败处理（自动切换 API）
 const handleIconError = (card) => {
   const currentAttempt = failedAttempts[card.id] || 0;
-  
-  // 最多尝试 5 次（对应 5 个 API）
   if (currentAttempt < 4) {
     failedAttempts[card.id] = currentAttempt + 1;
-    
-    // 延迟一点点，避免同时发送太多请求
     setTimeout(() => {
-      // 触发重新加载（使用下一个 API）
       const newUrl = getIconSrc(card);
       const img = new Image();
       img.src = newUrl;
-      
       img.onload = () => {
         iconCache.set(newUrl, true);
         loadingIcons[card.id] = false;
-        // 🔄 强制组件重新渲染
         iconError[card.id] = false;
       };
-      
       img.onerror = () => {
-        handleIconError(card); // 递归尝试下一个
+        handleIconError(card); 
       };
-    }, 100 * (currentAttempt + 1)); // 递增延迟：100ms, 200ms, 300ms...
-    
+    }, 100 * (currentAttempt + 1)); 
   } else {
-    // 所有 API 都失败了，显示后备字母图标
     loadingIcons[card.id] = false;
     iconError[card.id] = true;
-    console.warn(`❌ 所有图标 API 都失败了: ${card.title || card.name}`);
   }
 };
 
@@ -231,12 +204,13 @@ const onImgError = (id) => {
     handleIconError(card);
   }
 };
-
 </script>
 
-
 <style scoped>
-/* ✨✨✨ 核心修改：确保手机端行间距正常 ✨✨✨ */
+/* 3️⃣ 核心修改：CSS 适配 */
+/* 修改逻辑：所有的暗黑样式，现在不仅支持 @media (系统级)，
+   还支持 .grid-container.dark-theme (手动级)
+*/
 
 .card-grid {
   display: grid;
@@ -244,7 +218,6 @@ const onImgError = (id) => {
   grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
   gap: 24px 20px;
   padding-bottom: 80px;
-  
   min-height: 100%; 
   overflow: visible; 
 }
@@ -261,30 +234,25 @@ const onImgError = (id) => {
   perspective: 1000px;
 }
 
-/* ✨✨✨ 增强立体感：白色模式下的卡片样式 ✨✨✨ */
+/* === 卡片基础样式 (亮色默认) === */
 .card-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  
   min-height: 140px;
   width: 100%;
   padding: 20px;
-  
-  /* 🎨 白色模式立体感：多层阴影 + 边框光泽 */
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  
   border-radius: 16px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.04),
     0 4px 16px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  
   color: inherit;
   text-decoration: none;
   position: relative;
@@ -292,7 +260,6 @@ const onImgError = (id) => {
   cursor: pointer;
   box-sizing: border-box;
   touch-action: pan-y;
-  
   background-image: linear-gradient(
     135deg,
     rgba(255, 255, 255, 1) 0%,
@@ -315,24 +282,36 @@ const onImgError = (id) => {
   );
 }
 
+/* === 🌙 暗黑模式适配 (支持系统级 OR 手动级) === */
 @media (prefers-color-scheme: dark) {
   .card-item {
     background: rgba(255, 255, 255, 0.06);
     background-image: none;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 
-      0 4px 6px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
-  
   .card-item:not(.is-dragging):hover {
     background: rgba(255, 255, 255, 0.1);
     background-image: none;
     border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 
-      0 12px 24px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
+}
+
+/* 👇👇👇 手动强制暗黑模式样式 (关键修复) 👇👇👇 */
+.grid-container.dark-theme .card-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+.grid-container.dark-theme .card-item:not(.is-dragging):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
 .card-item.is-dragging {
@@ -350,279 +329,153 @@ const onImgError = (id) => {
   box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 
-/* === 内容区域：增强图标容器立体感 === */
-
+/* === 图标容器 === */
 .card-icon-wrapper {
   width: 64px; 
   height: 64px; 
   margin-bottom: 12px;
   border-radius: 12px;
   overflow: hidden;
-  
-  background: linear-gradient(
-    135deg,
-    rgba(248, 250, 252, 1) 0%,
-    rgba(241, 245, 249, 1) 100%
-  );
-  
+  background: linear-gradient(135deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 1) 100%);
   padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.04);
   transition: all 0.3s;
-  position: relative; /* 🆕 为骨架屏定位 */
+  position: relative;
 }
 
 .card-item:hover .card-icon-wrapper {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(248, 250, 252, 1) 100%
-  );
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06), inset 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
+/* 🌙 系统级暗黑 */
 @media (prefers-color-scheme: dark) {
   .card-icon-wrapper {
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: 
-      0 2px 4px rgba(0, 0, 0, 0.2),
-      inset 0 1px 2px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.1);
   }
-  
   .card-item:hover .card-icon-wrapper {
     background: rgba(255, 255, 255, 0.12);
   }
 }
 
-/* 🆕 骨架屏加载动画 */
+/* 👇👇👇 手动级暗黑 (强制覆盖) */
+.grid-container.dark-theme .card-icon-wrapper {
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.grid-container.dark-theme .card-item:hover .card-icon-wrapper {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 骨架屏 */
 .icon-skeleton {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  background: linear-gradient(
-    90deg,
-    rgba(200, 200, 200, 0.2) 25%,
-    rgba(200, 200, 200, 0.3) 50%,
-    rgba(200, 200, 200, 0.2) 75%
-  );
+  position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px;
+  background: linear-gradient(90deg, rgba(200, 200, 200, 0.2) 25%, rgba(200, 200, 200, 0.3) 50%, rgba(200, 200, 200, 0.2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite ease-in-out;
   border-radius: 8px;
 }
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
 @media (prefers-color-scheme: dark) {
   .icon-skeleton {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 25%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 75%
-    );
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
   }
 }
-
-.real-icon {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s;
+/* 👇 手动暗黑骨架屏 */
+.grid-container.dark-theme .icon-skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%) !important;
 }
 
-.card-item:hover .real-icon {
-  transform: scale(1.1);
-}
+.real-icon { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
+.card-item:hover .real-icon { transform: scale(1.1); }
 
 .fallback-icon {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #00ff9d;
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: bold; color: #00ff9d;
   text-shadow: 0 2px 4px rgba(0, 255, 157, 0.3);
 }
 
 .card-title {
-  font-size: 14px;
-  font-weight: 700;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 4px;
-  color: rgba(0, 0, 0, 0.9);
+  font-size: 14px; font-weight: 700; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px; color: rgba(0, 0, 0, 0.9);
 }
-
 .card-desc {
-  font-size: 12px;
-  opacity: 0.6;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px; opacity: 0.6; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
-  .card-title {
-    color: rgba(255, 255, 255, 0.95);
-  }
-  .card-desc {
-    color: rgba(255, 255, 255, 0.6);
-  }
+  .card-title { color: rgba(255, 255, 255, 0.95); }
+  .card-desc { color: rgba(255, 255, 255, 0.6); }
 }
+/* 👇 手动暗黑字体 */
+.grid-container.dark-theme .card-title { color: rgba(255, 255, 255, 0.95) !important; }
+.grid-container.dark-theme .card-desc { color: rgba(255, 255, 255, 0.6) !important; }
 
-/* === 编辑模式控件 === */
+/* 控件 */
 .drag-indicator {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  opacity: 0.4;
+  position: absolute; top: 8px; left: 8px; opacity: 0.4;
   background: rgba(120, 120, 120, 0.2);
-  border-radius: 50%;
-  padding: 4px;
-  display: flex;
-  box-shadow: none;
-  pointer-events: none;
+  border-radius: 50%; padding: 4px; display: flex; box-shadow: none; pointer-events: none;
   color: rgba(0, 0, 0, 0.5);
 }
-
 @media (prefers-color-scheme: dark) {
-  .drag-indicator {
-    background: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.5);
-  }
+  .drag-indicator { background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.5); }
 }
+.grid-container.dark-theme .drag-indicator { background: rgba(255, 255, 255, 0.12) !important; color: rgba(255, 255, 255, 0.5) !important; }
 
 .action-buttons {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: flex !important;
-  gap: 6px;
-  z-index: 100;
-  pointer-events: auto;
+  position: absolute; top: 6px; right: 6px; display: flex !important; gap: 6px; z-index: 100; pointer-events: auto;
 }
-
 .icon-btn {
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: none;
-  flex-shrink: 0;
+  background: transparent; border: none; border-radius: 8px; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;
+  box-shadow: none; flex-shrink: 0;
 }
-
-.icon-btn:hover {
-  transform: scale(1.15);
-}
-
-.icon-btn:active {
-  transform: scale(0.9);
-}
-
-.edit-btn {
-  color: #2196F3;
-}
-
-.edit-btn:hover { 
-  background: rgba(33, 150, 243, 0.1);
-  color: #1565C0;
-}
-
-.del-btn {
-  color: #F44336;
-}
-
-.del-btn:hover { 
-  background: rgba(244, 67, 54, 0.1);
-  color: #C62828;
-}
+.icon-btn:hover { transform: scale(1.15); }
+.icon-btn:active { transform: scale(0.9); }
+.edit-btn { color: #2196F3; }
+.edit-btn:hover { background: rgba(33, 150, 243, 0.1); color: #1565C0; }
+.del-btn { color: #F44336; }
+.del-btn:hover { background: rgba(244, 67, 54, 0.1); color: #C62828; }
 
 @media (prefers-color-scheme: dark) {
-  .icon-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-  
-  .icon-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-1px) scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  .edit-btn {
-    color: #64B5F6;
-  }
-  
-  .edit-btn:hover {
-    background: rgba(33, 150, 243, 0.25);
-    color: #90CAF9;
-    border-color: #42A5F5;
-  }
-  
-  .del-btn {
-    color: #EF5350;
-  }
-  
-  .del-btn:hover {
-    background: rgba(244, 67, 54, 0.25);
-    color: #E57373;
-    border-color: #EF5350;
-  }
+  .icon-btn { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); }
+  .icon-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px) scale(1.1); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); }
+  .edit-btn { color: #64B5F6; }
+  .edit-btn:hover { background: rgba(33, 150, 243, 0.25); color: #90CAF9; border-color: #42A5F5; }
+  .del-btn { color: #EF5350; }
+  .del-btn:hover { background: rgba(244, 67, 54, 0.25); color: #E57373; border-color: #EF5350; }
 }
 
-.add-card {
-  border: 2px dashed rgba(0, 0, 0, 0.15);
-  background: transparent;
-  box-shadow: none;
+/* 👇 手动暗黑按钮 */
+.grid-container.dark-theme .icon-btn { 
+  background: rgba(255, 255, 255, 0.08) !important; 
+  border: 1px solid rgba(255, 255, 255, 0.12) !important; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important; 
 }
+.grid-container.dark-theme .icon-btn:hover { 
+  background: rgba(255, 255, 255, 0.15) !important; 
+}
+.grid-container.dark-theme .edit-btn { color: #64B5F6 !important; }
+.grid-container.dark-theme .del-btn { color: #EF5350 !important; }
 
-.add-card:hover {
-  border-color: #00ff9d;
-  background: rgba(0, 255, 157, 0.05);
-  box-shadow: 
-    0 4px 12px rgba(0, 255, 157, 0.1),
-    inset 0 1px 0 rgba(0, 255, 157, 0.1);
-}
+.add-card { border: 2px dashed rgba(0, 0, 0, 0.15); background: transparent; box-shadow: none; }
+.add-card:hover { border-color: #00ff9d; background: rgba(0, 255, 157, 0.05); box-shadow: 0 4px 12px rgba(0, 255, 157, 0.1), inset 0 1px 0 rgba(0, 255, 157, 0.1); }
 
 @media (prefers-color-scheme: dark) {
-  .add-card {
-    border-color: rgba(255, 255, 255, 0.2);
-  }
+  .add-card { border-color: rgba(255, 255, 255, 0.2); }
 }
+.grid-container.dark-theme .add-card { border-color: rgba(255, 255, 255, 0.2) !important; }
 
-.add-icon {
-  font-size: 32px;
-  color: #00ff9d;
-  margin-bottom: 0;
-  text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
-}
+.add-icon { font-size: 32px; color: #00ff9d; margin-bottom: 0; text-shadow: 0 2px 8px rgba(0, 255, 157, 0.3); }
 </style>
