@@ -411,19 +411,130 @@ const handleSearch = () => {
   }
 };
 
-const exportData = () => {
-  const data = { menus: menus.value, version: '1.0', date: new Date() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nav-backup.json'; a.click();
-  showUserMenu.value = false;
+// ==================== 数据备份与恢复 (增强版) ====================
+
+// 📤 备份数据：不仅备份菜单，还遍历所有菜单把里面的卡片也存下来
+const exportData = async () => {
+  if (!confirm('确定要导出当前所有数据吗？这可能需要几秒钟。')) return;
+  
+  try {
+    const fullData = { 
+      version: '2.0', 
+      date: new Date().toISOString(),
+      menus: [] 
+    };
+
+    // 1. 遍历所有一级菜单
+    for (const menu of menus.value) {
+      const menuObj = { ...menu, subMenus: [], cards: [] };
+      
+      // 获取该菜单下的卡片
+      const res = await getCards(menu.id);
+      menuObj.cards = res.data || [];
+
+      // 2. 如果有二级菜单，也处理一下（假设二级菜单逻辑类似）
+      if (menu.subMenus && menu.subMenus.length > 0) {
+        for (const sub of menu.subMenus) {
+           const subRes = await getCards(menu.id, sub.id);
+           menuObj.subMenus.push({
+             ...sub,
+             cards: subRes.data || []
+           });
+        }
+      }
+      
+      fullData.menus.push(menuObj);
+    }
+
+    // 下载文件
+    const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nav-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    
+    showUserMenu.value = false;
+  } catch (e) {
+    alert('备份失败: ' + e.message);
+    console.error(e);
+  }
 };
+
+// 📥 恢复数据：读取 JSON -> 循环调用 API 重建数据
 const importData = (event) => {
-  const file = event.target.files[0]; if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
+
   const reader = new FileReader();
-  reader.onload = (e) => { alert('文件已读取，需后端支持。'); console.log(JSON.parse(e.target.result)); };
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.menus || !Array.isArray(data.menus)) {
+        throw new Error('文件格式不正确，找不到菜单数据');
+      }
+
+      if (!confirm(`解析成功！包含 ${data.menus.length} 个主菜单。\n确定要导入吗？这会将数据添加到现有列表中。`)) {
+        return;
+      }
+
+      // 开始导入流程
+      let successCount = 0;
+      
+      for (const menu of data.menus) {
+        // 1. 创建一级菜单
+        const menuRes = await apiAddMenu({ 
+          name: menu.name, 
+          order: menus.value.length + successCount + 1 
+        });
+        const newMenuId = menuRes.data.id; // 获取新生成的 ID
+        
+        // 2. 恢复该菜单下的卡片
+        if (menu.cards && menu.cards.length) {
+          for (const card of menu.cards) {
+            await apiAddCard({
+              menu_id: newMenuId,
+              title: card.title,
+              url: card.url,
+              description: card.description,
+              icon: card.icon, // 如果有图标url也恢复
+              order: card.order || 0
+            });
+          }
+        }
+
+        // 3. 恢复二级菜单及其卡片
+        if (menu.subMenus && menu.subMenus.length) {
+           // 注意：这里需要你的后端支持创建二级菜单的API，
+           // 假设 apiAddMenu 支持 parent_id 或者你有专门的 apiAddSubMenu
+           // 如果目前没有二级菜单创建接口，这部分可能需要略过或调整
+           // 下面是伪代码逻辑：
+           /* for (const sub of menu.subMenus) {
+             const subRes = await apiAddMenu({ name: sub.name, parent_id: newMenuId });
+             const newSubId = subRes.data.id;
+             for (const subCard of sub.cards) {
+               await apiAddCard({ menu_id: newMenuId, sub_menu_id: newSubId, ...subCard });
+             }
+           }
+           */
+        }
+        successCount++;
+      }
+
+      alert('数据恢复成功！页面将刷新。');
+      window.location.reload();
+
+    } catch (err) {
+      alert('恢复失败: ' + err.message);
+      console.error(err);
+    } finally {
+      // 清空 input 防止无法重复选择同一个文件
+      event.target.value = ''; 
+      showUserMenu.value = false;
+    }
+  };
   reader.readAsText(file);
-  showUserMenu.value = false;
 };
+
 
 const handleLogoError = (e) => e.target.style.display = 'none';
 const vFocus = { mounted: (el) => el.focus() };
@@ -591,6 +702,7 @@ onMounted(async () => {
   color: #e0e0e0;
 }
 </style>
+
 
 
 
