@@ -218,8 +218,8 @@ function handleDelete(id) {
 
 /* 默认（亮色）模式变量 */
 .menu-scroll-wrapper {
-  --text-primary: rgba(0, 0, 0, 0.85);       /* 加深颜色，确保白色背景清晰 */
-  --text-secondary: rgba(0, 0, 0, 0.75);
+  --text-primary: rgba(0, 0, 0, 0.75);       /* 加深颜色，确保白色背景清晰 */
+  --text-secondary: rgba(0, 0, 0, 0.65);
   --text-hover: #000000;                     /* 悬停纯黑 */
   --accent-color: #0891B2;                   /* 青色 */
   --accent-light: #06B6D4;
@@ -303,7 +303,7 @@ function handleDelete(id) {
   flex-shrink: 0;
   white-space: nowrap;
   font-size: 18px; 
-  font-weight: 800; 
+  font-weight: 700; 
   font-family: system-ui, -apple-system, sans-serif;
   
   /* 应用变量 */
@@ -337,7 +337,7 @@ function handleDelete(id) {
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
   background: transparent !important;
-  font-weight: 900; 
+  font-weight: 800; 
 }
 
 .menu-item.active::after {
@@ -496,3 +496,4 @@ function handleDelete(id) {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
+
