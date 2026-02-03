@@ -423,7 +423,7 @@ function handleDelete(id) {
 
 /* 删除按钮 (红色) */
 .menu-del {
-  position: absolute; top: -4px; right: -4px;
+  position: absolute; top: -4px; right: -2px;
   background: #ff4d4f !important; color: white !important;
   -webkit-text-fill-color: white !important;
   border: none; border-radius: 50%; 
@@ -436,7 +436,7 @@ function handleDelete(id) {
 
 /* 【新增】编辑按钮 (蓝色) */
 .menu-edit {
-  position: absolute; top: -4px; left: -4px;
+  position: absolute; top: -4px; left: -2px;
   background: #3b82f6 !important; color: white !important;
   -webkit-text-fill-color: white !important;
   border: none; border-radius: 50%; 
@@ -536,5 +536,6 @@ function handleDelete(id) {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
+
 
 
