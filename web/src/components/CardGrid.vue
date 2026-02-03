@@ -11,6 +11,7 @@
       :animation="200"
       :force-fallback="true"
       :scroll="true"
+      :PREVENT-ON-FILTER="FALSE"
     >
       <template #item="{ element }">
         <div class="card-wrapper">
@@ -334,3 +335,4 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
