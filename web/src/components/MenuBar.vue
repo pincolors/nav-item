@@ -45,6 +45,19 @@
               @mouseup="handleMouseUp"
               @mouseleave="handleMouseUp"
             >
+              <button 
+                v-if="isEditMode" 
+                class="menu-edit" 
+                @click.stop="handleRename(menu)"
+                @touchstart.stop
+                type="button"
+                aria-label="重命名菜单"
+              >
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+              </button>
+
               <span class="menu-name">{{ menu.name }}</span>
               
               <div v-if="isEditMode && pressingId === menu.id" class="press-indicator">
@@ -142,6 +155,19 @@ function handleClick(menu) {
   emit('select', menu);
 }
 
+// 【新增】处理重命名逻辑
+function handleRename(menu) {
+  const newName = prompt('重命名菜单', menu.name);
+  if (newName === null || newName.trim() === '') return;
+  
+  const newMenus = [...props.menus];
+  const target = newMenus.find(m => m.id === menu.id);
+  if (target) {
+    target.name = newName.trim();
+    emit('update:menus', newMenus);
+  }
+}
+
 function handleTouchStart(menu) {
   if (!props.isEditMode) return;
   startPressing(menu);
@@ -216,18 +242,17 @@ function handleDelete(id) {
    1. 定义 CSS 变量
    ========================================= */
 
-/* 默认（亮色）模式变量 */
 .menu-scroll-wrapper {
-  --text-primary: rgba(0, 0, 0, 0.75);       /* 加深颜色，确保白色背景清晰 */
+  --text-primary: rgba(0, 0, 0, 0.75);
   --text-secondary: rgba(0, 0, 0, 0.65);
-  --text-hover: #000000;                     /* 悬停纯黑 */
-  --accent-color: #0891B2;                   /* 青色 */
+  --text-hover: #000000;
+  --accent-color: #0891B2;
   --accent-light: #06B6D4;
   --bg-color: #ffffff;
   --bg-hover: rgba(128, 128, 128, 0.08);
   --bg-hover-strong: rgba(128, 128, 128, 0.15);
   --border-dashed: rgba(128, 128, 128, 0.3);
-  --card-bg-drag: #ffffff;                   /* 拖拽时的卡片背景 */
+  --card-bg-drag: #ffffff;
   
   width: 100%;
   display: flex;
@@ -237,7 +262,6 @@ function handleDelete(id) {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 🌙 暗色模式变量（容器级） */
 .menu-scroll-wrapper.dark-theme {
   --text-primary: rgba(255, 255, 255, 0.85);
   --text-secondary: rgba(255, 255, 255, 0.75);
@@ -248,18 +272,14 @@ function handleDelete(id) {
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-hover-strong: rgba(255, 255, 255, 0.15);
   --border-dashed: rgba(255, 255, 255, 0.3);
-  --card-bg-drag: #1e1e1e;                   /* 暗色拖拽时的卡片背景 */
+  --card-bg-drag: #1e1e1e;
 }
 
-/* 🚀 关键修复：ITEM 级别的变量覆盖 
-  当拖拽发生时，元素被移动到 body，它会丢失 .menu-scroll-wrapper 的上下文。
-  所以我们把变量再次定义在 .menu-item.dark-mode-item 上。
-*/
 .menu-item.dark-mode-item {
   --text-primary: rgba(255, 255, 255, 0.85);
   --text-hover: #ffffff;
   --accent-color: #22D3EE;
-  --card-bg-drag: #1f2937;  /* 强制深灰背景，防止变白 */
+  --card-bg-drag: #1f2937;
   --bg-hover-strong: rgba(255, 255, 255, 0.15);
 }
 
@@ -305,21 +325,22 @@ function handleDelete(id) {
   font-size: 18px; 
   font-weight: 700; 
   font-family: system-ui, -apple-system, sans-serif;
-  
-  /* 应用变量 */
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  
   cursor: pointer;
   padding: 10px 20px;
   border-radius: 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
   user-select: none;
-  background: transparent; /* 默认透明，拖拽时才加背景 */
+  background: transparent;
 }
 
-.menu-item.is-edit-mode { padding-right: 28px; }
+/* 【修改】编辑模式下的内边距，给左右按钮留位置 */
+.menu-item.is-edit-mode { 
+  padding-right: 28px; 
+  padding-left: 28px; 
+}
 
 .menu-item:hover {
   background: var(--bg-hover) !important;
@@ -332,7 +353,7 @@ function handleDelete(id) {
   transform: scale(1.05);
 }
 
-/* 激活状态 */
+/* 【修改】激活状态 - 下划线变细 */
 .menu-item.active {
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
@@ -343,47 +364,36 @@ function handleDelete(id) {
 .menu-item.active::after {
   content: '';
   position: absolute;
-  bottom: 0px; 
+  /* 稍微上移，悬浮感更好 */
+  bottom: 2px; 
   left: 15px; 
   right: 15px;
-  height: 4px;
-  border-radius: 4px;
+  /* 变细为 2px */
+  height: 2px;
+  border-radius: 2px;
   background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
-  box-shadow: 0 2px 8px var(--accent-color);
+  box-shadow: 0 1px 4px var(--accent-color);
 }
 
 /* =========================================
-   3. 拖拽样式 (核心修复区)
+   3. 拖拽与按钮样式
    ========================================= */
 
-.chosen-menu .menu-item {
-  opacity: 0.8;
-  cursor: grabbing;
-}
+.chosen-menu .menu-item { opacity: 0.8; cursor: grabbing; }
 
-/* 拖拽时的样式：强制使用变量 */
-.dragging-menu, 
-.fallback-drag {
-  z-index: 9999 !important;
-}
+.dragging-menu, .fallback-drag { z-index: 9999 !important; }
 
 .dragging-menu .menu-item,
 .fallback-drag .menu-item {
-  /* 读取 dark-mode-item 上定义的 --card-bg-drag */
   background: var(--card-bg-drag) !important; 
-  
   color: var(--text-primary) !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  
-  /* 加上边框防止在同色背景下看不清 */
   border: 2px solid var(--accent-color) !important;
-  
   transform: rotate(3deg) scale(1.1);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
   opacity: 1 !important;
 }
 
-/* 幽灵占位符样式 */
 .ghost-menu { opacity: 0.5 !important; }
 .ghost-menu .menu-item {
   background: var(--bg-hover-strong) !important;
@@ -395,15 +405,13 @@ function handleDelete(id) {
 }
 
 /* =========================================
-   4. 其他组件样式
+   4. 按钮样式 (新增编辑按钮)
    ========================================= */
 
 .press-indicator {
-  position: absolute;
-  top: 50%; left: 50%;
+  position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 5;
+  pointer-events: none; z-index: 5;
 }
 .progress-ring { transform: rotate(-90deg); }
 .progress-ring-circle {
@@ -413,6 +421,7 @@ function handleDelete(id) {
   filter: drop-shadow(0 0 3px var(--accent-color));
 }
 
+/* 删除按钮 (红色) */
 .menu-del {
   position: absolute; top: -4px; right: -4px;
   background: #ff4d4f !important; color: white !important;
@@ -424,9 +433,46 @@ function handleDelete(id) {
   box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
   z-index: 10; cursor: pointer; padding: 0; line-height: 1;
 }
-.menu-item:hover .menu-del { opacity: 1; transform: scale(1); }
+
+/* 【新增】编辑按钮 (蓝色) */
+.menu-edit {
+  position: absolute; top: -4px; left: -4px;
+  background: #3b82f6 !important; color: white !important;
+  -webkit-text-fill-color: white !important;
+  border: none; border-radius: 50%; 
+  width: 20px; height: 20px; 
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  z-index: 10; cursor: pointer; padding: 0; line-height: 1;
+}
+
+/* 悬停时显示按钮 */
+.menu-item:hover .menu-del,
+.menu-item:hover .menu-edit { opacity: 1; transform: scale(1); }
+
 .menu-del:hover { background: #ff7875 !important; transform: scale(1.15) !important; }
 .menu-del:active { transform: scale(0.95) !important; }
+
+.menu-edit:hover { background: #2563eb !important; transform: scale(1.15) !important; }
+.menu-edit:active { transform: scale(0.95) !important; }
+
+/* 手机端适配：编辑模式下常显按钮 */
+@media (max-width: 768px) {
+  .menu-item { font-size: 16px; padding: 8px 16px; }
+  .menu-item.is-edit-mode { 
+    padding-right: 24px; 
+    padding-left: 24px; 
+  }
+  .sub-menu-item { font-size: 13px; padding: 5px 14px; }
+  
+  /* 强制显示 */
+  .menu-item.is-edit-mode .menu-del,
+  .menu-item.is-edit-mode .menu-edit {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+  }
+}
 
 .add-menu-btn {
   display: flex; align-items: center; justify-content: center;
@@ -482,12 +528,6 @@ function handleDelete(id) {
   border: 1px solid var(--accent-color) !important;
 }
 
-@media (max-width: 768px) {
-  .menu-item { font-size: 16px; padding: 8px 16px; }
-  .menu-item.is-edit-mode { padding-right: 24px; }
-  .sub-menu-item { font-size: 13px; padding: 5px 14px; }
-}
-
 .menu-list *, .menu-item *, .sub-menu-item * {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
@@ -496,4 +536,3 @@ function handleDelete(id) {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
-
