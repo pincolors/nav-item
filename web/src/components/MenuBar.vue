@@ -303,7 +303,7 @@ function handleDelete(id) {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: 4px;
   padding: 0 20px 10px 20px;
   align-items: center;
   min-width: min-content;
@@ -536,4 +536,5 @@ function handleDelete(id) {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
+
 
