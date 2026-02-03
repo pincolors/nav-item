@@ -242,7 +242,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   /* 增加内边距：这12px的透明区域内，手指按住都不会触发拖动 */
   padding: 12px; 
   display: flex !important; 
-  gap: 12px; 
+  gap: 6px; 
   z-index: 20; 
   /* 允许点击，配合 draggable filter=".action-buttons" 使用 */
   pointer-events: auto; 
@@ -340,6 +340,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
 
