@@ -7,7 +7,7 @@
       :disabled="!isEditMode"
       @end="onDragEnd"
       ghost-class="ghost"
-      filter=".action-buttons"
+      filter=".action-buttons" 
       :animation="200"
       :force-fallback="true"
       :scroll="true"
@@ -81,7 +81,7 @@ import draggable from 'vuedraggable';
 const props = defineProps({ 
   cards: Array, 
   isEditMode: Boolean,
-  isDarkMode: Boolean // 接收父组件传来的信号
+  isDarkMode: Boolean
 });
 
 const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
@@ -101,24 +101,39 @@ onMounted(() => {
   preloadIcons(props.cards);
 });
 
-// ... (逻辑代码部分保持不变，为了节省篇幅略去，直接用你之前的逻辑即可) ...
-// 为了确保代码完整性，以下是核心逻辑函数的简写，你可以直接保留原来的逻辑
+// 逻辑函数保持不变
 function initializeLoadingStates() { if (!props.cards) return; props.cards.forEach(c => { loadingIcons[c.id] = true; failedAttempts[c.id] = 0; }); }
 function onDragEnd() { emit('update:cards', localCards.value); }
 function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
-const getIconSrc = (site) => { /* 保持你原来的多级图标获取逻辑 */ if(site.icon && site.icon.startsWith('http')) return site.icon; if(site.logo_url) return site.logo_url; try { const domain = new URL(site.url).hostname; return `https://icons.duckduckgo.com/ip3/${domain}.ico`; } catch(e){ return ''; } };
-// 注意：如果你使用了之前增强版的图标获取逻辑，请继续保留，这里只是演示
-function preloadIcons(cards) { /* 保持原逻辑 */ cards?.forEach(c => { const src = getIconSrc(c); if(!src){loadingIcons[c.id]=false;return;} const img=new Image(); img.src=src; img.onload=()=>{loadingIcons[c.id]=false}; img.onerror=()=>{loadingIcons[c.id]=false; iconError[c.id]=true;} }) }
+
+const getIconSrc = (site) => { 
+  if(site.icon && site.icon.startsWith('http')) return site.icon; 
+  if(site.logo_url) return site.logo_url; 
+  try { 
+    const domain = new URL(site.url).hostname; 
+    return `https://icons.duckduckgo.com/ip3/${domain}.ico`; 
+  } catch(e){ return ''; } 
+};
+
+function preloadIcons(cards) { 
+  cards?.forEach(c => { 
+    const src = getIconSrc(c); 
+    if(!src){loadingIcons[c.id]=false;return;} 
+    const img=new Image(); 
+    img.src=src; 
+    img.onload=()=>{loadingIcons[c.id]=false}; 
+    img.onerror=()=>{loadingIcons[c.id]=false; iconError[c.id]=true;} 
+  }) 
+}
+
 const onImgLoad = (id) => { loadingIcons[id] = false; };
 const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 </script>
 
 <style scoped>
 /* =========================================
-   1. 定义 CSS 变量 (核心修复)
-   这样写，不管系统是亮还是暗，只要 class 变了，颜色就会强制变过来
+   1. 定义 CSS 变量
    ========================================= */
-
 .grid-container {
   /* ☀️ 默认亮色模式变量 */
   --card-bg: rgba(255, 255, 255, 0.95);
@@ -140,7 +155,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   --btn-hover: rgba(0,0,0,0.05);
 }
 
-/* 🌙 手动暗色模式变量 (强制覆盖) */
+/* 🌙 暗色模式变量 */
 .grid-container.dark-theme {
   --card-bg: rgba(255, 255, 255, 0.06);
   --card-bg-hover: rgba(255, 255, 255, 0.1);
@@ -162,7 +177,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 }
 
 /* =========================================
-   2. 应用变量 (不用再写 @media 了)
+   2. 基础布局
    ========================================= */
 
 .card-grid {
@@ -184,13 +199,10 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 .card-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; min-height: 140px; width: 100%; padding: 20px;
-  
-  /* 应用变量 */
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
   color: var(--text-title);
-  
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-radius: 16px; position: relative;
   transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -200,10 +212,9 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 .card-item:not(.is-dragging):hover {
   transform: translateY(-8px) scale(1.03);
   background: var(--card-bg-hover);
-  border-color: rgba(0, 255, 157, 0.3); /* 保持青色高亮 */
+  border-color: rgba(0, 255, 157, 0.3);
   box-shadow: var(--card-shadow-hover);
 }
-/* 暗色模式下的 Hover 边框微调 */
 .grid-container.dark-theme .card-item:not(.is-dragging):hover {
   border-color: rgba(255, 255, 255, 0.3);
 }
@@ -212,6 +223,62 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   cursor: grabbing; opacity: 0.9;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
 }
+
+/* =========================================
+   3. 修复移动端点击与拖动冲突 (核心修改)
+   ========================================= */
+
+/* 定义右上角的防拖动安全区 */
+.action-buttons { 
+  position: absolute; 
+  top: 0; 
+  right: 0; 
+  /* 增加内边距：这12px的透明区域内，手指按住都不会触发拖动 */
+  padding: 12px; 
+  display: flex !important; 
+  gap: 12px; 
+  z-index: 20; 
+  /* 允许点击，配合 draggable filter=".action-buttons" 使用 */
+  pointer-events: auto; 
+}
+
+.icon-btn {
+  position: relative; /* 为伪元素定位提供参考 */
+  background: var(--btn-bg); 
+  border: 1px solid var(--btn-border);
+  border-radius: 8px; 
+  width: 32px; 
+  height: 32px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  transition: all 0.2s ease; 
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent; /* 去除手机端点击背景高亮 */
+}
+
+/* 使用伪元素扩大按钮点击热区 (Invisible Hit Box) */
+.icon-btn::after {
+  content: '';
+  position: absolute;
+  /* 向四周扩大 10px，让实际点击范围变大 */
+  top: -10px; 
+  bottom: -10px; 
+  left: -10px; 
+  right: -10px;
+  border-radius: 50%;
+}
+
+.icon-btn:hover { background: var(--btn-hover); transform: scale(1.15); }
+.edit-btn { color: #2196F3; }
+.del-btn { color: #F44336; }
+.grid-container.dark-theme .edit-btn { color: #64B5F6; }
+.grid-container.dark-theme .del-btn { color: #EF5350; }
+
+/* =========================================
+   4. 其他元素样式
+   ========================================= */
 
 .card-icon-wrapper {
   width: 64px; height: 64px; margin-bottom: 12px; border-radius: 12px; overflow: hidden;
@@ -257,18 +324,6 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   color: var(--drag-indicator-color);
   border-radius: 50%; padding: 4px; display: flex; pointer-events: none;
 }
-
-.action-buttons { position: absolute; top: 6px; right: 6px; display: flex !important; gap: 6px; z-index: 100; pointer-events: auto; }
-.icon-btn {
-  background: var(--btn-bg); border: 1px solid var(--btn-border);
-  border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
-}
-.icon-btn:hover { background: var(--btn-hover); transform: scale(1.15); }
-.edit-btn { color: #2196F3; }
-.del-btn { color: #F44336; }
-.grid-container.dark-theme .edit-btn { color: #64B5F6; }
-.grid-container.dark-theme .del-btn { color: #EF5350; }
 
 .add-card { border: 2px dashed var(--add-border); background: transparent; box-shadow: none; }
 .add-card:hover { border-color: #00ff9d; background: rgba(0, 255, 157, 0.05); }
