@@ -237,8 +237,8 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 /* 定义右上角的防拖动安全区 */
 .action-buttons { 
   position: absolute; 
-  top: 0; 
-  right: 0; 
+  top: -6px; 
+  right: -6px; 
   /* 增加内边距：这12px的透明区域内，手指按住都不会触发拖动 */
   padding: 12px; 
   display: flex !important; 
@@ -340,5 +340,6 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
