@@ -111,24 +111,23 @@ onMounted(() => {
 function initializeLoadingStates() { if (!props.cards) return; props.cards.forEach(c => { loadingIcons[c.id] = true; failedAttempts[c.id] = 0; }); }
 function onDragEnd() { emit('update:cards', localCards.value); }
 function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
-
-const getIconSrc = (site) => { 
-  // 在 script setup 中找到这个函数并替换
-  // 【修复 3】最优先：如果存在用户自定义的 Logo，直接使用
-  // 假设你的数据对象里，自定义 Logo 存在 site.custom_icon 字段里
-  if (site.logo_url && site.logo_url.startsWith('http')) {
+const getIconSrc = (site) => {
+  if (!site) return '';
+  
+  if (site.logo_url && typeof site.logo_url === 'string' && site.logo_url.startsWith('http')) {
     return site.logo_url;
   }
-
-   // 1. 尝试使用原有的 icon 字段 (有时候 api 会返回这个)
-  if(site.icon && site.icon.startsWith('http')) return site.icon;
-  // 2. 尝试使用 logo_url 字段
-  if(site.logo_url) return site.logo_url;
-  // 3. 最后的兜底：使用 DuckDuckGo 的服务自动获取
+  
+  if (site.icon && typeof site.icon === 'string' && site.icon.startsWith('http')) {
+    return site.icon;
+  }
+  
+  if (!site.url) return '';
+  
   try {
     const domain = new URL(site.url).hostname;
     return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
-  } catch(e){
+  } catch (e) {
     return '';
   }
 };
@@ -366,6 +365,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
 
