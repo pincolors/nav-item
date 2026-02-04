@@ -116,8 +116,8 @@ const getIconSrc = (site) => {
   // 在 script setup 中找到这个函数并替换
   // 【修复 3】最优先：如果存在用户自定义的 Logo，直接使用
   // 假设你的数据对象里，自定义 Logo 存在 site.custom_icon 字段里
-  if (site.custom_icon && site.custom_icon.startsWith('http')) {
-    return site.custom_icon;
+  if (site.logo_url && site.logo_url.startsWith('http')) {
+    return site.logo_url;
   }
 
    // 1. 尝试使用原有的 icon 字段 (有时候 api 会返回这个)
@@ -366,6 +366,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
 
