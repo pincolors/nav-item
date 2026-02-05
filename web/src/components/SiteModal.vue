@@ -25,6 +25,25 @@
 
         <div class="form-group">
           <label>Logo 图片链接（可选）</label>
+          
+          <div class="icon-quick-select" v-if="domain">
+            <span class="select-label">推荐源：</span>
+            
+            <div class="icon-option" @click="selectIcon(googleIcon)" title="使用 Google Favicon (推荐)">
+              <img :src="googleIcon" loading="lazy" />
+              <span class="src-name">Google</span>
+            </div>
+
+            <div class="icon-option" @click="selectIcon(ddgIcon)" title="使用 DuckDuckGo 图标">
+              <img :src="ddgIcon" loading="lazy" />
+              <span class="src-name">DDG</span>
+            </div>
+            
+            <div class="icon-option" @click="selectIcon(textIcon)" title="使用首字母头像">
+              <img :src="textIcon" loading="lazy" />
+              <span class="src-name">文字</span>
+            </div>
+          </div>
           <div class="logo-input-wrapper">
             <input
               v-model="formData.logo_url"
@@ -40,7 +59,7 @@
               <span v-else class="placeholder">?</span>
             </div>
           </div>
-          <small class="tip">留空则自动获取 Favicon</small>
+          <small class="tip">点击上方推荐图标可直接填入，或留空自动获取</small>
         </div>
 
         <div class="form-group">
@@ -67,7 +86,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue';
+import { reactive, ref, watch, computed } from 'vue';
 
 const props = defineProps({
   visible: Boolean,
@@ -86,6 +105,32 @@ const formData = reactive({
 });
 
 const errorMsg = ref('');
+
+/* =========== ⭐ 新增逻辑：图标源计算 =========== */
+
+// 1. 动态提取域名
+const domain = computed(() => {
+  try {
+    let u = formData.url;
+    if (!u) return '';
+    // 补全协议防止 URL 解析报错
+    if (!u.startsWith('http') && !u.startsWith('//')) u = `https://${u}`;
+    return new URL(u).hostname;
+  } catch {
+    return '';
+  }
+});
+
+// 2. 定义图标源 URL
+const googleIcon = computed(() => `https://www.google.com/s2/favicons?domain=${domain.value}&sz=128`);
+const ddgIcon = computed(() => `https://icons.duckduckgo.com/ip3/${domain.value}.ico`);
+const textIcon = computed(() => `https://ui-avatars.com/api/?background=random&name=${domain.value.substring(0, 2).toUpperCase()}`);
+
+// 3. 选择图标动作
+function selectIcon(url) {
+  formData.logo_url = url;
+}
+/* =========================================== */
 
 /* 初始化表单 */
 function resetForm(data = null) {
@@ -110,7 +155,10 @@ function close() {
 /* URL 校验 */
 function isValidUrl(url) {
   try {
-    new URL(url);
+    // 简单的协议补全校验
+    let u = url;
+    if (!u.startsWith('http')) u = `https://${u}`;
+    new URL(u);
     return true;
   } catch {
     return false;
@@ -134,7 +182,10 @@ function save() {
 
 /* logo 加载失败回退 */
 function handleImgError() {
-  formData.logo_url = '';
+  // 如果预览图片加载失败，不需要清空，可能是网络问题，
+  // 或者让用户看到是个裂图，如果不喜欢用户自己会删掉。
+  // 这里暂时保持原逻辑，或者你可以选择注释掉下面这行：
+  formData.logo_url = ''; 
 }
 
 /* 键盘快捷键 */
@@ -237,6 +288,7 @@ label {
   font-size: 12px;
   opacity: 0.5;
   margin-top: 6px;
+  display: block; /* 确保换行 */
 }
 
 .logo-input-wrapper {
@@ -256,12 +308,14 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0; /* 防止被挤压 */
 }
 
 .logo-preview img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  padding: 4px; /* 稍微留点白边 */
 }
 
 .placeholder {
@@ -306,7 +360,7 @@ label {
   opacity: 0.7;
 }
 
-/* ✅ 关键修复：暗色模式下的取消按钮 */
+/* 暗色模式下的取消按钮 */
 :global(.dark-mode) .cancel {
   color: #e6e6e6;
   opacity: 1;
@@ -316,5 +370,78 @@ label {
 
 :global(.dark-mode) .cancel:hover {
   background: rgba(255,255,255,0.14);
+}
+
+/* ⭐ 新增样式：图标快速选择栏 ⭐ */
+.icon-quick-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.03); 
+  border-radius: 12px;
+  overflow-x: auto; /* 防止小屏幕溢出 */
+}
+
+:global(.dark-mode) .icon-quick-select {
+  background: rgba(255,255,255,0.05);
+}
+
+.select-label {
+  font-size: 12px;
+  opacity: 0.6;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.icon-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--bg-color);
+  /* 小号的新拟态效果 */
+  box-shadow: 
+    3px 3px 6px rgba(163,177,198,0.4), 
+    -3px -3px 6px rgba(255,255,255,0.5);
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+
+:global(.dark-mode) .icon-option {
+  box-shadow: 
+    3px 3px 6px rgba(0,0,0,0.3), 
+    -3px -3px 6px rgba(255,255,255,0.05);
+}
+
+.icon-option:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-color);
+}
+
+.icon-option:active {
+  box-shadow: inset 2px 2px 5px rgba(163,177,198,0.4);
+  transform: translateY(0);
+}
+
+:global(.dark-mode) .icon-option:active {
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5);
+}
+
+.icon-option img {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+.src-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-color);
 }
 </style>
