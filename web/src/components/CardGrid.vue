@@ -41,19 +41,18 @@
             </div>
 
             <div class="card-icon-wrapper">
-              <div v-if="loadingIcons[element.id]" class="icon-skeleton"></div>
               
               <img 
+                v-if="!iconError[element.id]"
                 :src="getIconSrc(element)" 
                 @error="(e) => handleIconError(e, element)"
-                @load="onImgLoad(element.id)"
                 loading="lazy"
+                referrerpolicy="no-referrer"
                 :alt="element.title"
                 class="site-favicon"
-                v-show="!loadingIcons[element.id] && !iconError[element.id]" 
               />
 
-              <div v-if="iconError[element.id]" class="fallback-icon">
+              <div v-else class="fallback-icon">
                 {{ (element.title || element.name || '?').charAt(0).toUpperCase() }}
               </div>
             </div>
@@ -79,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, watch, reactive, onMounted } from 'vue';
+import { ref, watch, reactive } from 'vue';
 import draggable from 'vuedraggable';
 
 const props = defineProps({ 
@@ -92,8 +91,7 @@ const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
 
 // 状态管理
 const localCards = ref([...props.cards || []]);
-const iconError = reactive({});
-const loadingIcons = reactive({});
+const iconError = reactive({}); // 仅保留错误状态，移除复杂的 loading 状态
 
 /* =========== 👇 核心逻辑：获取图标 👇 =========== */
 
@@ -112,82 +110,52 @@ const getDomain = (url) => {
 const getIconSrc = (item) => {
   if (!item) return '';
 
-  // A. 如果数据库明确存了 logo_url (用户手动选择的)，优先使用
+  // A. 优先使用数据库里存的 logo_url (手动选择的或自定义的)
   if (item.logo_url && item.logo_url.trim() !== '') {
     return item.logo_url;
   }
   
-  // B. 兼容旧数据：如果有 icon 字段且是链接
+  // B. 兼容旧数据
   if (item.icon && item.icon.startsWith('http')) {
     return item.icon;
   }
   
-  // C. 默认：使用 Google Favicon API
+  // C. 默认使用 Google
   return `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=128`;
 };
 
 // 3. 图片加载错误处理 (自动降级)
 const handleIconError = (e, item) => {
-  // 图片加载失败，标记 loading 结束
-  loadingIcons[item.id] = false;
-  
   const img = e.target;
   
   // 防止死循环
   if (img.dataset.isFallback) {
-    // 如果降级方案也失败了，显示文字兜底
-    iconError[item.id] = true;
+    iconError[item.id] = true; // 彻底放弃，显示文字
     return;
   }
   
   img.dataset.isFallback = "true";
 
-  // 降级策略：如果当前不是 Google 的图挂了，尝试切换回 Google
+  // 降级策略：
+  // 逻辑：如果当前图片挂了，且当前链接**不是**Google API，那就尝试用 Google API 救一下。
+  // 如果已经是 Google API 挂了，那就没救了，显示文字。
   if (!img.src.includes('google.com')) {
     img.src = `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=128`;
   } else {
-    // 如果 Google 也挂了，显示文字兜底
     iconError[item.id] = true;
   }
 };
 
-// 4. 图片加载成功
-const onImgLoad = (id) => {
-  loadingIcons[id] = false;
-};
-
 /* =========== 👆 核心逻辑结束 👆 =========== */
-
-// 初始化加载状态
-function initializeLoadingStates() { 
-  if (!props.cards) return; 
-  props.cards.forEach(c => { 
-    loadingIcons[c.id] = true; 
-    iconError[c.id] = false; // 重置错误状态
-  }); 
-}
-
-// 预加载图标逻辑 (可选，因为 img 标签自带懒加载)
-function preloadIcons(cards) { 
-  cards?.forEach(c => { 
-    const src = getIconSrc(c); 
-    // 创建一个隐藏的 Image 对象来触发浏览器缓存
-    const img = new Image(); 
-    img.src = src; 
-    img.onload = () => { loadingIcons[c.id] = false }; 
-    img.onerror = () => { loadingIcons[c.id] = false }; 
-  }) 
-}
 
 // 监听数据变化
 watch(() => props.cards, (newVal) => { 
   localCards.value = [...newVal || []];
-  initializeLoadingStates(); // 重新加载时重置 loading
+  // 重置错误状态，给新数据一次加载机会
+  newVal?.forEach(c => {
+    if (iconError[c.id]) iconError[c.id] = false;
+  });
 }, { deep: true });
-
-onMounted(() => {
-  initializeLoadingStates();
-});
 
 // 拖拽结束
 function onDragEnd() { 
@@ -215,8 +183,6 @@ function handleClick(e) {
   --text-desc: rgba(0, 0, 0, 0.6);
   --icon-bg: linear-gradient(135deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 1) 100%);
   --icon-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
-  --skeleton-base: rgba(200, 200, 200, 0.2);
-  --skeleton-highlight: rgba(200, 200, 200, 0.3);
   --drag-indicator-bg: rgba(120, 120, 120, 0.2);
   --drag-indicator-color: rgba(0, 0, 0, 0.5);
   --add-border: rgba(0, 0, 0, 0.15);
@@ -236,8 +202,6 @@ function handleClick(e) {
   --text-desc: rgba(255, 255, 255, 0.6);
   --icon-bg: rgba(255, 255, 255, 0.08);
   --icon-bg-hover: rgba(255, 255, 255, 0.12);
-  --skeleton-base: rgba(255, 255, 255, 0.05);
-  --skeleton-highlight: rgba(255, 255, 255, 0.1);
   --drag-indicator-bg: rgba(255, 255, 255, 0.12);
   --drag-indicator-color: rgba(255, 255, 255, 0.5);
   --add-border: rgba(255, 255, 255, 0.2);
@@ -295,10 +259,9 @@ function handleClick(e) {
 }
 
 /* =========================================
-   3. 修复移动端点击与拖动冲突 (核心修改)
+   3. 修复移动端点击与拖动冲突
    ========================================= */
 
-/* 定义右上角的防拖动安全区 */
 .action-buttons { 
   position: absolute; 
   top: -5px;   
@@ -326,14 +289,10 @@ function handleClick(e) {
   -webkit-tap-highlight-color: transparent; 
 }
 
-/* 使用伪元素扩大按钮点击热区 */
 .icon-btn::after {
   content: '';
   position: absolute;
-  top: -10px; 
-  bottom: -10px; 
-  left: -10px; 
-  right: -10px;
+  top: -10px; bottom: -10px; left: -10px; right: -10px;
   border-radius: 50%;
 }
 
@@ -348,7 +307,7 @@ function handleClick(e) {
    ========================================= */
 
 .card-icon-wrapper {
-  width: 64px; height: 64px; margin-bottom: 12px; border-radius: 12px; overflow: hidden;
+  width: 128px; height: 128px; margin-bottom: 12px; border-radius: 12px; overflow: hidden;
   background: var(--icon-bg);
   padding: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -357,13 +316,6 @@ function handleClick(e) {
 
 .card-item:hover .card-icon-wrapper { background: var(--icon-bg-hover); }
 .grid-container.dark-theme .card-icon-wrapper { border-color: rgba(255,255,255,0.1); }
-
-.icon-skeleton {
-  position: absolute; inset: 8px; border-radius: 8px;
-  background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-highlight) 50%, var(--skeleton-base) 75%);
-  background-size: 200% 100%; animation: shimmer 1.5s infinite ease-in-out;
-}
-@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
 .site-favicon { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
 .card-item:hover .site-favicon { transform: scale(1.1); }
