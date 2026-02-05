@@ -25,25 +25,35 @@
 
         <div class="form-group">
           <label>Logo 图片链接（可选）</label>
-          
-          <div class="icon-quick-select" v-if="domain">
-            <span class="select-label">推荐源：</span>
+                    <div class="icon-quick-select" v-if="domain">
+            <span class="select-label">源：</span>
             
-            <div class="icon-option" @click="selectIcon(googleIcon)" title="使用 Google Favicon (推荐)">
+            <div class="icon-option" @click="selectIcon(googleIcon)" title="Google API">
               <img :src="googleIcon" loading="lazy" />
               <span class="src-name">Google</span>
             </div>
 
-            <div class="icon-option" @click="selectIcon(ddgIcon)" title="使用 DuckDuckGo 图标">
+            <div class="icon-option" @click="selectIcon(ddgIcon)" title="DuckDuckGo">
               <img :src="ddgIcon" loading="lazy" />
               <span class="src-name">DDG</span>
             </div>
+
+            <div class="icon-option" @click="selectIcon(horseIcon)" title="Icon Horse (强力扫描)">
+              <img :src="horseIcon" loading="lazy" />
+              <span class="src-name">Horse</span>
+            </div>
+
+            <div class="icon-option" @click="selectIcon(directIcon)" title="网站根目录直连">
+              <img :src="directIcon" loading="lazy" />
+              <span class="src-name">Direct</span>
+            </div>
             
-            <div class="icon-option" @click="selectIcon(textIcon)" title="使用首字母头像">
+            <div class="icon-option" @click="selectIcon(textIcon)" title="文字兜底">
               <img :src="textIcon" loading="lazy" />
-              <span class="src-name">文字</span>
+              <span class="src-name">Text</span>
             </div>
           </div>
+         
           <div class="logo-input-wrapper">
             <input
               v-model="formData.logo_url"
@@ -125,14 +135,8 @@ const domain = computed(() => {
 const googleIcon = computed(() => `https://www.google.com/s2/favicons?domain=${domain.value}&sz=128`);
 const ddgIcon = computed(() => `https://icons.duckduckgo.com/ip3/${domain.value}.ico`);
 const textIcon = computed(() => `https://ui-avatars.com/api/?background=random&name=${domain.value.substring(0, 2).toUpperCase()}`);
-// 👇👇👇 新增这两个 👇👇👇
-// 方式 A: 根目录直连 (最原始，比如 bilibili.com/favicon.ico)
 const directIcon = computed(() => `https://${domain.value}/favicon.ico`);
-
-// 方式 B: Icon Horse (推荐，它能深入分析网站代码找到图标)
 const horseIcon = computed(() => `https://icon.horse/icon/${domain.value}`);
-
-
 
 // 3. 选择图标动作
 function selectIcon(url) {
