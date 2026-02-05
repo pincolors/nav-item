@@ -45,16 +45,14 @@
 
             <div class="card-icon-wrapper">
               <div v-if="loadingIcons[element.id]" class="icon-skeleton"></div>
-              <img 
-                v-else-if="!iconError[element.id]"
-                :src="getIconSrc(element)" 
-                class="real-icon"
-                @load="onImgLoad(element.id)"
-                @error="onImgError(element.id)"
-                loading="lazy"
-                decoding="async"
-                :alt="element.title || element.name"
-              />
+             <img 
+  :src="getIconSrc(element)" 
+  @error="(e) => handleIconError(e, element)"
+  loading="lazy"
+  :alt="element.title"
+  class="site-favicon" 
+/>
+
               <div v-else class="fallback-icon">
                 {{ (element.title || element.name || '?').charAt(0).toUpperCase() }}
               </div>
@@ -89,6 +87,55 @@ const props = defineProps({
   isEditMode: Boolean,
   isDarkMode: Boolean
 });
+/* =========== 👇 新增/修改逻辑开始 👇 =========== */
+
+// 1. 获取域名的辅助函数 (防错处理)
+const getDomain = (url) => {
+  try {
+    if (!url) return '';
+    // 如果没有协议头，补全一下，否则 URL() 会报错
+    const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+    return new URL(fullUrl).hostname;
+  } catch (e) {
+    console.warn('Invalid URL:', url);
+    return 'google.com'; // 极端情况下的兜底
+  }
+};
+
+// 2. 计算图标来源 (核心逻辑)
+const getIconSrc = (item) => {
+  // 优先级 A：如果数据库存了特定的 logo_url (你在弹窗里选的或填的)，直接用它
+  if (item.logo_url && item.logo_url.trim() !== '') {
+    return item.logo_url;
+  }
+  
+  // 优先级 B：如果数据库是空的，默认使用 Google API
+  return `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=128`;
+};
+
+// 3. 图片加载失败的救急处理 (Error Handling)
+const handleIconError = (e, item) => {
+  const img = e.target;
+  
+  // 防止死循环：如果已经是救急图片了还报错，就停止
+  if (img.dataset.isFallback) return;
+  
+  // 标记一下，表示正在进行救急处理
+  img.dataset.isFallback = "true";
+
+  // 策略：
+  // 如果当前显示的不是 Google 的图（比如是 DDG 或自定义图）挂了 -> 降级为 Google
+  // 如果已经是 Google 的图挂了 -> 降级为文字头像
+  if (!img.src.includes('google.com')) {
+    img.src = `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=128`;
+  } else {
+    // 最终兜底：显示首字母文字头像
+    const name = item.title ? item.title.substring(0, 2) : 'NA';
+    img.src = `https://ui-avatars.com/api/?background=random&name=${name}`;
+  }
+};
+
+/* =========== 👆 新增/修改逻辑结束 👆 =========== */
 
 const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
 const localCards = ref([...props.cards || []]);
@@ -365,6 +412,7 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
 
