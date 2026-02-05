@@ -4,6 +4,7 @@
       :list="localCards" 
       item-key="id" 
       class="card-grid"
+      filter=".no-drag"
       :disabled="!isEditMode"
       @end="onDragEnd"
       ghost-class="ghost"
@@ -27,11 +28,7 @@
               </svg>
             </div>
 
-            <div v-if="isEditMode" 
-              class="action-buttons"
-              @mousedown.stop
-              @touchstart.stop
-            >
+            <div v-if="isEditMode" class="action-buttons no-drag">
               <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)" title="编辑">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               </button>
@@ -40,8 +37,7 @@
               </button>
             </div>
 
-            <div class="card-icon-wrapper">
-              
+            <div class="card-icon-wrapper">                 
               <img 
                 v-if="!iconError[element.id]"
                 :src="getIconSrc(element)" 
@@ -354,5 +350,6 @@ function handleClick(e) {
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
