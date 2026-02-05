@@ -125,6 +125,14 @@ const domain = computed(() => {
 const googleIcon = computed(() => `https://www.google.com/s2/favicons?domain=${domain.value}&sz=128`);
 const ddgIcon = computed(() => `https://icons.duckduckgo.com/ip3/${domain.value}.ico`);
 const textIcon = computed(() => `https://ui-avatars.com/api/?background=random&name=${domain.value.substring(0, 2).toUpperCase()}`);
+// 👇👇👇 新增这两个 👇👇👇
+// 方式 A: 根目录直连 (最原始，比如 bilibili.com/favicon.ico)
+const directIcon = computed(() => `https://${domain.value}/favicon.ico`);
+
+// 方式 B: Icon Horse (推荐，它能深入分析网站代码找到图标)
+const horseIcon = computed(() => `https://icon.horse/icon/${domain.value}`);
+
+
 
 // 3. 选择图标动作
 function selectIcon(url) {
