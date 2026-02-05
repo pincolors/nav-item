@@ -307,7 +307,7 @@ function handleClick(e) {
    ========================================= */
 
 .card-icon-wrapper {
-  width: 90px; height: 90px; margin-bottom: 12px; border-radius: 12px; overflow: hidden;
+  width: 72px; height: 72px; margin-bottom: 12px; border-radius: 12px; overflow: hidden;
   background: var(--icon-bg);
   padding: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -354,4 +354,5 @@ function handleClick(e) {
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
