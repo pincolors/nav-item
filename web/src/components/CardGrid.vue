@@ -1,17 +1,22 @@
 <template>
   <div class="grid-container" :class="{ 'dark-theme': isDarkMode }">
-    <draggable 
-      :list="localCards" 
-      item-key="id" 
-      class="card-grid"
-      filter=".no-drag"
-      :disabled="!isEditMode"
-      @end="onDragEnd"
-      ghost-class="ghost"
-      :animation="200"
-      :force-fallback="true"
-      :scroll="true"
-    >
+   <draggable 
+  :list="localCards" 
+  item-key="id" 
+  class="card-grid"
+  filter=".no-drag"
+  :disabled="!isEditMode"
+  @end="onDragEnd"
+  ghost-class="ghost"
+  :animation="200"
+  :force-fallback="true"
+  :scroll="true"
+  
+  :delay="200"                
+  :delay-on-touch-only="true" 
+  :touch-start-threshold="3"  
+>
+
       <template #item="{ element }">
         <div class="card-wrapper">
           <component
@@ -350,6 +355,7 @@ function handleClick(e) {
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
 
