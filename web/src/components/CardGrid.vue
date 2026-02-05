@@ -288,6 +288,8 @@ function handleClick(e) {
   transition: all 0.2s ease; 
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent; 
+/* 👇 新增这一行：优化触控点击响应 */
+  touch-action: manipulation; 
 }
 
 .icon-btn::after {
@@ -355,6 +357,7 @@ function handleClick(e) {
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
+
 
 
 
