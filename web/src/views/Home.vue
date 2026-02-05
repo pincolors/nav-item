@@ -52,20 +52,19 @@
     </header>
      
     <div class="menu-wrapper">
-  <MenuBar 
-    :menus="menus" 
-    :activeId="activeMenu?.id" 
-    :activeSubMenuId="activeSubMenu?.id"
-    :is-edit-mode="isLoggedIn"
-    :is-dark-mode="isDarkMode"
-    @select="handleMenuSelect"
-    @update:menus="handleMenuSort"
-    @add="addMenu"
-    @delete="deleteMenu"
-  />
-</div>
+      <MenuBar 
+        :menus="menus" 
+        :activeId="activeMenu?.id" 
+        :activeSubMenuId="activeSubMenu?.id"
+        :is-edit-mode="isLoggedIn"
+        :is-dark-mode="isDarkMode"
+        @select="handleMenuSelect"
+        @update:menus="handleMenuSort"
+        @add="addMenu"
+        @delete="deleteMenu"
+      />
+    </div>
 
-    
     <div class="search-section">
       <div class="search-box-wrapper">
         <div class="search-container">
@@ -277,7 +276,7 @@ const deleteMenu = async (id) => {
   }
 };
 
-// ==================== 卡片管理 ====================
+// ==================== 卡片管理 (核心修复部分) ====================
 const cards = ref([]);
 const showSiteModal = ref(false);
 const isEditingSite = ref(false);
@@ -290,7 +289,8 @@ const loadCards = async () => {
   }
   try {
     const res = await getCards(activeMenu.value.id, activeSubMenu.value?.id);
-    cards.value = res.data;
+    // 确保列表是按照 sort_order 排序的 (如果后端没排，前端兜底排一下)
+    cards.value = (res.data || []).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   } catch (e) {
     console.error('加载卡片失败:', e);
     cards.value = [];
@@ -298,14 +298,19 @@ const loadCards = async () => {
 };
 
 const handleCardSort = async (newCards) => {
-  const oldCards = [...cards.value];
+  // 1. 立即更新前端视图 (乐观更新)
   cards.value = newCards;
+  
+  // 2. 准备发送给后端的数据
+  const ids = newCards.map(c => c.id);
+  
   try {
-    await updateCardOrder(newCards.map(c => c.id));
-    console.log('卡片顺序已保存');
+    // 3. 默默保存
+    await updateCardOrder(ids);
   } catch (e) {
     console.error('卡片排序失败:', e);
-    cards.value = oldCards;
+    // 可选：如果失败，重新加载一次纠正顺序
+    // loadCards(); 
   }
 };
 
@@ -322,18 +327,49 @@ const openEditModal = (card) => {
   showSiteModal.value = true;
 };
 
+/* 🔥 核心修复：添加/编辑卡片逻辑 🔥 */
 const handleSiteSave = async (formData) => {
   try {
     if (isEditingSite.value) {
+      // ---------------- 编辑模式 ----------------
       await apiUpdateCard(formData.id, formData);
+      
+      // ✅ 仅更新本地数据，不刷新列表，保持顺序
+      const index = cards.value.findIndex(c => c.id === formData.id);
+      if (index !== -1) {
+        cards.value[index] = { ...cards.value[index], ...formData };
+      }
     } else {
-      await apiAddCard({
+      // ---------------- 新增模式 ----------------
+      
+      // 1. 计算正确的排序号 (当前最大值 + 1)
+      const maxOrder = cards.value.length > 0 
+        ? Math.max(...cards.value.map(c => c.sort_order || c.order || 0)) 
+        : 0;
+      
+      const nextOrder = maxOrder + 1;
+
+      // 2. 组装数据
+      const payload = {
         menu_id: activeMenu.value.id,
         sub_menu_id: activeSubMenu.value?.id,
-        ...formData
-      });
+        ...formData,
+        sort_order: nextOrder // 👈 关键点：指定排在最后
+      };
+
+      // 3. 调用 API
+      const res = await apiAddCard(payload);
+      
+      // 4. ✅ 手动 push 到数组末尾，不刷新列表
+      const newCard = res.data || { ...payload, id: Date.now() }; // 兜底使用时间戳ID
+      cards.value.push(newCard);
+      
+      // 5. 自动滚动到底部
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 100);
     }
-    await loadCards();
+    
     showSiteModal.value = false;
   } catch (e) {
     alert('保存失败: ' + e.message);
@@ -344,13 +380,14 @@ const deleteCard = async (id) => {
   if (!confirm("确定删除此卡片？")) return;
   try {
     await apiDeleteCard(id);
-    await loadCards();
+    // 前端删除
+    cards.value = cards.value.filter(c => c.id !== id);
   } catch (e) {
     alert('删除失败: ' + e.message);
   }
 };
 
-// === 快速导入功能 ===
+// === 快速导入功能 (含排序修复) ===
 const showQuickImportModal = ref(false);
 
 const openQuickImport = () => {
@@ -360,18 +397,30 @@ const openQuickImport = () => {
 
 const handleBatchImport = async ({ menuId, sites, done }) => {
   try {
-    const promises = sites.map((site, index) => 
-      apiAddCard({
+    // 获取当前基准排序号
+    let currentMaxOrder = cards.value.length > 0 
+      ? Math.max(...cards.value.map(c => c.sort_order || 0)) 
+      : 0;
+
+    const promises = sites.map((site, index) => {
+      // 递增排序号
+      const thisOrder = currentMaxOrder + index + 1;
+      return apiAddCard({
         menu_id: menuId,
         sub_menu_id: null,
         title: site.title,
         url: site.url,
-        order: cards.value.length + index + 1
-      })
-    );
+        sort_order: thisOrder // 👈 确保批量导入也有序
+      });
+    });
+
     await Promise.all(promises);
     alert(`成功导入 ${sites.length} 个站点！`);
-    if (activeMenu.value?.id === menuId) await loadCards();
+    
+    // 只有当导入到当前查看的菜单时，才刷新列表
+    if (activeMenu.value?.id === menuId) {
+      await loadCards();
+    }
   } catch (e) {
     alert('导入错误: ' + e.message);
   } finally {
@@ -411,130 +460,74 @@ const handleSearch = () => {
   }
 };
 
-// ==================== 数据备份与恢复 (增强版) ====================
+// ==================== 数据备份与恢复 ====================
 
-// 📤 备份数据：不仅备份菜单，还遍历所有菜单把里面的卡片也存下来
 const exportData = async () => {
   if (!confirm('确定要导出当前所有数据吗？这可能需要几秒钟。')) return;
-  
   try {
-    const fullData = { 
-      version: '2.0', 
-      date: new Date().toISOString(),
-      menus: [] 
-    };
-
-    // 1. 遍历所有一级菜单
+    const fullData = { version: '2.0', date: new Date().toISOString(), menus: [] };
     for (const menu of menus.value) {
       const menuObj = { ...menu, subMenus: [], cards: [] };
-      
-      // 获取该菜单下的卡片
       const res = await getCards(menu.id);
       menuObj.cards = res.data || [];
-
-      // 2. 如果有二级菜单，也处理一下（假设二级菜单逻辑类似）
       if (menu.subMenus && menu.subMenus.length > 0) {
         for (const sub of menu.subMenus) {
            const subRes = await getCards(menu.id, sub.id);
-           menuObj.subMenus.push({
-             ...sub,
-             cards: subRes.data || []
-           });
+           menuObj.subMenus.push({ ...sub, cards: subRes.data || [] });
         }
       }
-      
       fullData.menus.push(menuObj);
     }
-
-    // 下载文件
     const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `nav-backup-${new Date().toISOString().slice(0,10)}.json`;
     a.click();
-    
     showUserMenu.value = false;
   } catch (e) {
     alert('备份失败: ' + e.message);
-    console.error(e);
   }
 };
 
-// 📥 恢复数据：读取 JSON -> 循环调用 API 重建数据
 const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!data.menus || !Array.isArray(data.menus)) {
-        throw new Error('文件格式不正确，找不到菜单数据');
-      }
-
-      if (!confirm(`解析成功！包含 ${data.menus.length} 个主菜单。\n确定要导入吗？这会将数据添加到现有列表中。`)) {
-        return;
-      }
-
-      // 开始导入流程
-      let successCount = 0;
+      if (!confirm(`解析成功！包含 ${data.menus?.length || 0} 个主菜单。确定导入吗？`)) return;
       
+      let successCount = 0;
       for (const menu of data.menus) {
-        // 1. 创建一级菜单
-        const menuRes = await apiAddMenu({ 
-          name: menu.name, 
-          order: menus.value.length + successCount + 1 
-        });
-        const newMenuId = menuRes.data.id; // 获取新生成的 ID
-        
-        // 2. 恢复该菜单下的卡片
-        if (menu.cards && menu.cards.length) {
+        const menuRes = await apiAddMenu({ name: menu.name, order: menus.value.length + successCount + 1 });
+        const newMenuId = menuRes.data.id;
+        if (menu.cards) {
           for (const card of menu.cards) {
             await apiAddCard({
               menu_id: newMenuId,
               title: card.title,
               url: card.url,
               description: card.description,
-              icon: card.icon, // 如果有图标url也恢复
-              order: card.order || 0
+              icon: card.icon,
+              logo_url: card.logo_url, // 确保恢复 logo
+              sort_order: card.sort_order || 0
             });
           }
         }
-
-        // 3. 恢复二级菜单及其卡片
-        if (menu.subMenus && menu.subMenus.length) {
-           // 注意：这里需要你的后端支持创建二级菜单的API，
-           // 假设 apiAddMenu 支持 parent_id 或者你有专门的 apiAddSubMenu
-           // 如果目前没有二级菜单创建接口，这部分可能需要略过或调整
-           // 下面是伪代码逻辑：
-           /* for (const sub of menu.subMenus) {
-             const subRes = await apiAddMenu({ name: sub.name, parent_id: newMenuId });
-             const newSubId = subRes.data.id;
-             for (const subCard of sub.cards) {
-               await apiAddCard({ menu_id: newMenuId, sub_menu_id: newSubId, ...subCard });
-             }
-           }
-           */
-        }
         successCount++;
       }
-
       alert('数据恢复成功！页面将刷新。');
       window.location.reload();
-
     } catch (err) {
       alert('恢复失败: ' + err.message);
-      console.error(err);
     } finally {
-      // 清空 input 防止无法重复选择同一个文件
-      event.target.value = ''; 
+      event.target.value = '';
       showUserMenu.value = false;
     }
   };
   reader.readAsText(file);
 };
-
 
 const handleLogoError = (e) => e.target.style.display = 'none';
 const vFocus = { mounted: (el) => el.focus() };
@@ -616,31 +609,21 @@ onMounted(async () => {
 /* Sections */
 .menu-wrapper { margin: 0 0 20px; }
 .search-section { padding: 0 20px 30px; display: flex; justify-content: center; }
-/* 内容区域样式：只需要保留 padding 等布局设置，内部 Grid 由组件接管 */
-/* 找到 .content-area 并替换为以下内容 */
 
 .content-area {
   width: 100%;
-  /* 1. 限制最大宽度 (建议和你的 Header 保持一致，比如 1200px - 1440px) */
   max-width: 1400px; 
-  
-  /* 2. 核心：上下 0，左右自动 => 实现居中 */
   margin: 0 auto;    
-  
-  /* 3. 给电脑端增加更多留白 (比如左右各 50px) */
   padding: 0 50px 60px; 
-  
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
-/* 4. 适配手机端：手机屏幕小，不需要那么宽的留白 */
 @media (max-width: 768px) {
   .content-area {
-    padding: 0 16px 60px; /* 手机保持小边距 */
+    padding: 0 16px 60px;
   }
 }
-
 
 /* Search */
 .search-container {
@@ -685,14 +668,12 @@ onMounted(async () => {
   .home-container { padding-top: 70px; }
   .modal-content { padding: 30px 20px; }
   
-  /* 手机端边距适配，内容适配 */
   .header-inner, 
   .content-area { 
     padding-left: 12px !important;
     padding-right: 12px !important;
   }
 }
-/* === 修复搜索下拉菜单白屏问题 === */
 .engine-select option {
   background-color: var(--card-bg); 
   color: var(--text-color);
@@ -702,8 +683,3 @@ onMounted(async () => {
   color: #e0e0e0;
 }
 </style>
-
-
-
-
-
