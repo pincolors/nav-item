@@ -1,17 +1,16 @@
 <template>
   <div class="grid-container" :class="{ 'dark-theme': isDarkMode }">
     <draggable 
-  :list="localCards" 
-  item-key="id" 
-  class="card-grid"
-  :disabled="!isEditMode"
-  @end="onDragEnd"
-  ghost-class="ghost"
-  :animation="200"
-  :force-fallback="true"
-  :scroll="true"
->
-
+      :list="localCards" 
+      item-key="id" 
+      class="card-grid"
+      :disabled="!isEditMode"
+      @end="onDragEnd"
+      ghost-class="ghost"
+      :animation="200"
+      :force-fallback="true"
+      :scroll="true"
+    >
       <template #item="{ element }">
         <div class="card-wrapper">
           <component
@@ -32,28 +31,29 @@
               class="action-buttons"
               @mousedown.stop
               @touchstart.stop
-              >
-
-             <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)" title="编辑">
+            >
+              <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)" title="编辑">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               </button>
               <button class="icon-btn del-btn" @click.stop="$emit('delete', element.id)" title="删除">
-
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
               </button>
             </div>
 
             <div class="card-icon-wrapper">
               <div v-if="loadingIcons[element.id]" class="icon-skeleton"></div>
-             <img 
-  :src="getIconSrc(element)" 
-  @error="(e) => handleIconError(e, element)"
-  loading="lazy"
-  :alt="element.title"
-  class="site-favicon" 
-/>
+              
+              <img 
+                :src="getIconSrc(element)" 
+                @error="(e) => handleIconError(e, element)"
+                @load="onImgLoad(element.id)"
+                loading="lazy"
+                :alt="element.title"
+                class="site-favicon"
+                v-show="!loadingIcons[element.id] && !iconError[element.id]" 
+              />
 
-              <div v-else class="fallback-icon">
+              <div v-if="iconError[element.id]" class="fallback-icon">
                 {{ (element.title || element.name || '?').charAt(0).toUpperCase() }}
               </div>
             </div>
@@ -87,119 +87,117 @@ const props = defineProps({
   isEditMode: Boolean,
   isDarkMode: Boolean
 });
-/* =========== 👇 新增/修改逻辑开始 👇 =========== */
 
-// 1. 获取域名的辅助函数 (防错处理)
+const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
+
+// 状态管理
+const localCards = ref([...props.cards || []]);
+const iconError = reactive({});
+const loadingIcons = reactive({});
+
+/* =========== 👇 核心逻辑：获取图标 👇 =========== */
+
+// 1. 获取域名的辅助函数
 const getDomain = (url) => {
   try {
     if (!url) return '';
-    // 如果没有协议头，补全一下，否则 URL() 会报错
     const fullUrl = url.startsWith('http') ? url : `https://${url}`;
     return new URL(fullUrl).hostname;
   } catch (e) {
-    console.warn('Invalid URL:', url);
-    return 'google.com'; // 极端情况下的兜底
+    return 'google.com';
   }
 };
 
-// 2. 计算图标来源 (核心逻辑)
+// 2. 计算图标来源
 const getIconSrc = (item) => {
-  // 优先级 A：如果数据库存了特定的 logo_url (你在弹窗里选的或填的)，直接用它
+  if (!item) return '';
+
+  // A. 如果数据库明确存了 logo_url (用户手动选择的)，优先使用
   if (item.logo_url && item.logo_url.trim() !== '') {
     return item.logo_url;
   }
   
-  // 优先级 B：如果数据库是空的，默认使用 Google API
+  // B. 兼容旧数据：如果有 icon 字段且是链接
+  if (item.icon && item.icon.startsWith('http')) {
+    return item.icon;
+  }
+  
+  // C. 默认：使用 Google Favicon API
   return `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=128`;
 };
 
-// 3. 图片加载失败的救急处理 (Error Handling)
+// 3. 图片加载错误处理 (自动降级)
 const handleIconError = (e, item) => {
+  // 图片加载失败，标记 loading 结束
+  loadingIcons[item.id] = false;
+  
   const img = e.target;
   
-  // 防止死循环：如果已经是救急图片了还报错，就停止
-  if (img.dataset.isFallback) return;
+  // 防止死循环
+  if (img.dataset.isFallback) {
+    // 如果降级方案也失败了，显示文字兜底
+    iconError[item.id] = true;
+    return;
+  }
   
-  // 标记一下，表示正在进行救急处理
   img.dataset.isFallback = "true";
 
-  // 策略：
-  // 如果当前显示的不是 Google 的图（比如是 DDG 或自定义图）挂了 -> 降级为 Google
-  // 如果已经是 Google 的图挂了 -> 降级为文字头像
+  // 降级策略：如果当前不是 Google 的图挂了，尝试切换回 Google
   if (!img.src.includes('google.com')) {
     img.src = `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=128`;
   } else {
-    // 最终兜底：显示首字母文字头像
-    const name = item.title ? item.title.substring(0, 2) : 'NA';
-    img.src = `https://ui-avatars.com/api/?background=random&name=${name}`;
+    // 如果 Google 也挂了，显示文字兜底
+    iconError[item.id] = true;
   }
 };
 
-/* =========== 👆 新增/修改逻辑结束 👆 =========== */
+// 4. 图片加载成功
+const onImgLoad = (id) => {
+  loadingIcons[id] = false;
+};
 
-const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
-const localCards = ref([...props.cards || []]);
-const iconError = reactive({});
-const loadingIcons = reactive({});
-const iconCache = new Map();
-const failedAttempts = reactive({});
+/* =========== 👆 核心逻辑结束 👆 =========== */
 
+// 初始化加载状态
+function initializeLoadingStates() { 
+  if (!props.cards) return; 
+  props.cards.forEach(c => { 
+    loadingIcons[c.id] = true; 
+    iconError[c.id] = false; // 重置错误状态
+  }); 
+}
+
+// 预加载图标逻辑 (可选，因为 img 标签自带懒加载)
+function preloadIcons(cards) { 
+  cards?.forEach(c => { 
+    const src = getIconSrc(c); 
+    // 创建一个隐藏的 Image 对象来触发浏览器缓存
+    const img = new Image(); 
+    img.src = src; 
+    img.onload = () => { loadingIcons[c.id] = false }; 
+    img.onerror = () => { loadingIcons[c.id] = false }; 
+  }) 
+}
+
+// 监听数据变化
 watch(() => props.cards, (newVal) => { 
   localCards.value = [...newVal || []];
-  preloadIcons(newVal);
+  initializeLoadingStates(); // 重新加载时重置 loading
 }, { deep: true });
 
 onMounted(() => {
   initializeLoadingStates();
-  preloadIcons(props.cards);
 });
 
-// 逻辑函数保持不变
-function initializeLoadingStates() { if (!props.cards) return; props.cards.forEach(c => { loadingIcons[c.id] = true; failedAttempts[c.id] = 0; }); }
-function onDragEnd() { emit('update:cards', localCards.value); }
-function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
-const getIconSrc = (site) => {
-  if (!site) return '';
-  
-  if (site.logo_url && typeof site.logo_url === 'string' && site.logo_url.startsWith('http')) {
-    return site.logo_url;
-  }
-  
-  if (site.icon && typeof site.icon === 'string' && site.icon.startsWith('http')) {
-    return site.icon;
-  }
-  
-  if (!site.url) return '';
-  
-  try {
-    const domain = new URL(site.url).hostname;
-    return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
-  } catch (e) {
-    return '';
-  }
-};
-
-  if(site.icon && site.icon.startsWith('http')) return site.icon; 
-  if(site.logo_url) return site.logo_url; 
-  try { 
-    const domain = new URL(site.url).hostname; 
-    return `https://icons.duckduckgo.com/ip3/${domain}.ico`; 
-  } catch(e){ return ''; } 
-};
-
-function preloadIcons(cards) { 
-  cards?.forEach(c => { 
-    const src = getIconSrc(c); 
-    if(!src){loadingIcons[c.id]=false;return;} 
-    const img=new Image(); 
-    img.src=src; 
-    img.onload=()=>{loadingIcons[c.id]=false}; 
-    img.onerror=()=>{loadingIcons[c.id]=false; iconError[c.id]=true;} 
-  }) 
+// 拖拽结束
+function onDragEnd() { 
+  emit('update:cards', localCards.value); 
 }
 
-const onImgLoad = (id) => { loadingIcons[id] = false; };
-const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
+// 点击处理
+function handleClick(e) { 
+  if (props.isEditMode) e.preventDefault(); 
+}
 </script>
 
 <style scoped>
@@ -303,25 +301,17 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 /* 定义右上角的防拖动安全区 */
 .action-buttons { 
   position: absolute; 
-  
-  /* 1. 微调位置：负数让它往角落里缩 */
   top: -5px;   
   right: -5px; 
-  
-  /* 2. 减小内边距：从 12px 减到 4px */
-  /* 这样按钮就会很贴近边缘，不会显得“浮”在中间 */
   padding: 4px; 
-  
-  /* 3. 减小间距：让两个按钮挨得紧一点 */
   gap: 4px;    
-  
   display: flex !important; 
   z-index: 20; 
   pointer-events: auto; 
 }
 
 .icon-btn {
-  position: relative; /* 为伪元素定位提供参考 */
+  position: relative; 
   background: var(--btn-bg); 
   border: 1px solid var(--btn-border);
   border-radius: 8px; 
@@ -333,14 +323,13 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   cursor: pointer; 
   transition: all 0.2s ease; 
   flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent; /* 去除手机端点击背景高亮 */
+  -webkit-tap-highlight-color: transparent; 
 }
 
-/* 使用伪元素扩大按钮点击热区 (Invisible Hit Box) */
+/* 使用伪元素扩大按钮点击热区 */
 .icon-btn::after {
   content: '';
   position: absolute;
-  /* 向四周扩大 10px，让实际点击范围变大 */
   top: -10px; 
   bottom: -10px; 
   left: -10px; 
@@ -376,8 +365,9 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
 }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-.real-icon { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
-.card-item:hover .real-icon { transform: scale(1.1); }
+.site-favicon { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
+.card-item:hover .site-favicon { transform: scale(1.1); }
+
 .fallback-icon {
   width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
   font-size: 28px; font-weight: bold; color: #00ff9d;
@@ -412,12 +402,3 @@ const onImgError = (id) => { loadingIcons[id] = false; iconError[id] = true; };
   border: 2px dashed #00ff9d; box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
 }
 </style>
-
-
-
-
-
-
-
-
-
