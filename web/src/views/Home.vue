@@ -6,11 +6,11 @@
         <div class="header-left">
           <img :src="currentLogo" alt="WebNavHub" class="site-logo" @error="handleLogoError" />
           
-          <div style="display: flex !important; flex-direction: column; justify-content: center; margin-left: 10px; line-height: 1.2;">
-            <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 18px;">
+          <div style="display: flex !important; flex-direction: column; justify-content: center; margin-left: 4px; line-height: 1.2;">
+            <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 20px;">
               WebNav <span style="color: #FF6B6B; margin-left: 4px;">Hub</span>
             </span>
-            <span style="display: block !important; font-size: 10px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
+            <span style="display: block !important; font-size: 12px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
               Your Organized Internet Gateway
             </span>
           </div>
@@ -752,4 +752,5 @@ onMounted(async () => {
 
 .percent-num { font-weight: bold; color: var(--text-color); }
 </style>
+
 
