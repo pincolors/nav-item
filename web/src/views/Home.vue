@@ -152,7 +152,6 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup>
@@ -505,7 +504,7 @@ const exportData = async () => {
     alert('备份失败: ' + e.message);
   }
 };
-
+  </div>
 /* =========== 👇 修改后的 importData 函数 👇 =========== */
 const importData = (event) => {
   const file = event.target.files[0];
@@ -812,5 +811,6 @@ onMounted(async () => {
 }
 
 </style>
+
 
 
