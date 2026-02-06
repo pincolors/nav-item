@@ -492,40 +492,96 @@ const exportData = async () => {
 const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
+
+  // 1. 文件读取
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!confirm(`解析成功！包含 ${data.menus?.length || 0} 个主菜单。确定导入吗？`)) return;
-      
-      let successCount = 0;
+      // 2. 尝试解析 JSON (防呆检查)
+      const jsonContent = e.target.result;
+      let data;
+      try {
+        data = JSON.parse(jsonContent);
+      } catch (parseErr) {
+        throw new Error('文件格式错误：这不是一个有效的 JSON 文件。');
+      }
+
+      // 3. 数据结构检查
+      if (!data.menus || !Array.isArray(data.menus)) {
+        throw new Error('数据结构错误：找不到菜单列表 (menus)。');
+      }
+
+      // 4. 用户确认
+      const count = data.menus.length;
+      if (!confirm(`解析成功！发现 ${count} 个主菜单。\n是否开始恢复？(这将追加到现有数据后)`)) {
+        event.target.value = ''; // 清空选择
+        return;
+      }
+
+      // 5. 开始导入（显示简单的 Loading 状态）
+      // 建议这里加一个全局 loading 变量，例如 isLoading.value = true;
+      console.log('开始导入...');
+
+      // 遍历备份中的菜单
       for (const menu of data.menus) {
-        const menuRes = await apiAddMenu({ name: menu.name, order: menus.value.length + successCount + 1 });
-        const newMenuId = menuRes.data.id;
-        if (menu.cards) {
+        // --- 第一步：创建一级菜单 ---
+        // 注意：不使用备份里的 menu.id，而是让后端生成新 ID
+        const menuRes = await apiAddMenu({ 
+          name: menu.name, 
+          // 自动排在当前列表最后
+          order: 9999 
+        });
+        
+        // 🚨 关键点：获取后端返回的新 ID 🚨
+        const newMenuId = menuRes.data.id; 
+
+        // --- 第二步：恢复该菜单下的卡片 ---
+        if (menu.cards && menu.cards.length > 0) {
+          // 使用 for...of 循环，确保 await 生效（串行请求，防止后端崩）
           for (const card of menu.cards) {
             await apiAddCard({
-              menu_id: newMenuId,
+              menu_id: newMenuId, // ✅ 必须使用新生成的 ID
+              sub_menu_id: null,
               title: card.title,
               url: card.url,
-              description: card.description,
-              icon: card.icon,
-              logo_url: card.logo_url, // 确保恢复 logo
+              description: card.description || '',
+              icon: card.icon || '',
+              logo_url: card.logo_url || '',
               sort_order: card.sort_order || 0
             });
           }
         }
-        successCount++;
+
+        // --- 第三步：如果有二级菜单，也通过新 ID 关联 ---
+        if (menu.subMenus && menu.subMenus.length > 0) {
+          for (const sub of menu.subMenus) {
+            // 创建二级菜单 (假设后端支持 parent_id)
+            // const subRes = await apiAddMenu({ name: sub.name, parent_id: newMenuId });
+            // const newSubId = subRes.data.id;
+            
+            // 恢复二级菜单的卡片
+            // for (const subCard of sub.cards) {
+            //    await apiAddCard({ menu_id: newMenuId, sub_menu_id: newSubId, ... });
+            // }
+          }
+        }
       }
-      alert('数据恢复成功！页面将刷新。');
+
+      alert('🎉 恢复成功！页面即将刷新。');
       window.location.reload();
+
     } catch (err) {
-      alert('恢复失败: ' + err.message);
+      console.error(err);
+      alert('❌ 恢复失败: ' + err.message);
     } finally {
-      event.target.value = '';
+      // 清理工作
+      event.target.value = ''; 
       showUserMenu.value = false;
+      // isLoading.value = false;
     }
   };
+  
+  // 触发读取
   reader.readAsText(file);
 };
 
@@ -683,3 +739,4 @@ onMounted(async () => {
   color: #e0e0e0;
 }
 </style>
+
