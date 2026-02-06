@@ -600,7 +600,7 @@ onMounted(async () => {
 }
 .header-inner { width: 100%; max-width: 1400px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
 .header-left { display: flex; align-items: center; gap: 12px; }
-.site-logo { height: 64px; width: auto; }
+.site-logo { height: 48px; width: auto; }
 .site-title { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px; color: var(--text-color); }
 .header-right { display: flex; gap: 16px; align-items: center; }
 
@@ -752,3 +752,4 @@ onMounted(async () => {
 
 .percent-num { font-weight: bold; color: var(--text-color); }
 </style>
+
