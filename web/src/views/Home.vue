@@ -135,7 +135,7 @@
         <p class="copyright">Copyright © 2026 Nav-Item</p>
       </div>
     </footer>
-    </div>
+
     <div v-if="importState.visible" class="import-overlay">
       <div class="import-box">
         <h3>正在恢复数据...</h3>
@@ -153,8 +153,8 @@
         </div>
       </div>
     </div>
-
-</template>
+    
+  </div> </template>
 
 <script setup>
 import { ref, computed, reactive, onMounted, watch } from 'vue';
@@ -294,7 +294,7 @@ const deleteMenu = async (id) => {
   }
 };
 
-// ==================== 卡片管理 (核心修复部分) ====================
+// ==================== 卡片管理 ====================
 const cards = ref([]);
 const showSiteModal = ref(false);
 const isEditingSite = ref(false);
@@ -307,7 +307,6 @@ const loadCards = async () => {
   }
   try {
     const res = await getCards(activeMenu.value.id, activeSubMenu.value?.id);
-    // 确保列表是按照 sort_order 排序的 (如果后端没排，前端兜底排一下)
     cards.value = (res.data || []).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   } catch (e) {
     console.error('加载卡片失败:', e);
@@ -316,19 +315,12 @@ const loadCards = async () => {
 };
 
 const handleCardSort = async (newCards) => {
-  // 1. 立即更新前端视图 (乐观更新)
   cards.value = newCards;
-  
-  // 2. 准备发送给后端的数据
   const ids = newCards.map(c => c.id);
-  
   try {
-    // 3. 默默保存
     await updateCardOrder(ids);
   } catch (e) {
     console.error('卡片排序失败:', e);
-    // 可选：如果失败，重新加载一次纠正顺序
-    // loadCards(); 
   }
 };
 
@@ -345,49 +337,32 @@ const openEditModal = (card) => {
   showSiteModal.value = true;
 };
 
-/* 🔥 核心修复：添加/编辑卡片逻辑 🔥 */
 const handleSiteSave = async (formData) => {
   try {
     if (isEditingSite.value) {
-      // ---------------- 编辑模式 ----------------
       await apiUpdateCard(formData.id, formData);
-      
-      // ✅ 仅更新本地数据，不刷新列表，保持顺序
       const index = cards.value.findIndex(c => c.id === formData.id);
       if (index !== -1) {
         cards.value[index] = { ...cards.value[index], ...formData };
       }
     } else {
-      // ---------------- 新增模式 ----------------
-      
-      // 1. 计算正确的排序号 (当前最大值 + 1)
       const maxOrder = cards.value.length > 0 
         ? Math.max(...cards.value.map(c => c.sort_order || c.order || 0)) 
         : 0;
-      
       const nextOrder = maxOrder + 1;
-
-      // 2. 组装数据
       const payload = {
         menu_id: activeMenu.value.id,
         sub_menu_id: activeSubMenu.value?.id,
         ...formData,
-        sort_order: nextOrder // 👈 关键点：指定排在最后
+        sort_order: nextOrder
       };
-
-      // 3. 调用 API
       const res = await apiAddCard(payload);
-      
-      // 4. ✅ 手动 push 到数组末尾，不刷新列表
-      const newCard = res.data || { ...payload, id: Date.now() }; // 兜底使用时间戳ID
+      const newCard = res.data || { ...payload, id: Date.now() };
       cards.value.push(newCard);
-      
-      // 5. 自动滚动到底部
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 100);
     }
-    
     showSiteModal.value = false;
   } catch (e) {
     alert('保存失败: ' + e.message);
@@ -398,44 +373,35 @@ const deleteCard = async (id) => {
   if (!confirm("确定删除此卡片？")) return;
   try {
     await apiDeleteCard(id);
-    // 前端删除
     cards.value = cards.value.filter(c => c.id !== id);
   } catch (e) {
     alert('删除失败: ' + e.message);
   }
 };
 
-// === 快速导入功能 (含排序修复) ===
+// === 快速导入功能 ===
 const showQuickImportModal = ref(false);
-
 const openQuickImport = () => {
   showQuickImportModal.value = true;
   showUserMenu.value = false;
 };
-
 const handleBatchImport = async ({ menuId, sites, done }) => {
   try {
-    // 获取当前基准排序号
     let currentMaxOrder = cards.value.length > 0 
       ? Math.max(...cards.value.map(c => c.sort_order || 0)) 
       : 0;
-
     const promises = sites.map((site, index) => {
-      // 递增排序号
       const thisOrder = currentMaxOrder + index + 1;
       return apiAddCard({
         menu_id: menuId,
         sub_menu_id: null,
         title: site.title,
         url: site.url,
-        sort_order: thisOrder // 👈 确保批量导入也有序
+        sort_order: thisOrder
       });
     });
-
     await Promise.all(promises);
     alert(`成功导入 ${sites.length} 个站点！`);
-    
-    // 只有当导入到当前查看的菜单时，才刷新列表
     if (activeMenu.value?.id === menuId) {
       await loadCards();
     }
@@ -479,21 +445,14 @@ const handleSearch = () => {
 };
 
 // ==================== 数据备份与恢复 ====================
-
 const exportData = async () => {
-  if (!confirm('确定要导出当前所有数据吗？这可能需要几秒钟。')) return;
+  if (!confirm('确定要导出当前所有数据吗？')) return;
   try {
     const fullData = { version: '2.0', date: new Date().toISOString(), menus: [] };
     for (const menu of menus.value) {
       const menuObj = { ...menu, subMenus: [], cards: [] };
       const res = await getCards(menu.id);
       menuObj.cards = res.data || [];
-      if (menu.subMenus && menu.subMenus.length > 0) {
-        for (const sub of menu.subMenus) {
-           const subRes = await getCards(menu.id, sub.id);
-           menuObj.subMenus.push({ ...sub, cards: subRes.data || [] });
-        }
-      }
       fullData.menus.push(menuObj);
     }
     const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
@@ -507,7 +466,16 @@ const exportData = async () => {
   }
 };
 
-/* =========== 👇 修改后的 importData 函数 👇 =========== */
+/* =========== 👇 核心修复：定义进度条状态和逻辑 👇 =========== */
+
+// 1. 定义状态 (之前黑屏就是因为缺了这个)
+const importState = reactive({
+  visible: false,
+  percent: 0,
+  text: '准备中...'
+});
+
+// 2. 改进后的导入函数
 const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -519,8 +487,6 @@ const importData = (event) => {
       if (!data.menus) throw new Error('无效的备份文件');
 
       const menuCount = data.menus.length;
-      // 1. 预先计算总任务量 (用于计算进度百分比)
-      //    总任务 = 菜单数量 + 所有卡片数量
       let totalItems = menuCount; 
       data.menus.forEach(m => {
         if (m.cards) totalItems += m.cards.length;
@@ -531,31 +497,26 @@ const importData = (event) => {
         return;
       }
 
-      // 2. 开启进度条
+      // 开启进度条
       importState.visible = true;
       importState.percent = 0;
-      let processedCount = 0; // 已处理数量
+      let processedCount = 0;
 
-      // 辅助函数：更新进度
       const updateProgress = (msg) => {
         processedCount++;
         importState.percent = Math.floor((processedCount / totalItems) * 100);
         importState.text = msg;
       };
 
-      // 3. 开始循环导入
       for (const [index, menu] of data.menus.entries()) {
-        // --- 导入菜单 ---
         const menuRes = await apiAddMenu({ 
           name: menu.name, 
-          order: 9999 // 放在最后
+          order: 9999 
         });
         const newMenuId = menuRes.data.id;
         
-        // 更新进度
         updateProgress(`正在创建菜单: ${menu.name}`);
 
-        // --- 导入卡片 ---
         if (menu.cards && menu.cards.length > 0) {
           for (const card of menu.cards) {
             await apiAddCard({
@@ -567,17 +528,14 @@ const importData = (event) => {
               logo_url: card.logo_url || '',
               sort_order: card.sort_order || 0
             });
-            // 更新进度
             updateProgress(`正在导入: ${card.title}`);
           }
         }
       }
 
-      // 4. 完成
       importState.text = '恢复完成！即将刷新...';
       importState.percent = 100;
       
-      // 稍微停顿一下让用户看到 100%
       setTimeout(() => {
         alert('🎉 数据恢复成功！');
         window.location.reload();
@@ -586,7 +544,7 @@ const importData = (event) => {
     } catch (err) {
       console.error(err);
       alert('❌ 恢复失败: ' + err.message);
-      importState.visible = false; // 出错关闭遮罩
+      importState.visible = false;
     } finally {
       event.target.value = ''; 
       showUserMenu.value = false;
@@ -748,13 +706,14 @@ onMounted(async () => {
   background-color: #25262b; 
   color: #e0e0e0;
 }
-  /* =========== 进度条遮罩层样式 =========== */
+
+/* =========== 👇 新增：进度条样式 👇 =========== */
 .import-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
-  backdrop-filter: blur(5px);      /* 磨砂玻璃效果 */
-  z-index: 9999;                   /* 保证在最顶层 */
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -772,46 +731,24 @@ onMounted(async () => {
   border: 1px solid rgba(255,255,255,0.1);
 }
 
-.import-box h3 {
-  margin: 0 0 20px 0;
-  font-size: 1.2rem;
-  color: var(--primary-color);
-}
+.import-box h3 { margin: 0 0 20px 0; font-size: 1.2rem; color: var(--primary-color); }
 
-/* 进度条轨道 */
 .progress-track {
-  width: 100%;
-  height: 10px;
-  background: rgba(120, 120, 120, 0.2);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 15px;
+  width: 100%; height: 10px; background: rgba(120, 120, 120, 0.2);
+  border-radius: 10px; overflow: hidden; margin-bottom: 15px;
   box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
 }
 
-/* 进度条填充 (动画效果) */
 .progress-fill {
-  height: 100%;
-  background: var(--primary-color); /* 使用你的主题绿色 #00ff9d */
-  width: 0%;
-  border-radius: 10px;
-  transition: width 0.3s ease-out; /* 让进度条走动平滑 */
+  height: 100%; background: var(--primary-color); width: 0%;
+  border-radius: 10px; transition: width 0.3s ease-out;
   box-shadow: 0 0 10px var(--primary-color);
 }
 
 .import-status {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--text-desc);
-  font-weight: 500;
+  display: flex; justify-content: space-between; font-size: 13px;
+  color: var(--text-desc); font-weight: 500;
 }
 
-.percent-num {
-  font-weight: bold;
-  color: var(--text-color);
-}
-
+.percent-num { font-weight: bold; color: var(--text-color); }
 </style>
-
-
