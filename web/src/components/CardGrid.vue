@@ -331,7 +331,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
    4. 图标与内容
    ========================================= */
 .card-icon-wrapper {
-  width: 128px; height: 128px; 
+  width: 72px; height: 72px; 
   margin-bottom: 12px; border-radius: 12px; overflow: hidden;
   background: var(--icon-bg);
   padding: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -397,3 +397,4 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   border: 2px dashed #00ff9d;
 }
 </style>
+
