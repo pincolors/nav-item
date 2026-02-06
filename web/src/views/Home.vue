@@ -175,7 +175,8 @@ import MenuBar from '../components/MenuBar.vue';
 import CardGrid from '../components/CardGrid.vue';
 import SiteModal from '../components/SiteModal.vue';
 import QuickImportModal from '../components/QuickImportModal.vue';
-
+import UserManage from '../components/UserManage.vue';
+  
 // ==================== 主题管理 ====================
 const isDarkMode = ref(localStorage.getItem('theme') === 'dark');
 
@@ -773,6 +774,7 @@ onMounted(async () => {
 
 .percent-num { font-weight: bold; color: var(--text-color); }
 </style>
+
 
 
 
