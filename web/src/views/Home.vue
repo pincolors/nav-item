@@ -135,6 +135,23 @@
         <p class="copyright">Copyright © 2026 Nav-Item</p>
       </div>
     </footer>
+    <div v-if="importState.visible" class="import-overlay">
+      <div class="import-box">
+        <h3>正在恢复数据...</h3>
+        
+        <div class="progress-track">
+          <div 
+            class="progress-fill" 
+            :style="{ width: importState.percent + '%' }"
+          ></div>
+        </div>
+        
+        <div class="import-status">
+          <span>{{ importState.text }}</span>
+          <span class="percent-num">{{ importState.percent }}%</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -489,59 +506,59 @@ const exportData = async () => {
   }
 };
 
+/* =========== 👇 修改后的 importData 函数 👇 =========== */
 const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  // 1. 文件读取
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      // 2. 尝试解析 JSON (防呆检查)
-      const jsonContent = e.target.result;
-      let data;
-      try {
-        data = JSON.parse(jsonContent);
-      } catch (parseErr) {
-        throw new Error('文件格式错误：这不是一个有效的 JSON 文件。');
-      }
+      const data = JSON.parse(e.target.result);
+      if (!data.menus) throw new Error('无效的备份文件');
 
-      // 3. 数据结构检查
-      if (!data.menus || !Array.isArray(data.menus)) {
-        throw new Error('数据结构错误：找不到菜单列表 (menus)。');
-      }
+      const menuCount = data.menus.length;
+      // 1. 预先计算总任务量 (用于计算进度百分比)
+      //    总任务 = 菜单数量 + 所有卡片数量
+      let totalItems = menuCount; 
+      data.menus.forEach(m => {
+        if (m.cards) totalItems += m.cards.length;
+      });
 
-      // 4. 用户确认
-      const count = data.menus.length;
-      if (!confirm(`解析成功！发现 ${count} 个主菜单。\n是否开始恢复？(这将追加到现有数据后)`)) {
-        event.target.value = ''; // 清空选择
+      if (!confirm(`解析成功！共 ${totalItems} 个项目。\n确定开始恢复吗？`)) {
+        event.target.value = '';
         return;
       }
 
-      // 5. 开始导入（显示简单的 Loading 状态）
-      // 建议这里加一个全局 loading 变量，例如 isLoading.value = true;
-      console.log('开始导入...');
+      // 2. 开启进度条
+      importState.visible = true;
+      importState.percent = 0;
+      let processedCount = 0; // 已处理数量
 
-      // 遍历备份中的菜单
-      for (const menu of data.menus) {
-        // --- 第一步：创建一级菜单 ---
-        // 注意：不使用备份里的 menu.id，而是让后端生成新 ID
+      // 辅助函数：更新进度
+      const updateProgress = (msg) => {
+        processedCount++;
+        importState.percent = Math.floor((processedCount / totalItems) * 100);
+        importState.text = msg;
+      };
+
+      // 3. 开始循环导入
+      for (const [index, menu] of data.menus.entries()) {
+        // --- 导入菜单 ---
         const menuRes = await apiAddMenu({ 
           name: menu.name, 
-          // 自动排在当前列表最后
-          order: 9999 
+          order: 9999 // 放在最后
         });
+        const newMenuId = menuRes.data.id;
         
-        // 🚨 关键点：获取后端返回的新 ID 🚨
-        const newMenuId = menuRes.data.id; 
+        // 更新进度
+        updateProgress(`正在创建菜单: ${menu.name}`);
 
-        // --- 第二步：恢复该菜单下的卡片 ---
+        // --- 导入卡片 ---
         if (menu.cards && menu.cards.length > 0) {
-          // 使用 for...of 循环，确保 await 生效（串行请求，防止后端崩）
           for (const card of menu.cards) {
             await apiAddCard({
-              menu_id: newMenuId, // ✅ 必须使用新生成的 ID
-              sub_menu_id: null,
+              menu_id: newMenuId,
               title: card.title,
               url: card.url,
               description: card.description || '',
@@ -549,39 +566,31 @@ const importData = (event) => {
               logo_url: card.logo_url || '',
               sort_order: card.sort_order || 0
             });
-          }
-        }
-
-        // --- 第三步：如果有二级菜单，也通过新 ID 关联 ---
-        if (menu.subMenus && menu.subMenus.length > 0) {
-          for (const sub of menu.subMenus) {
-            // 创建二级菜单 (假设后端支持 parent_id)
-            // const subRes = await apiAddMenu({ name: sub.name, parent_id: newMenuId });
-            // const newSubId = subRes.data.id;
-            
-            // 恢复二级菜单的卡片
-            // for (const subCard of sub.cards) {
-            //    await apiAddCard({ menu_id: newMenuId, sub_menu_id: newSubId, ... });
-            // }
+            // 更新进度
+            updateProgress(`正在导入: ${card.title}`);
           }
         }
       }
 
-      alert('🎉 恢复成功！页面即将刷新。');
-      window.location.reload();
+      // 4. 完成
+      importState.text = '恢复完成！即将刷新...';
+      importState.percent = 100;
+      
+      // 稍微停顿一下让用户看到 100%
+      setTimeout(() => {
+        alert('🎉 数据恢复成功！');
+        window.location.reload();
+      }, 500);
 
     } catch (err) {
       console.error(err);
       alert('❌ 恢复失败: ' + err.message);
+      importState.visible = false; // 出错关闭遮罩
     } finally {
-      // 清理工作
       event.target.value = ''; 
       showUserMenu.value = false;
-      // isLoading.value = false;
     }
   };
-  
-  // 触发读取
   reader.readAsText(file);
 };
 
@@ -738,5 +747,70 @@ onMounted(async () => {
   background-color: #25262b; 
   color: #e0e0e0;
 }
+  /* =========== 进度条遮罩层样式 =========== */
+.import-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+  backdrop-filter: blur(5px);      /* 磨砂玻璃效果 */
+  z-index: 9999;                   /* 保证在最顶层 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.import-box {
+  background: var(--card-bg);
+  color: var(--text-color);
+  width: 90%;
+  max-width: 400px;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.import-box h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+/* 进度条轨道 */
+.progress-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(120, 120, 120, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+/* 进度条填充 (动画效果) */
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color); /* 使用你的主题绿色 #00ff9d */
+  width: 0%;
+  border-radius: 10px;
+  transition: width 0.3s ease-out; /* 让进度条走动平滑 */
+  box-shadow: 0 0 10px var(--primary-color);
+}
+
+.import-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-desc);
+  font-weight: 500;
+}
+
+.percent-num {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
 </style>
+
 
