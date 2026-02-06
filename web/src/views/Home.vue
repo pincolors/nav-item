@@ -449,12 +449,21 @@ const exportData = async () => {
   if (!confirm('确定要导出当前所有数据吗？')) return;
   try {
     const fullData = { version: '2.0', date: new Date().toISOString(), menus: [] };
+    
     for (const menu of menus.value) {
       const menuObj = { ...menu, subMenus: [], cards: [] };
+      
+      // 获取卡片数据
       const res = await getCards(menu.id);
+      
+      // ✅ 关键点：res.data 里本身就包含了 logo_url, icon, title 等所有字段
+      // 直接存进去就行，不需要特殊处理
       menuObj.cards = res.data || [];
+      
       fullData.menus.push(menuObj);
     }
+    
+    // ...下载文件的代码不变...
     const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -465,6 +474,7 @@ const exportData = async () => {
     alert('备份失败: ' + e.message);
   }
 };
+
 
 /* =========== 👇 核心修复：定义进度条状态和逻辑 👇 =========== */
 
@@ -519,19 +529,30 @@ const importData = (event) => {
 
         if (menu.cards && menu.cards.length > 0) {
           for (const card of menu.cards) {
+            
+            // ✅ 核心修改在这里：
             await apiAddCard({
               menu_id: newMenuId,
               title: card.title,
               url: card.url,
               description: card.description || '',
-              icon: card.icon || '',
-              logo_url: card.logo_url || '',
+              
+              // 1. 如果备份里有 logo_url，就恢复它；如果没有，传空字符串
+              logo_url: card.logo_url || '', 
+              
+              // 2. 兼容旧版本 icon 字段
+              icon: card.icon || '',       
+              
               sort_order: card.sort_order || 0
             });
+            
             updateProgress(`正在导入: ${card.title}`);
           }
         }
       }
+
+// ...后面的代码不变...
+
 
       importState.text = '恢复完成！即将刷新...';
       importState.percent = 100;
@@ -752,5 +773,6 @@ onMounted(async () => {
 
 .percent-num { font-weight: bold; color: var(--text-color); }
 </style>
+
 
 
