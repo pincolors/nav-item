@@ -135,6 +135,7 @@
         <p class="copyright">Copyright © 2026 Nav-Item</p>
       </div>
     </footer>
+    </div>
     <div v-if="importState.visible" class="import-overlay">
       <div class="import-box">
         <h3>正在恢复数据...</h3>
@@ -812,4 +813,5 @@ onMounted(async () => {
 }
 
 </style>
+
 
