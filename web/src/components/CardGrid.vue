@@ -24,11 +24,25 @@
             @click="handleClick($event)"
           >
             <div v-if="isEditMode" class="action-buttons no-drag">
-              <button class="icon-btn edit-btn" @click.stop="$emit('edit', element)" title="编辑">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <button 
+                class="icon-btn edit-btn" 
+                @touchstart.stop.prevent="handleEdit(element)"
+                @click.stop="handleEdit(element)" 
+                title="编辑"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
               </button>
-              <button class="icon-btn del-btn" @click.stop="$emit('delete', element.id)" title="删除">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <button 
+                class="icon-btn del-btn" 
+                @touchstart.stop.prevent="handleDelete(element.id)"
+                @click.stop="handleDelete(element.id)" 
+                title="删除"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </svg>
               </button>
             </div>
 
@@ -81,6 +95,25 @@ const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
 
 const localCards = ref([...props.cards || []]);
 const iconError = reactive({});
+
+// 防抖标志
+let touchHandled = false;
+
+// 处理编辑（防止重复触发）
+const handleEdit = (item) => {
+  if (touchHandled) return;
+  touchHandled = true;
+  emit('edit', item);
+  setTimeout(() => { touchHandled = false; }, 300);
+};
+
+// 处理删除（防止重复触发）
+const handleDelete = (id) => {
+  if (touchHandled) return;
+  touchHandled = true;
+  emit('delete', id);
+  setTimeout(() => { touchHandled = false; }, 300);
+};
 
 // 1. 辅助函数：获取域名
 const getDomain = (url) => {
@@ -212,22 +245,27 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 }
 
 /* =========================================
-   3. 操作按钮 (核心修改：防误触 + 扩大点击区)
+   3. 操作按钮（移动端优化）
    ========================================= */
 .action-buttons { 
   position: absolute; 
   top: 5px;   
   right: 5px; 
   display: flex;
-  gap: 8px; /* 稍微拉开一点间距 */
-  z-index: 50; /* 确保层级最高 */
-  
-  /* ✅ 这里的 .no-drag 类配合 draggable 组件的 filter 属性，
-     彻底禁止在按钮区域触发拖拽，点击会瞬间响应 */
+  gap: 8px;
+  z-index: 50;
+}
+
+/* 确保按钮区域不可拖拽 */
+.action-buttons,
+.action-buttons * {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .icon-btn {
-  position: relative; /* 为伪元素定位做准备 */
+  position: relative;
   background: var(--btn-bg); 
   border: 1px solid var(--btn-border);
   color: #666;
@@ -238,30 +276,56 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   align-items: center; 
   justify-content: center;
   cursor: pointer; 
-  transition: all 0.2s ease; 
+  transition: all 0.2s ease;
   
-  /* ✅ 优化移动端点击，消除300ms延迟 */
+  /* ✅ 移动端优化 */
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
 }
 
-/* 🌟🌟 核心魔法：扩大点击热区 🌟🌟 */
+/* 🌟 扩大点击热区 */
 .icon-btn::after {
   content: '';
   position: absolute;
-  /* 上下左右各向外扩展 10px，让手指更容易点中 */
   top: -10px;
   bottom: -10px;
   left: -10px;
   right: -10px;
-  /* border: 1px solid red;  <-- 调试时可以打开看热区 */
   border-radius: 50%;
 }
 
 .grid-container.dark-theme .icon-btn { color: #ccc; }
 
-.icon-btn:hover { background: var(--btn-hover); transform: scale(1.1); }
-.edit-btn:hover { color: #2196F3; }
-.del-btn:hover { color: #F44336; }
+/* 桌面端悬停 */
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover { 
+    background: var(--btn-hover); 
+    transform: scale(1.1); 
+  }
+  .edit-btn:hover { color: #2196F3; }
+  .del-btn:hover { color: #F44336; }
+}
+
+/* 移动端点击反馈 */
+@media (hover: none) and (pointer: coarse) {
+  .icon-btn {
+    width: 40px;  /* 加大点击区域 */
+    height: 40px;
+  }
+  
+  .action-buttons {
+    gap: 10px;
+  }
+  
+  .icon-btn:active {
+    background: var(--btn-hover);
+    transform: scale(0.92);
+  }
+  
+  .edit-btn:active { color: #2196F3; }
+  .del-btn:active { color: #F44336; }
+}
 
 /* =========================================
    4. 图标与内容
@@ -287,6 +351,10 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   text-shadow: 0 2px 4px rgba(0, 255, 157, 0.3);
 }
 
+.card-info {
+  width: 100%;
+}
+
 .card-title {
   font-size: 14px; font-weight: 700; width: 100%; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; margin-bottom: 4px;
@@ -299,12 +367,33 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   color: var(--text-desc);
 }
 
-.add-card { border: 2px dashed var(--btn-border); background: transparent; box-shadow: none; }
-.add-card:hover { border-color: #00ff9d; background: rgba(0, 255, 157, 0.05); }
-.add-icon { font-size: 32px; color: #00ff9d; margin-bottom: 0; }
+/* =========================================
+   5. 添加卡片
+   ========================================= */
+.add-card { 
+  border: 2px dashed var(--btn-border); 
+  background: transparent; 
+  box-shadow: none;
+  cursor: pointer;
+}
 
+.add-card:hover { 
+  border-color: #00ff9d; 
+  background: rgba(0, 255, 157, 0.05); 
+}
+
+.add-icon { 
+  font-size: 32px; 
+  color: #00ff9d; 
+  margin-bottom: 0; 
+}
+
+/* =========================================
+   6. 拖拽幽灵效果
+   ========================================= */
 .ghost .card-item {
-  opacity: 0.5; background: rgba(0, 255, 157, 0.08);
+  opacity: 0.5; 
+  background: rgba(0, 255, 157, 0.08);
   border: 2px dashed #00ff9d;
 }
 </style>
