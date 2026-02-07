@@ -353,28 +353,37 @@ const openEditModal = (card) => {
 const handleSiteSave = async (formData) => {
   try {
     if (isEditingSite.value) {
-      console.log('🔵 开始编辑卡片:', formData);
+      console.log('🔵 开始编辑卡片 ID:', formData.id);
+      console.log('🔵 发送数据:', formData);
       
-      // ✅ 调用后端 API
+      // 调用后端 API
       const response = await apiUpdateCard(formData.id, formData);
-      console.log('🟢 后端返回:', response.data);
+      console.log('🟢 后端返回:', response);
       
-      // ✅ 更新前端数据
+      // ⭐ 关键修复：强制触发响应式更新
       const index = cards.value.findIndex(c => c.id === formData.id);
-      console.log('🟡 找到索引:', index);
-      
       if (index !== -1) {
-        // 方式1：完整替换（推荐）
-        cards.value = [
-          ...cards.value.slice(0, index),
-          { ...cards.value[index], ...formData },
-          ...cards.value.slice(index + 1)
-        ];
+        // 创建全新的数组来触发 Vue 的响应式
+        const newCards = [...cards.value];
+        newCards[index] = { 
+          ...newCards[index], 
+          ...formData,
+          // 确保包含所有字段
+          id: formData.id,
+          title: formData.title,
+          url: formData.url,
+          description: formData.description || '',
+          logo_url: formData.logo_url || '',
+          icon: formData.icon || '',
+          sort_order: newCards[index].sort_order
+        };
+        cards.value = newCards;
         
-        console.log('🟢 前端数据已更新:', cards.value[index]);
+        console.log('🟢 前端数据已更新，索引:', index);
+        console.log('🟢 更新后的卡片:', cards.value[index]);
+      } else {
+        console.error('❌ 未找到卡片，ID:', formData.id);
       }
-      
-      alert('✅ 编辑成功！');
       
     } else {
       // 添加逻辑保持不变
@@ -391,23 +400,21 @@ const handleSiteSave = async (formData) => {
       
       console.log('🔵 开始添加卡片:', payload);
       const res = await apiAddCard(payload);
-      console.log('🟢 后端返回:', res.data);
-      
       const newCard = res.data || { ...payload, id: Date.now() };
-      cards.value.push(newCard);
+      cards.value = [...cards.value, newCard]; // ⭐ 也改成创建新数组
+      
+      console.log('🟢 添加成功:', newCard);
       
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 100);
-      
-      alert('✅ 添加成功！');
     }
     
     showSiteModal.value = false;
     
   } catch (e) {
     console.error('❌ 保存失败:', e);
-    console.error('❌ 错误详情:', e.response?.data);
+    console.error('❌ 错误响应:', e.response?.data);
     alert('保存失败: ' + (e.response?.data?.message || e.message));
   }
 };
@@ -819,4 +826,5 @@ onMounted(async () => {
 }
 
 </style>
+
 
