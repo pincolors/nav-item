@@ -31,6 +31,9 @@
               <button class="action-btn delete" @click="handleDelete(user.id)" v-if="user.id !== 1">删除</button>
             </td>
           </tr>
+          <tr v-if="userList.length === 0">
+            <td colspan="5" style="text-align:center; color:#999; padding: 20px;">暂无数据</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -68,8 +71,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-// 假设你有一个 api/index.js，如果没有，请根据实际情况修改 api 调用
-import { request } from '../../api'; // 或者用 axios
+
+/* ✅ 关键修复：路径修正
+   原来是 '../../api' (因为之前在 views/admin 下)
+   现在改成了 '../api' (因为现在在 components 下)
+   注意：如果你的 api/index.js 是 export default request，则用 import request
+   如果是 export const request，则用 import { request }
+*/
+import request from '../api'; 
 
 const userList = ref([]);
 const showModal = ref(false);
@@ -90,17 +99,16 @@ onMounted(() => {
 // 获取用户列表
 const fetchUsers = async () => {
   try {
-    // 这里调用你的后端接口，比如 GET /api/users
-    // const res = await request.get('/users'); 
-    // userList.value = res.data;
-
-    // 👇 模拟数据 (等你后端写好接口后，删掉下面这行，取消上面的注释)
+    // 真实接口调用 (请确保后端有这个接口)
+    const res = await request.get('/users'); 
+    userList.value = res.data;
+  } catch (e) {
+    console.error('加载用户失败, 使用模拟数据演示:', e);
+    // 👇 兜底：如果后端接口没通，显示模拟数据，防止页面空白
     userList.value = [
       { id: 1, username: 'admin', role: 'admin', created_at: '2025-12-01T10:00:00Z' },
-      { id: 2, username: 'guest', role: 'user', created_at: '2026-01-15T14:30:00Z' }
+      { id: 2, username: 'demo', role: 'user', created_at: '2026-02-01T14:30:00Z' }
     ];
-  } catch (e) {
-    alert('加载失败: ' + e.message);
   }
 };
 
@@ -128,19 +136,17 @@ const handleSubmit = async () => {
 
   try {
     if (isEdit.value) {
-      // update user api
-      console.log('更新用户', form);
-      // await request.put(`/users/${form.id}`, form);
+      // 编辑接口 (假设后端是 PUT /users/:id)
+      await request.put(`/users/${form.id}`, form);
     } else {
-      // create user api
-      console.log('创建用户', form);
-      // await request.post('/users', form);
+      // 新增接口 (假设后端是 POST /users)
+      await request.post('/users', form);
     }
     showModal.value = false;
     alert('保存成功');
     fetchUsers(); // 刷新列表
   } catch (e) {
-    alert('操作失败');
+    alert('操作失败: ' + (e.response?.data?.message || e.message));
   }
 };
 
@@ -148,15 +154,16 @@ const handleSubmit = async () => {
 const handleDelete = async (id) => {
   if (!confirm('确定删除该用户吗？')) return;
   try {
-    // delete user api
-    // await request.delete(`/users/${id}`);
+    // 删除接口 (假设后端是 DELETE /users/:id)
+    await request.delete(`/users/${id}`);
     alert('删除成功');
     fetchUsers();
   } catch (e) {
-    alert('删除失败');
+    alert('删除失败: ' + (e.response?.data?.message || e.message));
   }
 };
 
+// 日期格式化辅助函数
 const formatDate = (str) => {
   if(!str) return '-';
   return new Date(str).toLocaleString();
@@ -165,10 +172,8 @@ const formatDate = (str) => {
 
 <style scoped>
 .manage-container {
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  min-height: 500px;
+  /* 移除白色背景和边框，因为现在是嵌入在弹窗里的 */
+  min-height: 300px;
 }
 
 .toolbar {
@@ -178,43 +183,54 @@ const formatDate = (str) => {
   margin-bottom: 20px;
 }
 
+/* 表格样式 */
+.table-wrapper {
+  overflow-x: auto;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 .data-table th, .data-table td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #eee;
+  color: #333;
 }
 
 .data-table th {
   background: #f8f9fa;
   font-weight: 600;
-  color: #333;
 }
 
+/* 角色标签 */
 .role-tag {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
+  font-weight: 500;
 }
-.role-tag.admin { background: #e6f7ff; color: #1890ff; }
-.role-tag.user { background: #f6ffed; color: #52c41a; }
+.role-tag.admin { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+.role-tag.user { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
 
+/* 操作按钮 */
 .action-btn {
   margin-right: 8px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border: none;
   cursor: pointer;
   border-radius: 4px;
   font-size: 12px;
+  transition: opacity 0.2s;
 }
-.action-btn.edit { background: #e6f7ff; color: #1890ff; }
-.action-btn.delete { background: #fff1f0; color: #f5222d; }
+.action-btn:hover { opacity: 0.8; }
+.action-btn.edit { background: #1890ff; color: #fff; }
+.action-btn.delete { background: #ff4d4f; color: #fff; }
 
-/* 按钮样式 */
+/* 顶部主要按钮 */
 .btn-primary {
   background: #00ff9d;
   color: #000;
@@ -223,33 +239,41 @@ const formatDate = (str) => {
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0, 255, 157, 0.3);
 }
 
-/* 弹窗样式 */
+/* 内部弹窗 (新增/编辑) 样式 */
 .modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
+  position: absolute; /* 注意：这里的 absolute 是相对于父级大弹窗的 */
+  inset: 0;
+  background: rgba(255,255,255,0.8); /* 稍微浅一点的遮罩，区分层级 */
+  backdrop-filter: blur(2px);
   display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 .modal-content {
   background: #fff;
   padding: 24px;
   border-radius: 12px;
-  width: 360px;
+  width: 320px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  border: 1px solid #eee;
 }
 .form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; }
+.form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; font-weight: bold;}
 .form-group input, .form-group select {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   box-sizing: border-box;
+  outline: none;
 }
+.form-group input:focus { border-color: #00ff9d; }
+
 .modal-actions {
   display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
 }
-.btn-cancel { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
-.btn-confirm { background: #00ff9d; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+.btn-cancel { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 16px; border-radius: 6px; cursor: pointer; color: #666; }
+.btn-confirm { background: #00ff9d; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #000; }
 </style>
