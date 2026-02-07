@@ -8,7 +8,7 @@
           
           <div style="display: flex !important; flex-direction: column; justify-content: center; margin-left: 4px; line-height: 1.2;">
             <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 20px;">
-              WebNav <span style="color: #FF6B6B; margin-left: 4px;">Hub</span>
+              WebNav <span style="color: #FF6B6B; margin-left: 2px;">Hub</span>
             </span>
             <span style="display: block !important; font-size: 12px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
               Your Organized Internet Gateway
@@ -114,7 +114,8 @@
       :current-menu-id="activeMenu?.id"
       @import="handleBatchImport"
     />
-    div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
+
+    <div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
       <div class="modal-content large-modal">
         <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
           <h3 style="margin:0">用户管理</h3>
@@ -124,6 +125,7 @@
         <UserManage />
       </div>
     </div>
+
     <Teleport to="body">
       <div v-if="showLoginModal" class="modal-overlay" @click="showLoginModal = false">
         <div class="modal-content login-modal" @click.stop>
@@ -163,7 +165,8 @@
       </div>
     </div>
     
-  </div> </template>
+  </div> 
+</template>
 
 <script setup>
 import { ref, computed, reactive, onMounted, watch } from 'vue';
@@ -389,12 +392,15 @@ const deleteCard = async (id) => {
   }
 };
 
-// === 快速导入功能 ===
+// === 快速导入 & 用户管理功能 (整合版) ===
 const showQuickImportModal = ref(false);
+const showUserManageModal = ref(false); // ✅ 只定义一次
+
 const openQuickImport = () => {
   showQuickImportModal.value = true;
   showUserMenu.value = false;
 };
+
 const handleBatchImport = async ({ menuId, sites, done }) => {
   try {
     let currentMaxOrder = cards.value.length > 0 
@@ -422,7 +428,11 @@ const handleBatchImport = async ({ menuId, sites, done }) => {
   }
 };
 
-const openUserManagement = () => { alert('用户管理开发中...'); showUserMenu.value = false; };
+const openUserManagement = () => {
+  showUserManageModal.value = true;
+  showUserMenu.value = false;
+};
+
 const openSystemSettings = () => { alert('系统设置开发中...'); showUserMenu.value = false; };
 
 watch([activeMenu, activeSubMenu], loadCards);
@@ -462,18 +472,11 @@ const exportData = async () => {
     
     for (const menu of menus.value) {
       const menuObj = { ...menu, subMenus: [], cards: [] };
-      
-      // 获取卡片数据
       const res = await getCards(menu.id);
-      
-      // ✅ 关键点：res.data 里本身就包含了 logo_url, icon, title 等所有字段
-      // 直接存进去就行，不需要特殊处理
       menuObj.cards = res.data || [];
-      
       fullData.menus.push(menuObj);
     }
     
-    // ...下载文件的代码不变...
     const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -486,16 +489,13 @@ const exportData = async () => {
 };
 
 
-/* =========== 👇 核心修复：定义进度条状态和逻辑 👇 =========== */
-
-// 1. 定义状态 (之前黑屏就是因为缺了这个)
+/* =========== 进度条状态和逻辑 =========== */
 const importState = reactive({
   visible: false,
   percent: 0,
   text: '准备中...'
 });
 
-// 2. 改进后的导入函数
 const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -517,7 +517,6 @@ const importData = (event) => {
         return;
       }
 
-      // 开启进度条
       importState.visible = true;
       importState.percent = 0;
       let processedCount = 0;
@@ -539,30 +538,19 @@ const importData = (event) => {
 
         if (menu.cards && menu.cards.length > 0) {
           for (const card of menu.cards) {
-            
-            // ✅ 核心修改在这里：
             await apiAddCard({
               menu_id: newMenuId,
               title: card.title,
               url: card.url,
               description: card.description || '',
-              
-              // 1. 如果备份里有 logo_url，就恢复它；如果没有，传空字符串
               logo_url: card.logo_url || '', 
-              
-              // 2. 兼容旧版本 icon 字段
               icon: card.icon || '',       
-              
               sort_order: card.sort_order || 0
             });
-            
             updateProgress(`正在导入: ${card.title}`);
           }
         }
       }
-
-// ...后面的代码不变...
-
 
       importState.text = '恢复完成！即将刷新...';
       importState.percent = 100;
@@ -798,9 +786,5 @@ onMounted(async () => {
     padding: 15px;
   }
 }
+
 </style>
-
-
-
-
-
