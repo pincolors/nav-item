@@ -114,7 +114,7 @@
       :current-menu-id="activeMenu?.id"
       @import="handleBatchImport"
     />
-    
+
     <div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
       <div class="modal-content large-modal">
         <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
@@ -392,13 +392,15 @@ const deleteCard = async (id) => {
   }
 };
 
-// === 快速导入功能 ===
+// === 快速导入 & 用户管理功能 (整合版) ===
 const showQuickImportModal = ref(false);
-const showUserManageModal = ref(false); 
+const showUserManageModal = ref(false); // ✅ 只定义一次
+
 const openQuickImport = () => {
   showQuickImportModal.value = true;
   showUserMenu.value = false;
 };
+
 const handleBatchImport = async ({ menuId, sites, done }) => {
   try {
     let currentMaxOrder = cards.value.length > 0 
@@ -427,9 +429,10 @@ const handleBatchImport = async ({ menuId, sites, done }) => {
 };
 
 const openUserManagement = () => {
-  showUserManageModal.value = true; 
+  showUserManageModal.value = true;
   showUserMenu.value = false;
 };
+
 const openSystemSettings = () => { alert('系统设置开发中...'); showUserMenu.value = false; };
 
 watch([activeMenu, activeSubMenu], loadCards);
@@ -487,7 +490,6 @@ const exportData = async () => {
 
 
 /* =========== 进度条状态和逻辑 =========== */
-
 const importState = reactive({
   visible: false,
   percent: 0,
