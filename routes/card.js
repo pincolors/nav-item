@@ -64,27 +64,74 @@ router.get('/:menuId', (req, res) => {
   });
 });
 
-// 新增卡片
+// ========================================
+// 🔥🔥🔥 修改这里：新增卡片接口 🔥🔥🔥
+// ========================================
 router.post('/', auth, (req, res) => {
-  const { menu_id, sub_menu_id, title, url, logo_url, custom_logo_path, desc, order } = req.body;
-  db.run('INSERT INTO cards (menu_id, sub_menu_id, title, url, logo_url, custom_logo_path, desc, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
-    [menu_id, sub_menu_id || null, title, url, logo_url, custom_logo_path, desc, order || 0], function(err) {
-    if (err) return res.status(500).json({error: err.message});
-    res.json({ id: this.lastID });
-  });
+  const { menu_id, sub_menu_id, title, url, logo_url, custom_logo_path, desc } = req.body;
+  
+  // ✅ 兼容 order 和 sort_order 两种字段名
+  const order = req.body.order !== undefined ? req.body.order : (req.body.sort_order || 0);
+  
+  console.log('🔵 新增卡片:', req.body);
+  console.log('🔵 使用 order 值:', order);
+  
+  db.run(
+    'INSERT INTO cards (menu_id, sub_menu_id, title, url, logo_url, custom_logo_path, desc, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
+    [menu_id, sub_menu_id || null, title, url, logo_url, custom_logo_path, desc, order], 
+    function(err) {
+      if (err) {
+        console.error('❌ 新增失败:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      console.log('🟢 新增成功，ID:', this.lastID);
+      
+      // ✅ 返回完整数据
+      db.get('SELECT * FROM cards WHERE id = ?', [this.lastID], (err, row) => {
+        if (err) {
+          return res.json({ id: this.lastID });
+        }
+        res.json({ id: this.lastID, data: row });
+      });
+    }
+  );
 });
 
-// 修改卡片
+// ========================================
+// 🔥🔥🔥 修改这里：修改卡片接口 🔥🔥🔥
+// ========================================
 router.put('/:id', auth, (req, res) => {
-  const { menu_id, sub_menu_id, title, url, logo_url, custom_logo_path, desc, order } = req.body;
-  db.run('UPDATE cards SET menu_id=?, sub_menu_id=?, title=?, url=?, logo_url=?, custom_logo_path=?, desc=?, "order"=? WHERE id=?', 
-    [menu_id, sub_menu_id || null, title, url, logo_url, custom_logo_path, desc, order || 0, req.params.id], function(err) {
-    if (err) return res.status(500).json({error: err.message});
-    res.json({ changed: this.changes });
-  });
+  const { menu_id, sub_menu_id, title, url, logo_url, custom_logo_path, desc } = req.body;
+  
+  // ✅ 兼容 order 和 sort_order 两种字段名
+  const order = req.body.order !== undefined ? req.body.order : (req.body.sort_order || 0);
+  
+  console.log('🔵 更新卡片 ID:', req.params.id);
+  console.log('🔵 接收数据:', req.body);
+  console.log('🔵 使用 order 值:', order);
+  
+  db.run(
+    'UPDATE cards SET menu_id=?, sub_menu_id=?, title=?, url=?, logo_url=?, custom_logo_path=?, desc=?, "order"=? WHERE id=?', 
+    [menu_id, sub_menu_id || null, title, url, logo_url, custom_logo_path, desc, order, req.params.id], 
+    function(err) {
+      if (err) {
+        console.error('❌ 更新失败:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      console.log('🟢 更新成功，影响行数:', this.changes);
+      
+      // ✅ 返回更新后的完整数据
+      db.get('SELECT * FROM cards WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) {
+          return res.json({ changed: this.changes });
+        }
+        res.json({ changed: this.changes, data: row });
+      });
+    }
+  );
 });
 
-// 删除卡片
+// 删除卡片（保持不变）
 router.delete('/:id', auth, (req, res) => {
   db.run('DELETE FROM cards WHERE id=?', [req.params.id], function(err) {
     if (err) return res.status(500).json({error: err.message});
