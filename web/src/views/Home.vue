@@ -782,7 +782,24 @@ onMounted(async () => {
 }
 
 .percent-num { font-weight: bold; color: var(--text-color); }
+/* ✅ 新增：大号弹窗样式（适配表格） */
+.large-modal {
+  width: 90%;          /* 宽度占屏幕 90% */
+  max-width: 900px;    /* 最大宽度 900px */
+  max-height: 85vh;    /* 防止太高超出屏幕 */
+  overflow-y: auto;    /* 内容多了出现滚动条 */
+  padding: 25px;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .large-modal {
+    width: 95%;
+    padding: 15px;
+  }
+}
 </style>
+
 
 
 
