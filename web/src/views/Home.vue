@@ -114,7 +114,7 @@
       :current-menu-id="activeMenu?.id"
       @import="handleBatchImport"
     />
-    div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
+   <div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
       <div class="modal-content large-modal">
         <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
           <h3 style="margin:0">用户管理</h3>
@@ -184,6 +184,7 @@ import MenuBar from '../components/MenuBar.vue';
 import CardGrid from '../components/CardGrid.vue';
 import SiteModal from '../components/SiteModal.vue';
 import QuickImportModal from '../components/QuickImportModal.vue';
+// ✅ 【在这里插入】引入用户管理组件
 import UserManage from '../components/UserManage.vue';
   
 // ==================== 主题管理 ====================
@@ -391,6 +392,7 @@ const deleteCard = async (id) => {
 
 // === 快速导入功能 ===
 const showQuickImportModal = ref(false);
+ const showUserManageModal = ref(false); 
 const openQuickImport = () => {
   showQuickImportModal.value = true;
   showUserMenu.value = false;
@@ -422,7 +424,10 @@ const handleBatchImport = async ({ menuId, sites, done }) => {
   }
 };
 
-const openUserManagement = () => { alert('用户管理开发中...'); showUserMenu.value = false; };
+const openUserManagement = () => {
+  showUserManageModal.value = true; // 1. 打开弹窗
+  showUserMenu.value = false;       // 2. 关闭右上角的小菜单
+};
 const openSystemSettings = () => { alert('系统设置开发中...'); showUserMenu.value = false; };
 
 watch([activeMenu, activeSubMenu], loadCards);
@@ -799,6 +804,7 @@ onMounted(async () => {
   }
 }
 </style>
+
 
 
 
