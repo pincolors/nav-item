@@ -114,7 +114,16 @@
       :current-menu-id="activeMenu?.id"
       @import="handleBatchImport"
     />
-
+    div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
+      <div class="modal-content large-modal">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+          <h3 style="margin:0">用户管理</h3>
+          <button @click="showUserManageModal = false" style="background:none; border:none; color:inherit; cursor:pointer; font-size:20px; padding:0 10px;">✕</button>
+        </div>
+        
+        <UserManage />
+      </div>
+    </div>
     <Teleport to="body">
       <div v-if="showLoginModal" class="modal-overlay" @click="showLoginModal = false">
         <div class="modal-content login-modal" @click.stop>
@@ -774,6 +783,7 @@ onMounted(async () => {
 
 .percent-num { font-weight: bold; color: var(--text-color); }
 </style>
+
 
 
 
