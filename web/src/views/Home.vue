@@ -353,12 +353,31 @@ const openEditModal = (card) => {
 const handleSiteSave = async (formData) => {
   try {
     if (isEditingSite.value) {
-      await apiUpdateCard(formData.id, formData);
+      console.log('🔵 开始编辑卡片:', formData);
+      
+      // ✅ 调用后端 API
+      const response = await apiUpdateCard(formData.id, formData);
+      console.log('🟢 后端返回:', response.data);
+      
+      // ✅ 更新前端数据
       const index = cards.value.findIndex(c => c.id === formData.id);
+      console.log('🟡 找到索引:', index);
+      
       if (index !== -1) {
-        cards.value[index] = { ...cards.value[index], ...formData };
+        // 方式1：完整替换（推荐）
+        cards.value = [
+          ...cards.value.slice(0, index),
+          { ...cards.value[index], ...formData },
+          ...cards.value.slice(index + 1)
+        ];
+        
+        console.log('🟢 前端数据已更新:', cards.value[index]);
       }
+      
+      alert('✅ 编辑成功！');
+      
     } else {
+      // 添加逻辑保持不变
       const maxOrder = cards.value.length > 0 
         ? Math.max(...cards.value.map(c => c.sort_order || c.order || 0)) 
         : 0;
@@ -369,18 +388,30 @@ const handleSiteSave = async (formData) => {
         ...formData,
         sort_order: nextOrder
       };
+      
+      console.log('🔵 开始添加卡片:', payload);
       const res = await apiAddCard(payload);
+      console.log('🟢 后端返回:', res.data);
+      
       const newCard = res.data || { ...payload, id: Date.now() };
       cards.value.push(newCard);
+      
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 100);
+      
+      alert('✅ 添加成功！');
     }
+    
     showSiteModal.value = false;
+    
   } catch (e) {
-    alert('保存失败: ' + e.message);
+    console.error('❌ 保存失败:', e);
+    console.error('❌ 错误详情:', e.response?.data);
+    alert('保存失败: ' + (e.response?.data?.message || e.message));
   }
 };
+
 
 const deleteCard = async (id) => {
   if (!confirm("确定删除此卡片？")) return;
@@ -788,3 +819,4 @@ onMounted(async () => {
 }
 
 </style>
+
