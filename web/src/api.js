@@ -23,7 +23,6 @@ request.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token 过期，清除并提示
       localStorage.removeItem('token');
       // window.location.reload(); // 可选：自动刷新跳转登录
     }
@@ -31,45 +30,53 @@ request.interceptors.response.use(
   }
 );
 
-// 🔥🔥🔥 关键：必须导出默认对象，UserManage.vue 需要它 🔥🔥🔥
+// 🔥 必须导出默认对象
 export default request;
 
 /* ============================================================
-   下面是具体的 API 函数 (已重构为使用 request 实例)
-   这样就不需要手动写 { headers: authHeaders() } 了
+   API 函数定义
    ============================================================ */
 
-export const login = (username, password) => request.post('/login', { username, password });
+// === 认证 API ===
+export const login = (username, password) => 
+  request.post('/login', { username, password });
 
 // === 菜单 API ===
 export const getMenus = () => request.get('/menus');
 export const addMenu = (data) => request.post('/menus', data);
 export const updateMenu = (id, data) => request.put(`/menus/${id}`, data);
 export const deleteMenu = (id) => request.delete(`/menus/${id}`);
-// 排序
 export const updateMenuOrder = (ids) => request.post('/menus/sort', { ids });
 
 // === 子菜单 API ===
-export const getSubMenus = (menuId) => request.get(`/menus/${menuId}/submenus`);
-export const addSubMenu = (menuId, data) => request.post(`/menus/${menuId}/submenus`, data);
-export const updateSubMenu = (id, data) => request.put(`/menus/submenus/${id}`, data);
-export const deleteSubMenu = (id) => request.delete(`/menus/submenus/${id}`);
+export const getSubMenus = (menuId) => 
+  request.get(`/menus/${menuId}/submenus`);
+export const addSubMenu = (menuId, data) => 
+  request.post(`/menus/${menuId}/submenus`, data);
+export const updateSubMenu = (id, data) => 
+  request.put(`/menus/submenus/${id}`, data);
+export const deleteSubMenu = (id) => 
+  request.delete(`/menus/submenus/${id}`);
 
 // === 卡片 API ===
-// 保持你原本的逻辑
 export const getCards = (menuId, subMenuId = null) => {
   const params = subMenuId ? { subMenuId } : {};
   return request.get(`/cards/${menuId}`, { params });
 };
-export const addCard = (data) => request.post('/cards', data);
-export const updateCard = (id, data) => request.put(`/cards/${id}`, data);
-export const deleteCard = (id) => request.delete(`/cards/${id}`);
+
+export const addCard = (data) => 
+  request.post('/cards', data);
+
+// ✅ 只保留一个 updateCard，添加 async/await
 export const updateCard = async (id, data) => {
   return await request.put(`/cards/${id}`, data);
 };
 
-// 排序
-export const updateCardOrder = (ids) => request.post('/cards/sort', { ids });
+export const deleteCard = (id) => 
+  request.delete(`/cards/${id}`);
+
+export const updateCardOrder = (ids) => 
+  request.post('/cards/sort', { ids });
 
 // === 上传 API ===
 export const uploadLogo = (file) => {
@@ -92,8 +99,8 @@ export const addFriend = (data) => request.post('/friends', data);
 export const updateFriend = (id, data) => request.put(`/friends/${id}`, data);
 export const deleteFriend = (id) => request.delete(`/friends/${id}`);
 
-// === 用户 API (UserManage 需要这些) ===
+// === 用户 API ===
 export const getUsers = () => request.get('/users');
 export const getUserProfile = () => request.get('/users/profile');
-export const changePassword = (oldPassword, newPassword) => request.put('/users/password', { oldPassword, newPassword });
-
+export const changePassword = (oldPassword, newPassword) => 
+  request.put('/users/password', { oldPassword, newPassword });
