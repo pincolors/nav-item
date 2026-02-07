@@ -320,7 +320,12 @@ const loadCards = async () => {
   }
   try {
     const res = await getCards(activeMenu.value.id, activeSubMenu.value?.id);
-    cards.value = (res.data || []).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    console.log('🔵 加载的卡片数据:', res.data);
+    
+    // ✅ 使用 order 字段排序（后端返回的是 order，不是 sort_order）
+    cards.value = (res.data || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    console.log('🟢 卡片总数:', cards.value.length);
   } catch (e) {
     console.error('加载卡片失败:', e);
     cards.value = [];
@@ -332,6 +337,7 @@ const handleCardSort = async (newCards) => {
   const ids = newCards.map(c => c.id);
   try {
     await updateCardOrder(ids);
+    console.log('🟢 排序已保存');
   } catch (e) {
     console.error('卡片排序失败:', e);
   }
@@ -356,54 +362,52 @@ const handleSiteSave = async (formData) => {
       console.log('🔵 开始编辑卡片 ID:', formData.id);
       console.log('🔵 发送数据:', formData);
       
-      // 调用后端 API
-      const response = await apiUpdateCard(formData.id, formData);
-      console.log('🟢 后端返回:', response);
+      // ✅ 统一使用 order 字段
+      const payload = {
+        ...formData,
+        order: formData.order || 0
+      };
       
-      // ⭐ 关键修复：强制触发响应式更新
+      const response = await apiUpdateCard(formData.id, payload);
+      console.log('🟢 后端返回:', response.data);
+      
+      // ✅ 更新前端数据
       const index = cards.value.findIndex(c => c.id === formData.id);
       if (index !== -1) {
-        // 创建全新的数组来触发 Vue 的响应式
         const newCards = [...cards.value];
         newCards[index] = { 
           ...newCards[index], 
-          ...formData,
-          // 确保包含所有字段
-          id: formData.id,
-          title: formData.title,
-          url: formData.url,
-          description: formData.description || '',
-          logo_url: formData.logo_url || '',
-          icon: formData.icon || '',
-          sort_order: newCards[index].sort_order
+          ...payload
         };
         cards.value = newCards;
-        
-        console.log('🟢 前端数据已更新，索引:', index);
-        console.log('🟢 更新后的卡片:', cards.value[index]);
-      } else {
-        console.error('❌ 未找到卡片，ID:', formData.id);
+        console.log('🟢 前端数据已更新');
       }
       
     } else {
-      // 添加逻辑保持不变
+      // ✅ 添加卡片 - 使用 order 字段
       const maxOrder = cards.value.length > 0 
-        ? Math.max(...cards.value.map(c => c.sort_order || c.order || 0)) 
+        ? Math.max(...cards.value.map(c => c.order || 0))  // 👈 改成 order
         : 0;
       const nextOrder = maxOrder + 1;
+      
       const payload = {
         menu_id: activeMenu.value.id,
         sub_menu_id: activeSubMenu.value?.id,
         ...formData,
-        sort_order: nextOrder
+        order: nextOrder  // 👈 改成 order
       };
       
       console.log('🔵 开始添加卡片:', payload);
       const res = await apiAddCard(payload);
-      const newCard = res.data || { ...payload, id: Date.now() };
-      cards.value = [...cards.value, newCard]; // ⭐ 也改成创建新数组
+      console.log('🟢 后端返回:', res.data);
       
-      console.log('🟢 添加成功:', newCard);
+      // ✅ 获取返回的完整数据
+      const newCard = res.data?.data || res.data || { ...payload, id: res.data?.id || Date.now() };
+      console.log('🟢 新卡片数据:', newCard);
+      
+      // ✅ 添加到列表
+      cards.value = [...cards.value, newCard];
+      console.log('🟢 当前卡片总数:', cards.value.length);
       
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -414,21 +418,22 @@ const handleSiteSave = async (formData) => {
     
   } catch (e) {
     console.error('❌ 保存失败:', e);
-    console.error('❌ 错误响应:', e.response?.data);
-    alert('保存失败: ' + (e.response?.data?.message || e.message));
+    console.error('❌ 错误详情:', e.response?.data);
+    alert('保存失败: ' + (e.response?.data?.error || e.message));
   }
 };
-
 
 const deleteCard = async (id) => {
   if (!confirm("确定删除此卡片？")) return;
   try {
     await apiDeleteCard(id);
     cards.value = cards.value.filter(c => c.id !== id);
+    console.log('🟢 删除成功');
   } catch (e) {
     alert('删除失败: ' + e.message);
   }
 };
+
 
 // === 快速导入 & 用户管理功能 (整合版) ===
 const showQuickImportModal = ref(false);
@@ -826,5 +831,6 @@ onMounted(async () => {
 }
 
 </style>
+
 
 
