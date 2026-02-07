@@ -64,6 +64,10 @@ export const getCards = (menuId, subMenuId = null) => {
 export const addCard = (data) => request.post('/cards', data);
 export const updateCard = (id, data) => request.put(`/cards/${id}`, data);
 export const deleteCard = (id) => request.delete(`/cards/${id}`);
+export const updateCard = async (id, data) => {
+  return await request.put(`/cards/${id}`, data);
+};
+
 // 排序
 export const updateCardOrder = (ids) => request.post('/cards/sort', { ids });
 
@@ -92,3 +96,4 @@ export const deleteFriend = (id) => request.delete(`/friends/${id}`);
 export const getUsers = () => request.get('/users');
 export const getUserProfile = () => request.get('/users/profile');
 export const changePassword = (oldPassword, newPassword) => request.put('/users/password', { oldPassword, newPassword });
+
