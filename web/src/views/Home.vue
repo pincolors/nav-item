@@ -359,69 +359,130 @@ const openEditModal = (card) => {
 const handleSiteSave = async (formData) => {
   try {
     if (isEditingSite.value) {
-      console.log('🔵 开始编辑卡片 ID:', formData.id);
-      console.log('🔵 发送数据:', formData);
+      console.log('==================== 开始编辑 ====================');
+      console.log('🔵 编辑卡片 ID:', formData.id);
+      console.log('🔵 编辑前卡片总数:', cards.value.length);
+      console.log('🔵 原始表单数据:', formData);
       
-      // ✅ 统一使用 order 字段
+      // ✅ 找到原始卡片，保留其 order 值
+      const originalCard = cards.value.find(c => c.id === formData.id);
+      console.log('🟡 找到原始卡片:', originalCard);
+      
+      if (!originalCard) {
+        console.error('❌ 未找到原始卡片，ID:', formData.id);
+        alert('卡片不存在，无法编辑');
+        return;
+      }
+      
+      // ✅ 构建完整的 payload（确保包含所有必要字段）
       const payload = {
-        ...formData,
-        order: formData.order || 0
+        id: formData.id,
+        menu_id: formData.menu_id || originalCard.menu_id,
+        sub_menu_id: formData.sub_menu_id !== undefined ? formData.sub_menu_id : originalCard.sub_menu_id,
+        title: formData.title,
+        url: formData.url,
+        logo_url: formData.logo_url || '',
+        custom_logo_path: formData.custom_logo_path || '',
+        desc: formData.desc || formData.description || '',
+        // ✅ 保留原有的 order 值（除非明确指定了新值）
+        order: formData.order !== undefined ? formData.order : (originalCard.order || 0)
       };
       
+      console.log('🔵 实际发送的数据:', payload);
+      
+      // 调用后端 API
       const response = await apiUpdateCard(formData.id, payload);
       console.log('🟢 后端返回:', response.data);
       
       // ✅ 更新前端数据
       const index = cards.value.findIndex(c => c.id === formData.id);
+      console.log('🟡 找到索引:', index);
+      
       if (index !== -1) {
+        console.log('🟡 更新前的卡片:', cards.value[index]);
+        
+        // ✅ 优先使用后端返回的数据
+        const updatedCard = response.data?.data || payload;
+        console.log('🟡 使用的更新数据:', updatedCard);
+        
+        // ✅ 创建新数组触发响应式更新
         const newCards = [...cards.value];
-        newCards[index] = { 
-          ...newCards[index], 
-          ...payload
-        };
+        newCards[index] = updatedCard;
         cards.value = newCards;
-        console.log('🟢 前端数据已更新');
+        
+        console.log('🟢 更新后的卡片:', cards.value[index]);
+        console.log('🟢 更新后卡片总数:', cards.value.length);
+        
+        // 🔥 验证：卡片数量不应该变化
+        const countBefore = cards.value.length;
+        if (countBefore !== newCards.length) {
+          console.error('❌❌❌ 严重错误：卡片数量发生变化！');
+          console.error('之前:', countBefore, '现在:', newCards.length);
+        }
+      } else {
+        console.error('❌ 更新失败：未找到卡片索引，ID:', formData.id);
+        console.error('❌ 当前所有卡片 ID:', cards.value.map(c => c.id));
       }
       
+      console.log('==================== 编辑完成 ====================');
+      
     } else {
-      // ✅ 添加卡片 - 使用 order 字段
+      // ========== 添加卡片逻辑 ==========
+      console.log('==================== 开始添加 ====================');
+      
+      // ✅ 计算下一个 order 值
       const maxOrder = cards.value.length > 0 
-        ? Math.max(...cards.value.map(c => c.order || 0))  // 👈 改成 order
+        ? Math.max(...cards.value.map(c => c.order || 0))
         : 0;
       const nextOrder = maxOrder + 1;
       
+      console.log('🔵 当前最大 order:', maxOrder);
+      console.log('🔵 新卡片 order:', nextOrder);
+      
       const payload = {
         menu_id: activeMenu.value.id,
-        sub_menu_id: activeSubMenu.value?.id,
-        ...formData,
-        order: nextOrder  // 👈 改成 order
+        sub_menu_id: activeSubMenu.value?.id || null,
+        title: formData.title,
+        url: formData.url,
+        logo_url: formData.logo_url || '',
+        custom_logo_path: formData.custom_logo_path || '',
+        desc: formData.desc || formData.description || '',
+        order: nextOrder
       };
       
       console.log('🔵 开始添加卡片:', payload);
+      
       const res = await apiAddCard(payload);
       console.log('🟢 后端返回:', res.data);
       
-      // ✅ 获取返回的完整数据
+      // ✅ 获取完整的新卡片数据
       const newCard = res.data?.data || res.data || { ...payload, id: res.data?.id || Date.now() };
       console.log('🟢 新卡片数据:', newCard);
       
       // ✅ 添加到列表
       cards.value = [...cards.value, newCard];
-      console.log('🟢 当前卡片总数:', cards.value.length);
+      console.log('🟢 添加成功，当前卡片总数:', cards.value.length);
       
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 100);
+      
+      console.log('==================== 添加完成 ====================');
     }
     
     showSiteModal.value = false;
     
   } catch (e) {
-    console.error('❌ 保存失败:', e);
-    console.error('❌ 错误详情:', e.response?.data);
+    console.error('==================== 保存失败 ====================');
+    console.error('❌ 错误对象:', e);
+    console.error('❌ 错误消息:', e.message);
+    console.error('❌ 响应数据:', e.response?.data);
+    console.error('❌ 响应状态:', e.response?.status);
+    console.error('==========================================');
     alert('保存失败: ' + (e.response?.data?.error || e.message));
   }
 };
+
 
 const deleteCard = async (id) => {
   if (!confirm("确定删除此卡片？")) return;
@@ -831,6 +892,7 @@ onMounted(async () => {
 }
 
 </style>
+
 
 
 
