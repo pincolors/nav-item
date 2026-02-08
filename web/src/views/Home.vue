@@ -787,11 +787,25 @@ const switchToPreviousMenu = () => {
     navigator.vibrate(10);
   }
 };
-
 onMounted(async () => {
   await loadMenus();
-  if (activeMenu.value) await loadCards();
+  if (activeMenu.value) {
+    await loadCards();
+    
+    // ✅ 新增：初始化时滚动到第一个菜单
+    setTimeout(() => {
+      const activeMenuItem = document.querySelector('.menu-item.active');
+      if (activeMenuItem) {
+        activeMenuItem.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }, 300); // 稍微延长延迟，确保菜单已渲染
+  }
 });
+
 </script>
 
 <style scoped>
@@ -1005,6 +1019,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
