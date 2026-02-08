@@ -89,17 +89,22 @@
       </div>
     </div>
     
-    <div class="content-area">
-      <CardGrid 
-        :cards="filteredCards" 
-        :is-edit-mode="isLoggedIn"
-        :is-dark-mode="isDarkMode"
-        @update:cards="handleCardSort"
-        @edit="openEditModal"
-        @delete="deleteCard"
-        @add="openAddModal"
-      />
-    </div>
+   <div 
+  class="content-area"
+  @touchstart="handleTouchStart"
+  @touchmove="handleTouchMove"
+  @touchend="handleTouchEnd"
+>
+  <CardGrid 
+    :cards="filteredCards" 
+    :is-edit-mode="isLoggedIn"
+    :is-dark-mode="isDarkMode"
+    @update:cards="handleCardSort"
+    @edit="openEditModal"
+    @delete="deleteCard"
+    @add="openAddModal"
+  />
+</div> 
 
     <SiteModal 
       v-model:visible="showSiteModal"
@@ -267,6 +272,20 @@ const handleMenuSelect = (menu, parent = null) => {
     activeMenu.value = menu;
     activeSubMenu.value = null;
   }
+  loadCards();
+  
+  // 滚动菜单到可视范围
+  setTimeout(() => {
+    const activeMenuItem = document.querySelector('.menu-item.active');
+    if (activeMenuItem) {
+      activeMenuItem.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, 100);
+
   loadCards();
 };
 
@@ -687,6 +706,87 @@ const vClickOutside = {
   },
   unmounted(el) { document.removeEventListener('click', el._clickOutside); delete el._clickOutside; }
 };
+// ==================== 移动端滑动切换菜单 ====================
+let touchStartX = 0;
+let touchEndX = 0;
+let touchStartTime = 0;
+let isSwiping = false;
+
+const handleTouchStart = (e) => {
+  // 编辑模式下禁用滑动切换（避免与卡片拖拽冲突）
+  if (isLoggedIn.value) return;
+  
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartTime = Date.now();
+  isSwiping = true;
+};
+
+const handleTouchMove = (e) => {
+  if (!isSwiping || isLoggedIn.value) return;
+  
+  const touchCurrentX = e.changedTouches[0].screenX;
+  const diff = touchCurrentX - touchStartX;
+  
+  // 限制滑动范围，避免过度滑动
+  if (Math.abs(diff) > 100) {
+    e.preventDefault();
+  }
+};
+
+const handleTouchEnd = (e) => {
+  if (!isSwiping || isLoggedIn.value) return;
+  
+  touchEndX = e.changedTouches[0].screenX;
+  const touchDuration = Date.now() - touchStartTime;
+  
+  isSwiping = false;
+  handleSwipe(touchDuration);
+};
+
+const handleSwipe = (duration) => {
+  const swipeDistance = touchStartX - touchEndX;
+  const swipeThreshold = 50; // 最小滑动距离（像素）
+  const swipeSpeed = Math.abs(swipeDistance) / duration;
+  
+  // 快速滑动或滑动距离足够
+  if (Math.abs(swipeDistance) > swipeThreshold || swipeSpeed > 0.5) {
+    if (swipeDistance > 0) {
+      switchToNextMenu(); // 向左滑 - 下一个
+    } else {
+      switchToPreviousMenu(); // 向右滑 - 上一个
+    }
+  }
+};
+
+const switchToNextMenu = () => {
+  if (!menus.value.length) return;
+  
+  const currentIndex = menus.value.findIndex(m => m.id === activeMenu.value?.id);
+  if (currentIndex === -1 || currentIndex === menus.value.length - 1) return;
+  
+  const nextMenu = menus.value[currentIndex + 1];
+  handleMenuSelect(nextMenu);
+  
+  // 触觉反馈（可选）
+  if (navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+};
+
+const switchToPreviousMenu = () => {
+  if (!menus.value.length) return;
+  
+  const currentIndex = menus.value.findIndex(m => m.id === activeMenu.value?.id);
+  if (currentIndex <= 0) return;
+  
+  const prevMenu = menus.value[currentIndex - 1];
+  handleMenuSelect(prevMenu);
+  
+  // 触觉反馈（可选）
+  if (navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+};
 
 onMounted(async () => {
   await loadMenus();
@@ -890,8 +990,22 @@ onMounted(async () => {
     padding: 15px;
   }
 }
+ /* ==================== 移动端滑动优化 ==================== */
+.content-area {
+  transition: opacity 0.3s ease;
+  touch-action: pan-y; /* 允许垂直滚动，拦截水平滑动 */
+}
+
+@media (max-width: 768px) {
+  /* 滑动时的视觉反馈 */
+  .content-area:active {
+    opacity: 0.95;
+  }
+}
+ 
 
 </style>
+
 
 
 
