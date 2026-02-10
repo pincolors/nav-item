@@ -236,7 +236,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 }
 
 .card-wrapper { 
-  min-height: 200px; 
+  min-height: 180px; 
   perspective: 1000px; 
 }
 
@@ -249,7 +249,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   align-items: center; 
   justify-content: center;
   text-align: center; 
-  min-height: 200px; 
+  min-height: 180px; 
   width: 100%; 
   padding: 20px;
   background: var(--card-bg);
@@ -549,6 +549,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   }
 }
 </style>
+
 
 
 
