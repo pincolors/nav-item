@@ -166,8 +166,20 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   --card-bg: rgba(255, 255, 255, 0.95);
   --card-bg-hover: rgba(255, 255, 255, 1);
   --card-border: rgba(0, 0, 0, 0.08);
-  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  
+  /* 🌟🌟🌟 增强的多层阴影系统 🌟🌟🌟 */
+  --card-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  --card-shadow-hover: 
+    0 12px 24px rgba(0, 0, 0, 0.12),
+    0 16px 40px rgba(0, 0, 0, 0.15),
+    0 0 40px rgba(0, 255, 157, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  
   --text-title: rgba(0, 0, 0, 0.9);
   --text-desc: rgba(0, 0, 0, 0.6);
   --icon-bg: linear-gradient(135deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 1) 100%);
@@ -178,11 +190,23 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 }
 
 .grid-container.dark-theme {
-  --card-bg: rgba(255, 255, 255, 0.06);
-  --card-bg-hover: rgba(255, 255, 255, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --card-bg-hover: rgba(255, 255, 255, 0.12);
   --card-border: rgba(255, 255, 255, 0.12);
-  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --card-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  
+  /* 🌟🌟🌟 深色模式增强阴影 🌟🌟🌟 */
+  --card-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.4),
+    0 8px 16px rgba(0, 0, 0, 0.5),
+    0 16px 48px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  
+  --card-shadow-hover: 
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 50px rgba(0, 255, 157, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  
   --text-title: rgba(255, 255, 255, 0.95);
   --text-desc: rgba(255, 255, 255, 0.6);
   --icon-bg: rgba(255, 255, 255, 0.08);
@@ -205,23 +229,41 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   overflow: visible; 
 }
 @media (min-width: 1024px) {
-  .card-grid { grid-template-columns: repeat(6, 1fr); gap: 28px 20px; }
+  .card-grid { 
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 28px 20px; 
+  }
 }
 
-.card-wrapper { min-height: 200px; perspective: 1000px; }
+.card-wrapper { 
+  min-height: 200px; 
+  perspective: 1000px; 
+}
 
+/* =========================================
+   3. 卡片主体样式（核心增强）
+   ========================================= */
 .card-item {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; min-height: 200px; width: 100%; padding: 20px;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center;
+  text-align: center; 
+  min-height: 200px; 
+  width: 100%; 
+  padding: 20px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
   color: var(--text-title);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-radius: 16px; position: relative;
-  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
   
-  /* ✅ 整卡可拖拽 */
+  /* 🌟🌟🌟 核心改进：多层阴影 + 强烈立体感 🌟🌟🌟 */
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  border-radius: 16px; 
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: grab; 
   box-sizing: border-box; 
   touch-action: pan-y;
@@ -229,23 +271,30 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 
 /* 拖拽中样式 */
 .card-item.is-dragging {
-  cursor: grabbing; opacity: 0.9;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+  cursor: grabbing; 
+  opacity: 0.9;
+  box-shadow: 
+    0 12px 28px rgba(0, 0, 0, 0.15), 
+    0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 悬停效果 (编辑模式下) */
+/* 🌟🌟🌟 悬停效果增强（核心魔法）🌟🌟🌟 */
 .card-item:not(.is-dragging):hover {
-  transform: translateY(-8px) scale(1.03);
+  transform: translateY(-10px) scale(1.05); /* 更大的位移和缩放 */
   background: var(--card-bg-hover);
-  border-color: rgba(0, 255, 157, 0.3);
+  border-color: rgba(0, 255, 157, 0.4);
+  
+  /* 🌟 发光效果 + 多层阴影 */
   box-shadow: var(--card-shadow-hover);
+  z-index: 10; /* 确保悬停时在最上层 */
 }
+
 .grid-container.dark-theme .card-item:not(.is-dragging):hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* =========================================
-   3. 操作按钮（移动端优化）
+   4. 操作按钮（移动端优化）
    ========================================= */
 .action-buttons { 
   position: absolute; 
@@ -256,7 +305,6 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   z-index: 50;
 }
 
-/* 确保按钮区域不可拖拽 */
 .action-buttons,
 .action-buttons * {
   -webkit-user-drag: none;
@@ -277,14 +325,12 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   justify-content: center;
   cursor: pointer; 
   transition: all 0.2s ease;
-  
-  /* ✅ 移动端优化 */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
 }
 
-/* 🌟 扩大点击热区 */
+/* 扩大点击热区 */
 .icon-btn::after {
   content: '';
   position: absolute;
@@ -295,7 +341,9 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   border-radius: 50%;
 }
 
-.grid-container.dark-theme .icon-btn { color: #ccc; }
+.grid-container.dark-theme .icon-btn { 
+  color: #ccc; 
+}
 
 /* 桌面端悬停 */
 @media (hover: hover) and (pointer: fine) {
@@ -310,7 +358,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 /* 移动端点击反馈 */
 @media (hover: none) and (pointer: coarse) {
   .icon-btn {
-    width: 40px;  /* 加大点击区域 */
+    width: 40px;
     height: 40px;
   }
   
@@ -328,73 +376,178 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 }
 
 /* =========================================
-   4. 图标与内容
+   5. 图标容器（增强版）
    ========================================= */
 .card-icon-wrapper {
-  width: 72px; height: 72px; 
-  margin-bottom: 12px; border-radius: 12px; overflow: hidden;
+  width: 128px; 
+  height: 128px; 
+  margin-bottom: 12px; 
+  border-radius: 12px; 
+  overflow: hidden;
   background: var(--icon-bg);
-  padding: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.04); transition: all 0.3s;
+  padding: 12px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  flex-shrink: 0;
+  
+  /* 🌟 增强的阴影系统 */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.06), 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  border: 1px solid rgba(0, 0, 0, 0.06); 
+  transition: all 0.3s;
 }
 
-.card-item:hover .card-icon-wrapper { background: var(--icon-bg-hover); }
-.grid-container.dark-theme .card-icon-wrapper { border-color: rgba(255,255,255,0.1); }
+/* 🌟 卡片悬停时图标发光 */
+.card-item:hover .card-icon-wrapper { 
+  background: var(--icon-bg-hover);
+  
+  /* 发光效果 */
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 0 20px rgba(0, 255, 157, 0.2);
+  
+  transform: scale(1.05);
+}
 
-.site-favicon { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
-.card-item:hover .site-favicon { transform: scale(1.1); }
+.grid-container.dark-theme .card-icon-wrapper { 
+  border-color: rgba(255,255,255,0.1); 
+}
+
+.site-favicon { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: contain; 
+  transition: transform 0.3s;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* 🌟 悬停时图标旋转放大 */
+.card-item:hover .site-favicon { 
+  transform: scale(1.1) rotate(5deg);
+}
 
 .fallback-icon {
-  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  font-size: 48px; font-weight: bold; color: #00ff9d;
-  text-shadow: 0 2px 4px rgba(0, 255, 157, 0.3);
+  width: 100%; 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-size: 48px; 
+  font-weight: bold; 
+  color: #00ff9d;
+  text-shadow: 
+    0 2px 4px rgba(0, 255, 157, 0.3),
+    0 0 20px rgba(0, 255, 157, 0.4);
 }
 
+/* =========================================
+   6. 内容区域
+   ========================================= */
 .card-info {
   width: 100%;
 }
 
 .card-title {
-  font-size: 14px; font-weight: 700; width: 100%; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis; margin-bottom: 4px;
+  font-size: 14px; 
+  font-weight: 700; 
+  width: 100%; 
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis; 
+  margin-bottom: 4px;
   color: var(--text-title);
+  transition: color 0.2s;
+}
+
+.card-item:hover .card-title {
+  color: #00ff9d;
 }
 
 .card-desc {
-  font-size: 12px; opacity: 0.6; width: 100%; white-space: nowrap; overflow: hidden;
+  font-size: 12px; 
+  opacity: 0.6; 
+  width: 100%; 
+  white-space: nowrap; 
+  overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-desc);
 }
 
 /* =========================================
-   5. 添加卡片
+   7. 添加卡片
    ========================================= */
 .add-card { 
   border: 2px dashed var(--btn-border); 
   background: transparent; 
   box-shadow: none;
   cursor: pointer;
+  transition: all 0.3s;
 }
 
 .add-card:hover { 
   border-color: #00ff9d; 
-  background: rgba(0, 255, 157, 0.05); 
+  background: rgba(0, 255, 157, 0.08);
+  
+  /* 🌟 悬停时的发光效果 */
+  box-shadow: 
+    0 8px 24px rgba(0, 255, 157, 0.15),
+    0 0 30px rgba(0, 255, 157, 0.2);
+  
+  transform: translateY(-8px);
 }
 
 .add-icon { 
   font-size: 32px; 
   color: #00ff9d; 
-  margin-bottom: 0; 
+  margin-bottom: 0;
+  transition: transform 0.3s;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+}
+
+.add-card:hover .add-icon {
+  transform: scale(1.2) rotate(90deg);
 }
 
 /* =========================================
-   6. 拖拽幽灵效果
+   8. 拖拽幽灵效果
    ========================================= */
 .ghost .card-item {
   opacity: 0.5; 
   background: rgba(0, 255, 157, 0.08);
   border: 2px dashed #00ff9d;
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+}
+
+/* =========================================
+   9. 移动端滑动优化
+   ========================================= */
+@media (max-width: 768px) {
+  .card-grid {
+    padding: 0 12px 60px;
+    gap: 20px 16px;
+  }
+  
+  .card-item {
+    padding: 16px;
+    min-height: 180px;
+  }
+  
+  .card-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    padding: 10px;
+  }
+  
+  /* 移动端悬停效果减弱（避免误触） */
+  .card-item:hover {
+    transform: translateY(-6px) scale(1.03);
+  }
 }
 </style>
+
 
