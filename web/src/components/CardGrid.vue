@@ -379,8 +379,8 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
    5. 图标容器（增强版）
    ========================================= */
 .card-icon-wrapper {
-  width: 128px; 
-  height: 128px; 
+  width: 80px; 
+  height: 80px; 
   margin-bottom: 12px; 
   border-radius: 12px; 
   overflow: hidden;
@@ -549,5 +549,6 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   }
 }
 </style>
+
 
 
