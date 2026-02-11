@@ -538,8 +538,8 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   }
   
   .card-icon-wrapper {
-    width: 100px;
-    height: 100px;
+    width: 76px;
+    height: 76px;
     padding: 10px;
   }
   
@@ -549,6 +549,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   }
 }
 </style>
+
 
 
 
