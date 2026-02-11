@@ -223,7 +223,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   display: grid;
   width: 100%;
   grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
-  gap: 24px 20px;
+  gap: 24px 24px;
   padding-bottom: 80px;
   min-height: 100%; 
   overflow: visible; 
@@ -379,8 +379,8 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
    5. 图标容器（增强版）
    ========================================= */
 .card-icon-wrapper {
-  width: 84px; 
-  height: 84px; 
+  width: 76px; 
+  height: 76px; 
   margin-bottom: 12px; 
   border-radius: 12px; 
   overflow: hidden;
@@ -549,6 +549,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   }
 }
 </style>
+
 
 
 
