@@ -902,47 +902,78 @@ onMounted(async () => {
   align-items: center; 
   background: var(--card-bg);
   border-radius: 20px; 
-  padding: 6px 12px; 
+  padding: 8px 14px;  /* 稍微增加内边距 */
   width: 100%;
-  
-  /* ✅ 新拟态立体效果 - 与卡片一致 */
   border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  
+  /* 🌟🌟🌟 与卡片完全一致的多层阴影 🌟🌟🌟 */
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  /* 🌟 与卡片一致的背景模糊 */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
 }
 
 /* 深色模式 */
 .dark-mode .search-container {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
+  
+  /* 深色模式的多层阴影 */
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.4),
+    0 8px 16px rgba(0, 0, 0, 0.5),
+    0 16px 48px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
+
 /* 悬停效果 - 与卡片一致 */
 .search-container:hover {
-  transform: translateY(-2px);
-  border-color: rgba(0, 255, 157, 0.3);
-  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(0, 255, 157, 0.4);
+  
+  /* 悬停时的发光阴影 */
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 0 30px rgba(0, 255, 157, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
   .dark-mode .search-container:hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    0 16px 48px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 255, 157, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* 聚焦效果 */
 .search-container:focus-within {
-  transform: translateY(-4px) scale(1.01);
+  transform: translateY(-6px) scale(1.02);
   border-color: var(--primary-color);
+  
+  /* 聚焦时的强烈发光 */
   box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.1),
-    0 0 0 3px rgba(0, 255, 157, 0.1);
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(0, 255, 157, 0.2),
+    0 0 50px rgba(0, 255, 157, 0.4);
 }
 
 .dark-mode .search-container:focus-within {
   box-shadow: 
-    0 16px 40px rgba(0, 0, 0, 0.5),
-    0 0 0 3px rgba(0, 255, 157, 0.2);
+    0 16px 48px rgba(0, 0, 0, 0.6),
+    0 20px 64px rgba(0, 0, 0, 0.8),
+    0 0 0 3px rgba(0, 255, 157, 0.25),
+    0 0 60px rgba(0, 255, 157, 0.5);
 }
 
 /* 搜索引擎选择器 */
@@ -952,25 +983,29 @@ onMounted(async () => {
   color: var(--text-color); 
   font-weight: 700; 
   padding-right: 12px; 
-  margin-right: 8px; 
-  border-right: 1px solid rgba(163, 177, 198, 0.3); 
+  margin-right: 10px; 
+  border-right: 2px solid rgba(0, 255, 157, 0.2);  /* 绿色分割线 */
   outline: none; 
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  font-size: 14px;
 }
 
 .engine-select:hover {
   color: var(--primary-color);
+  border-right-color: var(--primary-color);
 }
+
 
 .engine-select option {
   background-color: var(--card-bg); 
   color: var(--text-color);
-  padding: 8px;
+  padding: 10px;
+  font-weight: 600;
 }
 
 .dark-mode .engine-select {
-  border-right-color: rgba(255, 255, 255, 0.2);
+  border-right-color: rgba(0, 255, 157, 0.3);
 }
 
 .dark-mode .engine-select option {
@@ -983,7 +1018,7 @@ onMounted(async () => {
   flex: 1; 
   border: none; 
   background: transparent; 
-  padding: 12px 8px; 
+  padding: 14px 10px;  /* 增加高度 */
   color: var(--text-color); 
   font-size: 16px; 
   outline: none; 
@@ -1009,39 +1044,43 @@ onMounted(async () => {
   border: none; 
   color: #888; 
   cursor: pointer; 
-  padding: 0 8px; 
-  font-size: 18px;
+  padding: 0 10px; 
+  font-size: 20px;
   transition: all 0.2s;
   opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .clear-btn:hover {
   color: var(--primary-color);
   opacity: 1;
-  transform: scale(1.1);
+  transform: scale(1.2) rotate(90deg);
 }
 
-/* 搜索按钮 - 立体效果 */
+/* 🌟🌟🌟 搜索按钮 - 立体效果增强 🌟🌟🌟 */
 .search-btn { 
-  background: var(--card-bg);
+  background: var(--icon-bg);  /* 使用与图标容器相同的渐变 */
   color: var(--primary-color); 
-  width: 40px; 
-  height: 40px; 
+  width: 44px;  /* 稍微大一点 */
+  height: 44px; 
   border-radius: 12px; 
-  border: none; 
+  border: 1px solid rgba(0, 255, 157, 0.2); 
   cursor: pointer; 
   display: flex; 
   align-items: center; 
   justify-content: center;
+  flex-shrink: 0;
   
-  /* ✅ 立体效果 */
+  /* 🌟 多层阴影立体效果 */
   box-shadow: 
-    4px 4px 8px rgba(163, 177, 198, 0.4), 
-    -4px -4px 8px rgba(255, 255, 255, 0.5);
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 2px rgba(0, 0, 0, 0.05);
   
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-
 .dark-mode .search-btn { 
   background: var(--card-bg);
   box-shadow: 
@@ -1214,6 +1253,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
