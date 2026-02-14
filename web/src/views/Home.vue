@@ -1142,7 +1142,7 @@ onMounted(async () => {
     width: 40px;
     height: 40px;
   }
-  transform: translateY(-2px) scale(1.005);
+ 
  }
 
 
@@ -1261,6 +1261,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
