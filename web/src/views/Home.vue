@@ -1143,8 +1143,7 @@ onMounted(async () => {
     height: 40px;
   }
   transform: translateY(-2px) scale(1.005);
-  }
-}
+ }
 
 
 /* Modal */
@@ -1262,6 +1261,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
