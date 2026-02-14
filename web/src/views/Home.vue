@@ -1082,38 +1082,45 @@ onMounted(async () => {
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .dark-mode .search-btn { 
-  background: var(--card-bg);
+  background: var(--icon-bg);
+  border-color: rgba(0, 255, 157, 0.3);
   box-shadow: 
-    4px 4px 8px rgba(0, 0, 0, 0.4),
-    -4px -4px 8px rgba(255, 255, 255, 0.05);
+    0 4px 6px rgba(0, 0, 0, 0.4),
+    0 8px 16px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* 搜索按钮悬停 */
 .search-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
+  border-color: var(--primary-color);
+  
+  /* 悬停发光效果 */
   box-shadow: 
-    6px 6px 12px rgba(163, 177, 198, 0.5), 
-    -6px -6px 12px rgba(255, 255, 255, 0.6);
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 0 20px rgba(0, 255, 157, 0.3);
 }
 
 .dark-mode .search-btn:hover {
   box-shadow: 
-    6px 6px 12px rgba(0, 0, 0, 0.5),
-    -6px -6px 12px rgba(255, 255, 255, 0.08);
+    0 8px 16px rgba(0, 0, 0, 0.5),
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(0, 255, 157, 0.4);
 }
 
 /* 搜索按钮按下 */
 .search-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
   box-shadow: 
-    inset 3px 3px 6px rgba(163, 177, 198, 0.4), 
-    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .dark-mode .search-btn:active {
   box-shadow: 
-    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.05);
+    inset 0 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* 移动端优化 */
@@ -1123,17 +1130,19 @@ onMounted(async () => {
   }
   
   .search-container {
-    padding: 4px 8px;
+    padding: 6px 10px;
   }
   
   .search-input {
-    padding: 10px 6px;
+    padding: 12px 8px
     font-size: 15px;
   }
   
   .search-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+  }
+  transform: translateY(-2px) scale(1.005);
   }
 }
 
@@ -1253,6 +1262,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
