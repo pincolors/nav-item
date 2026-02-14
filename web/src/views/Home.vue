@@ -1138,11 +1138,13 @@ onMounted(async () => {
     font-size: 15px;
   }
   
-  .search-btn {
+ .search-btn {
     width: 40px;
     height: 40px;
   }
- 
+    transform: translateY(-2px) scale(1.005);
+  }
+}
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
@@ -1259,6 +1261,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
