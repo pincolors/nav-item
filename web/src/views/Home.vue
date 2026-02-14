@@ -1143,8 +1143,6 @@ onMounted(async () => {
     height: 40px;
   }
  
- }
-
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
@@ -1261,6 +1259,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
