@@ -1082,45 +1082,38 @@ onMounted(async () => {
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .dark-mode .search-btn { 
-  background: var(--icon-bg);
-  border-color: rgba(0, 255, 157, 0.3);
+  background: var(--card-bg);
   box-shadow: 
-    0 4px 6px rgba(0, 0, 0, 0.4),
-    0 8px 16px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    4px 4px 8px rgba(0, 0, 0, 0.4),
+    -4px -4px 8px rgba(255, 255, 255, 0.05);
 }
 
 /* 搜索按钮悬停 */
 .search-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  border-color: var(--primary-color);
-  
-  /* 悬停发光效果 */
+  transform: translateY(-2px);
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.12),
-    0 8px 24px rgba(0, 0, 0, 0.15),
-    0 0 20px rgba(0, 255, 157, 0.3);
+    6px 6px 12px rgba(163, 177, 198, 0.5), 
+    -6px -6px 12px rgba(255, 255, 255, 0.6);
 }
 
 .dark-mode .search-btn:hover {
   box-shadow: 
-    0 8px 16px rgba(0, 0, 0, 0.5),
-    0 12px 32px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(0, 255, 157, 0.4);
+    6px 6px 12px rgba(0, 0, 0, 0.5),
+    -6px -6px 12px rgba(255, 255, 255, 0.08);
 }
 
 /* 搜索按钮按下 */
 .search-btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0);
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    inset 0 4px 8px rgba(0, 0, 0, 0.15);
+    inset 3px 3px 6px rgba(163, 177, 198, 0.4), 
+    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
 }
 
 .dark-mode .search-btn:active {
   box-shadow: 
-    inset 0 2px 6px rgba(0, 0, 0, 0.4),
-    inset 0 4px 12px rgba(0, 0, 0, 0.3);
+    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.05);
 }
 
 /* 移动端优化 */
@@ -1128,23 +1121,28 @@ onMounted(async () => {
   .search-section {
     padding: 0 16px 24px;
   }
+
   
   .search-container {
     padding: 6px 10px;
   }
+
   
   .search-input {
-    padding: 12px 8px
+    padding: 12px 8px;
     font-size: 15px;
   }
   
- .search-btn {
+  .search-btn {
     width: 40px;
     height: 40px;
   }
+   /* 移动端减弱悬停效果 */
+  .search-container:hover {
     transform: translateY(-2px) scale(1.005);
   }
 }
+
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
@@ -1261,12 +1259,6 @@ onMounted(async () => {
  
 
 </style>
-
-
-
-
-
-
 
 
 
