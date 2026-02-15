@@ -901,8 +901,9 @@ onMounted(async () => {
   display: flex; 
   align-items: center; 
   background: var(--card-bg);
-  border-radius: 20px; 
-  padding: 8px 14px;  /* 稍微增加内边距 */
+ border-radius: 16px;  /* 👈 从 20px 改为 16px（更扁平）*/
+  padding: 6px 12px;    /* 👈 从 8px 14px 改为 6px 12px（减小内边距）*/
+
   width: 100%;
   border: 1px solid var(--card-border);
   
@@ -982,13 +983,13 @@ onMounted(async () => {
   background: transparent; 
   color: var(--text-color); 
   font-weight: 700; 
-  padding-right: 12px; 
-  margin-right: 10px; 
+  padding-right: 10px;  /* 👈 从 12px 改为 10px */
+  margin-right: 8px;    /* 👈 从 10px 改为 8px */ 
   border-right: 2px solid rgba(0, 255, 157, 0.2);  /* 绿色分割线 */
   outline: none; 
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .engine-select:hover {
@@ -1018,9 +1019,9 @@ onMounted(async () => {
   flex: 1; 
   border: none; 
   background: transparent; 
-  padding: 14px 10px;  /* 增加高度 */
+  padding: 10px 8px;    /* 👈 从 14px 10px 改为 10px 8px（减小垂直内边距）*/
   color: var(--text-color); 
-  font-size: 16px; 
+  font-size: 15px;      /* 👈 从 16px 改为 15px */
   outline: none; 
   font-weight: 500;
 }
@@ -1044,8 +1045,8 @@ onMounted(async () => {
   border: none; 
   color: #888; 
   cursor: pointer; 
-  padding: 0 10px; 
-  font-size: 20px;
+  padding: 0 8px;       /* 👈 从 0 10px 改为 0 8px */
+  font-size: 18px;      /* 👈 从 20px 改为 18px */
   transition: all 0.2s;
   opacity: 0.6;
   display: flex;
@@ -1063,10 +1064,10 @@ onMounted(async () => {
 .search-btn { 
   background: var(--icon-bg);  /* 使用与图标容器相同的渐变 */
   color: var(--primary-color); 
-  width: 44px;  /* 稍微大一点 */
-  height: 44px; 
-  border-radius: 12px; 
-  border: 1px solid rgba(0, 255, 157, 0.2); 
+  width: 38px;          /* 👈 从 44px 改为 38px */
+  height: 38px;         /* 👈 从 44px 改为 38px */
+  border-radius: 10px;  /* 👈 从 12px 改为 10px */
+  border: 1px solid rgba(0, 255, 157, 0.2);   
   cursor: pointer; 
   display: flex; 
   align-items: center; 
@@ -1259,6 +1260,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
