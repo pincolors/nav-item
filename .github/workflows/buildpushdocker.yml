@@ -1,0 +1,51 @@
+name: Build and Push to Docker Hub
+
+on:
+  push:
+    branches: [ main ]
+    # 只有当这些文件变动时才触发构建，保持原有的逻辑
+    paths:
+      - 'Dockerfile'
+      - 'app.js'
+      - 'config.js'
+      - 'db.js'
+      - 'web/**'
+      - 'routes/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 1. 登录到 Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          # 注意：这里需要在 GitHub Repo Settings -> Secrets 中配置这两个变量
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 2. 设置 Docker Buildx (用于支持缓存和多架构构建)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. 构建并推送
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # 请将下方 'your_username' 改为你的 Docker Hub 用户名
+          # 将 'nav-item' 改为你的仓库名
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nav-item:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nav-item:${{ github.sha }}
+          # 使用 GitHub Actions 缓存来加速后续构建
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
