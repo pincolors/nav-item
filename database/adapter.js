@@ -4,15 +4,13 @@ const { Pool } = require('pg');
 
 class DatabaseAdapter {
   constructor() {
-    this.dbType = process.env.DB_TYPE || 'sqlite'; // 'sqlite' 或 'postgres'
+    this.dbType = process.env.DB_TYPE || 'sqlite';
     this.db = null;
     this.pool = null;
   }
 
-  // 初始化数据库连接
   async init() {
     if (this.dbType === 'postgres') {
-      // PostgreSQL 配置
       this.pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -20,20 +18,18 @@ class DatabaseAdapter {
       console.log('✅ 使用 PostgreSQL 数据库');
       await this.initPostgresTables();
     } else {
-      // SQLite 配置
-      const dbPath = process.env.DB_PATH || './navigation.db';
+      const dbPath = process.env.DB_PATH || './database/nav.db';
       this.db = new sqlite3.Database(dbPath, (err) => {
         if (err) {
           console.error('SQLite 连接失败:', err);
         } else {
-          console.log('✅ 使用 SQLite 数据库');
+          console.log('✅ 使用 SQLite 数据库:', dbPath);
         }
       });
       await this.initSqliteTables();
     }
   }
 
-  // 初始化 SQLite 表结构
   async initSqliteTables() {
     return new Promise((resolve, reject) => {
       this.db.serialize(() => {
@@ -95,6 +91,34 @@ class DatabaseAdapter {
             value TEXT,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
+        `);
+
+        // 广告表（如果存在）
+        this.db.run(`
+          CREATE TABLE IF NOT EXISTS ads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            image_url TEXT,
+            link_url TEXT,
+            position TEXT,
+            order_num INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+
+        // 友链表（如果存在）
+        this.db.run(`
+          CREATE TABLE IF NOT EXISTS friend_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            url TEXT NOT NULL,
+            logo_url TEXT,
+            description TEXT,
+            order_num INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
         `, (err) => {
           if (err) reject(err);
           else resolve();
@@ -103,13 +127,11 @@ class DatabaseAdapter {
     });
   }
 
-  // 初始化 PostgreSQL 表结构
   async initPostgresTables() {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
 
-      // 用户表
       await client.query(`
         CREATE TABLE IF NOT EXISTS users (
           id SERIAL PRIMARY KEY,
@@ -119,7 +141,6 @@ class DatabaseAdapter {
         )
       `);
 
-      // 菜单表
       await client.query(`
         CREATE TABLE IF NOT EXISTS menus (
           id SERIAL PRIMARY KEY,
@@ -130,7 +151,6 @@ class DatabaseAdapter {
         )
       `);
 
-      // 子菜单表
       await client.query(`
         CREATE TABLE IF NOT EXISTS sub_menus (
           id SERIAL PRIMARY KEY,
@@ -141,7 +161,6 @@ class DatabaseAdapter {
         )
       `);
 
-      // 卡片表
       await client.query(`
         CREATE TABLE IF NOT EXISTS cards (
           id SERIAL PRIMARY KEY,
@@ -157,12 +176,37 @@ class DatabaseAdapter {
         )
       `);
 
-      // 配置表
       await client.query(`
         CREATE TABLE IF NOT EXISTS configs (
           key VARCHAR(255) PRIMARY KEY,
           value TEXT,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ads (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255),
+          image_url TEXT,
+          link_url TEXT,
+          position VARCHAR(100),
+          order_num INTEGER DEFAULT 0,
+          is_active INTEGER DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS friend_links (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          url TEXT NOT NULL,
+          logo_url TEXT,
+          description TEXT,
+          order_num INTEGER DEFAULT 0,
+          is_active INTEGER DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
@@ -177,15 +221,12 @@ class DatabaseAdapter {
     }
   }
 
-  // 统一的查询接口
   async query(sql, params = []) {
     if (this.dbType === 'postgres') {
-      // PostgreSQL 使用 $1, $2 占位符
       const pgSql = this.convertToPostgresSQL(sql);
       const result = await this.pool.query(pgSql, params);
       return result.rows;
     } else {
-      // SQLite 使用 ? 占位符
       return new Promise((resolve, reject) => {
         this.db.all(sql, params, (err, rows) => {
           if (err) reject(err);
@@ -195,12 +236,10 @@ class DatabaseAdapter {
     }
   }
 
-  // 统一的执行接口（INSERT, UPDATE, DELETE）
   async run(sql, params = []) {
     if (this.dbType === 'postgres') {
       const pgSql = this.convertToPostgresSQL(sql);
       
-      // 如果是 INSERT，需要 RETURNING id
       if (pgSql.toUpperCase().includes('INSERT') && !pgSql.toUpperCase().includes('RETURNING')) {
         const modifiedSql = pgSql.replace(/;?\s*$/, ' RETURNING id');
         const result = await this.pool.query(modifiedSql, params);
@@ -225,33 +264,20 @@ class DatabaseAdapter {
     }
   }
 
-  // 获取单条记录
   async get(sql, params = []) {
     const rows = await this.query(sql, params);
     return rows[0] || null;
   }
 
-  // 转换 SQLite SQL 为 PostgreSQL SQL
   convertToPostgresSQL(sql) {
     let pgSql = sql;
-    
-    // 将 ? 占位符转换为 $1, $2, ...
     let index = 1;
     pgSql = pgSql.replace(/\?/g, () => `$${index++}`);
-    
-    // 替换 AUTOINCREMENT 为 SERIAL
     pgSql = pgSql.replace(/INTEGER PRIMARY KEY AUTOINCREMENT/gi, 'SERIAL PRIMARY KEY');
-    
-    // 替换 DATETIME 为 TIMESTAMP
     pgSql = pgSql.replace(/DATETIME/gi, 'TIMESTAMP');
-    
-    // 替换 CURRENT_TIMESTAMP
-    pgSql = pgSql.replace(/CURRENT_TIMESTAMP/gi, 'CURRENT_TIMESTAMP');
-    
     return pgSql;
   }
 
-  // 事务支持
   async transaction(callback) {
     if (this.dbType === 'postgres') {
       const client = await this.pool.connect();
@@ -285,7 +311,6 @@ class DatabaseAdapter {
     }
   }
 
-  // 关闭数据库连接
   async close() {
     if (this.dbType === 'postgres') {
       await this.pool.end();
@@ -304,6 +329,5 @@ class DatabaseAdapter {
   }
 }
 
-// 导出单例
 const dbAdapter = new DatabaseAdapter();
 module.exports = dbAdapter;
