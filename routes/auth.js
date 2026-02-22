@@ -1,54 +1,105 @@
+// routes/auth.js
 const express = require('express');
-const db = require('../db');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const { db } = require('../db');
 const router = express.Router();
 
-const JWT_SECRET = 'your_jwt_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-function getClientIp(req) {
-  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
-  if (typeof ip === 'string' && ip.includes(',')) ip = ip.split(',')[0].trim();
-  if (typeof ip === 'string' && ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
-  return ip;
-}
-
-function getShanghaiTime() {
-  const date = new Date();
-  // 获取上海时区时间
-  const shanghaiTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-  
-  // 格式化为 YYYY-MM-DD HH:mm:ss
-  const year = shanghaiTime.getFullYear();
-  const month = String(shanghaiTime.getMonth() + 1).padStart(2, '0');
-  const day = String(shanghaiTime.getDate()).padStart(2, '0');
-  const hours = String(shanghaiTime.getHours()).padStart(2, '0');
-  const minutes = String(shanghaiTime.getMinutes()).padStart(2, '0');
-  const seconds = String(shanghaiTime.getSeconds()).padStart(2, '0');
-  
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
-router.post('/login', (req, res) => {
+// === 注册用户 ===
+router.post('/register', async (req, res) => {
   const { username, password } = req.body;
-  db.get('SELECT * FROM users WHERE username=?', [username], (err, user) => {
-    if (err || !user) return res.status(401).json({ error: '用户名或密码错误' });
-    bcrypt.compare(password, user.password, (err, result) => {
-      if (result) {
-        // 记录上次登录时间和IP
-        const lastLoginTime = user.last_login_time;
-        const lastLoginIp = user.last_login_ip;
-        // 更新为本次登录（上海时间）
-        const now = getShanghaiTime();
-        const ip = getClientIp(req);
-        db.run('UPDATE users SET last_login_time=?, last_login_ip=? WHERE id=?', [now, ip, user.id]);
-        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '2h' });
-        res.json({ token, lastLoginTime, lastLoginIp });
-      } else {
-        res.status(401).json({ error: '用户名或密码错误' });
-      }
-    });
-  });
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: '用户名和密码不能为空' });
+  }
+  
+  try {
+    // 检查用户是否已存在
+    const existingUser = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+    if (existingUser) {
+      return res.status(400).json({ error: '用户名已存在' });
+    }
+    
+    // 加密密码
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // 插入新用户
+    const result = await db.run(
+      'INSERT INTO users (username, password) VALUES (?, ?)',
+      [username, hashedPassword]
+    );
+    
+    res.json({ message: '注册成功', id: result.lastID });
+  } catch (error) {
+    console.error('注册失败:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-module.exports = router; 
+// === 登录 ===
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: '用户名和密码不能为空' });
+  }
+  
+  try {
+    // 查找用户
+    const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+    if (!user) {
+      return res.status(401).json({ error: '用户名或密码错误' });
+    }
+    
+    // 验证密码
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: '用户名或密码错误' });
+    }
+    
+    // 生成 JWT
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({
+      message: '登录成功',
+      token,
+      user: {
+        id: user.id,
+        username: user.username
+      }
+    });
+  } catch (error) {
+    console.error('登录失败:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// === 验证 token ===
+router.get('/verify', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ error: '未提供 token' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await db.get('SELECT id, username FROM users WHERE id = ?', [decoded.id]);
+    
+    if (!user) {
+      return res.status(401).json({ error: '用户不存在' });
+    }
+    
+    res.json({ valid: true, user });
+  } catch (error) {
+    res.status(401).json({ error: 'Token 无效或已过期' });
+  }
+});
+
+module.exports = router;
