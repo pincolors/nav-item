@@ -117,22 +117,32 @@ db.serialize = (cb) => cb(); // Postgres 默认就是序列化的
     logo TEXT
   )`);
 
-// --- 默认数据初始化逻辑 ---
-setTimeout(() => {
-  db.get('SELECT COUNT(*) as count FROM menus', (err, row) => {
-    const count = row ? (row.count || row.count === 0 ? parseInt(row.count) : 0) : 0;
-    if (count === 0) {
-      console.log('数据库为空，开始写入默认数据...');
-      const defaultMenus = [['Home', 1], ['Ai Stuff', 2], ['Cloud', 3], ['Software', 4], ['Tools', 5], ['Other', 6]];
-      defaultMenus.forEach(([name, order]) => {
-        db.run('INSERT INTO menus (name, "order") VALUES (?, ?)', [name, order]);
-      });
+// 在 db.js 末尾替换这段逻辑
+setTimeout(async () => {
+  try {
+    // 使用 query 确保兼容性
+    const res = await db.query('SELECT COUNT(*) as count FROM menus');
+    const count = parseInt(res.rows[0].count);
 
-      // 初始化管理员
-      const passwordHash = bcrypt.hashSync(config.admin.password, 10);
-      db.run('INSERT INTO users (username, password) VALUES (?, ?)', [config.admin.username, passwordHash]);
+    if (count === 0) {
+      console.log('数据库为空，开始执行初始化...');
+      
+      // 1. 插入菜单 (Postgres 批量插入语法)
+      await db.query(`INSERT INTO menus (name, "order") VALUES 
+        ('Home', 1), ('Ai Stuff', 2), ('Cloud', 3), ('Software', 4), ('Tools', 5), ('Other', 6)`);
+
+      // 2. 插入管理员
+      const passwordHash = bcrypt.hashSync(config.admin.username, 10);
+      await db.query('INSERT INTO users (username, password) VALUES ($1, $2)', 
+        [config.admin.username, passwordHash]);
+        
+      console.log('默认数据初始化成功！');
     }
-  });
-}, 2000);
+  } catch (err) {
+    console.error('初始化数据失败，原因:', err.message);
+  }
+}, 5000); // 延长到 5 秒确保数据库连接稳固
+
 
 module.exports = db;
+
