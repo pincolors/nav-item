@@ -1,17 +1,20 @@
 // routes/menu.js
 const express = require('express');
 const { db } = require('../db');
-const auth = require('./authMiddleware');
+const auth = require('./authMiddleware');  // 👈 确保导入了
 const router = express.Router();
 
-// === 获取所有菜单及其子菜单 ===
+// === 获取所有菜单（公开接口，不需要认证）===
 router.get('/', async (req, res) => {
   try {
     const menus = await db.query('SELECT * FROM menus ORDER BY order_num');
     
     // 获取每个菜单的子菜单
     for (let menu of menus) {
-      const subMenus = await db.query('SELECT * FROM sub_menus WHERE menu_id = ? ORDER BY order_num', [menu.id]);
+      const subMenus = await db.query(
+        'SELECT * FROM sub_menus WHERE menu_id = ? ORDER BY order_num', 
+        [menu.id]
+      );
       menu.sub_menus = subMenus;
     }
     
@@ -22,8 +25,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// === 创建菜单 ===
-router.post('/', auth, async (req, res) => {
+// === 创建菜单（需要认证）===
+router.post('/', auth, async (req, res) => {  // 👈 确保有 auth
+  console.log('==================== 创建菜单 ====================');
+  console.log('🔵 请求数据:', req.body);
+  console.log('🔵 用户信息:', req.user);  // 从 auth 中间件获取
+  
   const { name, order_num, is_public } = req.body;
   
   if (!name) {
@@ -35,6 +42,10 @@ router.post('/', auth, async (req, res) => {
       'INSERT INTO menus (name, order_num, is_public) VALUES (?, ?, ?)',
       [name, order_num || 0, is_public !== undefined ? is_public : 1]
     );
+    
+    console.log('🟢 创建成功，ID:', result.lastID);
+    console.log('====================');
+    
     res.json({ id: result.lastID });
   } catch (error) {
     console.error('创建菜单失败:', error);
@@ -42,8 +53,8 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// === 更新菜单 ===
-router.put('/:id', auth, async (req, res) => {
+// === 更新菜单（需要认证）===
+router.put('/:id', auth, async (req, res) => {  // 👈 确保有 auth
   const { name, order_num, is_public } = req.body;
   
   try {
@@ -58,8 +69,8 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// === 删除菜单 ===
-router.delete('/:id', auth, async (req, res) => {
+// === 删除菜单（需要认证）===
+router.delete('/:id', auth, async (req, res) => {  // 👈 确保有 auth
   try {
     const result = await db.run('DELETE FROM menus WHERE id=?', [req.params.id]);
     res.json({ deleted: result.changes });
@@ -69,8 +80,8 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// === 菜单排序 ===
-router.post('/sort', auth, async (req, res) => {
+// === 菜单排序（需要认证）===
+router.post('/sort', auth, async (req, res) => {  // 👈 确保有 auth
   const { ids } = req.body;
   
   if (!Array.isArray(ids)) {
@@ -91,8 +102,8 @@ router.post('/sort', auth, async (req, res) => {
   }
 });
 
-// === 创建子菜单 ===
-router.post('/:menuId/sub', auth, async (req, res) => {
+// === 创建子菜单（需要认证）===
+router.post('/:menuId/sub', auth, async (req, res) => {  // 👈 确保有 auth
   const { name, order_num } = req.body;
   const menuId = req.params.menuId;
   
@@ -112,8 +123,8 @@ router.post('/:menuId/sub', auth, async (req, res) => {
   }
 });
 
-// === 更新子菜单 ===
-router.put('/sub/:id', auth, async (req, res) => {
+// === 更新子菜单（需要认证）===
+router.put('/sub/:id', auth, async (req, res) => {  // 👈 确保有 auth
   const { name, order_num } = req.body;
   
   try {
@@ -128,8 +139,8 @@ router.put('/sub/:id', auth, async (req, res) => {
   }
 });
 
-// === 删除子菜单 ===
-router.delete('/sub/:id', auth, async (req, res) => {
+// === 删除子菜单（需要认证）===
+router.delete('/sub/:id', auth, async (req, res) => {  // 👈 确保有 auth
   try {
     const result = await db.run('DELETE FROM sub_menus WHERE id=?', [req.params.id]);
     res.json({ deleted: result.changes });
