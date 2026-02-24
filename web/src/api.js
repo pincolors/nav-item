@@ -1,49 +1,63 @@
+i// web/src/api.js
+
 import axios from 'axios';
 
-// 1. 创建 axios 实例 (自动处理 baseURL)
+// 创建 axios 实例
 const request = axios.create({
   baseURL: '/api', 
-  timeout: 5000
+  timeout: 10000  // 👈 增加超时时间
 });
 
-// 2. 请求拦截器：自动给所有请求加上 Token
+// 请求拦截器：自动添加 Token
 request.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('📤 发送请求:', config.url);
+    console.log('🔑 Token:', token ? '存在' : '缺失');
+    
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('❌ 请求拦截器错误:', error);
+    return Promise.reject(error);
+  }
 );
 
-// 3. 响应拦截器：自动处理 401 过期
+// 响应拦截器：处理错误
 request.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('📥 收到响应:', response.config.url, response.status);
+    return response;
+  },
   (error) => {
+    console.error('❌ 响应错误:', error.response?.status, error.message);
+    
     if (error.response && error.response.status === 401) {
+      console.warn('⚠️ Token 失效，清除并跳转登录');
       localStorage.removeItem('token');
-      // window.location.reload(); // 可选：自动刷新跳转登录
+      // 可选：跳转到登录页
+      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-// 🔥 必须导出默认对象
 export default request;
 
-/* ============================================================
-   API 函数定义
-   ============================================================ */
-
-// === 认证 API ===
+// API 函数
 export const login = (username, password) => 
   request.post('/login', { username, password });
 
-// === 菜单 API ===
 export const getMenus = () => request.get('/menus');
-export const addMenu = (data) => request.post('/menus', data);
+
+export const addMenu = (data) => 
+  request.post('/menus', data);  // 👈 这个会自动带上 Token
+
+// ... 其他 API
+
 export const updateMenu = (id, data) => request.put(`/menus/${id}`, data);
 export const deleteMenu = (id) => request.delete(`/menus/${id}`);
 export const updateMenuOrder = (ids) => request.post('/menus/sort', { ids });
@@ -104,3 +118,4 @@ export const getUsers = () => request.get('/users');
 export const getUserProfile = () => request.get('/users/profile');
 export const changePassword = (oldPassword, newPassword) => 
   request.put('/users/password', { oldPassword, newPassword });
+
