@@ -16,7 +16,7 @@ const friendRoutes = require('./routes/friend');
 const userRoutes = require('./routes/user');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // 中间件配置
 app.use(cors());
@@ -202,3 +202,4 @@ if (require.main === module) {
 
 // 导出 app（用于测试）
 module.exports = app;
+
