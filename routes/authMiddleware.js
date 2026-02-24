@@ -1,31 +1,27 @@
+// routes/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'your_jwt_secret_key';
 
-/**
- * Authentication Middleware
- * Now using async/await for better error handling and scalability.
- */
-async function authMiddleware(req, res, next) {
-  const auth = req.headers.authorization;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-  if (!auth || !auth.startsWith('Bearer ')) {
-    return res.status(401).json({ error: '未授权' });
+module.exports = function(req, res, next) {
+  // 从请求头获取 token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  console.log('🔐 认证中间件 - Token:', token ? '存在' : '缺失');
+  console.log('🔐 Authorization Header:', req.headers.authorization);
+  
+  if (!token) {
+    console.error('❌ 未提供 token');
+    return res.status(401).json({ error: '未提供认证令牌' });
   }
-
-  const token = auth.slice(7);
-
+  
   try {
-    // jwt.verify can be wrapped in a promise if you want to be strictly async,
-    // but in a standard async function, this works perfectly.
-    const payload = await jwt.verify(token, JWT_SECRET);
-    
-    // Attach the decoded user data to the request object
-    req.user = payload;
-    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    console.log('✅ Token 验证成功，用户:', decoded.username);
     next();
-  } catch (e) {
-    return res.status(401).json({ error: '无效token' });
+  } catch (error) {
+    console.error('❌ Token 验证失败:', error.message);
+    return res.status(401).json({ error: 'Token 无效或已过期' });
   }
-}
-
-module.exports = authMiddleware;
+};
