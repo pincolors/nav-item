@@ -40,19 +40,20 @@ async function initDatabase() {
     }
 
     // 4. 强制管理员初始化 (解决 401)
-    try {
-      const adminUsername = config.admin.username || 'admin';
-      const adminExists = await dbAdapter.get('SELECT * FROM users WHERE username = ?', [adminUsername]);
-      
-      if (!adminExists) {
-          console.log('👤 正在创建默认管理员账户...');
-          const hashedPw = await bcrypt.hash(config.admin.password || 'admin123', 10);
-          await dbAdapter.run('INSERT INTO users (username, password) VALUES (?, ?)', [adminUsername, hashedPw]);
-          console.log('✅ 管理员已就绪:', adminUsername);
-      }
-    } catch (userErr) {
-      console.error('❌ 初始化管理员失败:', userErr.message);
-    }
+try {
+  const adminUsername = config.admin.username || 'admin';
+  const adminExists = await dbAdapter.get('SELECT * FROM users WHERE username = ?', [adminUsername]);
+  
+  if (!adminExists) {
+      console.log('👤 正在创建默认管理员账户...');
+      const hashedPw = await bcrypt.hash(config.admin.password || 'admin123', 10);
+      await dbAdapter.run('INSERT INTO users (username, password) VALUES (?, ?)', [adminUsername, hashedPw]);
+      console.log('✅ 管理员已就绪:', adminUsername);
+  }
+} catch (userErr) {
+  console.error('❌ 初始化管理员失败:', userErr.message);
+}
+
 
     // 5. 补全初始分组和卡片 (解决空白页)
     try {
@@ -90,3 +91,4 @@ module.exports = {
   db: dbAdapter,
   initDatabase
 };
+
