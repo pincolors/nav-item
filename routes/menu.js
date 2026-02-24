@@ -4,40 +4,45 @@ const { db } = require('../db');
 const auth = require('./authMiddleware');
 const router = express.Router();
 
-// === 获取所有菜单及其子菜单 ===
+// ========================================
+// 获取所有菜单（公开接口）
+// ========================================
 router.get('/', async (req, res) => {
   try {
+    // 1. 获取所有菜单
     const menus = await db.query('SELECT * FROM menus ORDER BY order_num');
     
-    // 🔥 修复：为每个菜单获取子菜单（如果需要的话）
-    // 如果你的数据库设计中没有子菜单，注释掉下面这段代码
+    // 2. 为每个菜单尝试获取子菜单（但不影响主流程）
     for (let menu of menus) {
       try {
-        // 检查 sub_menus 表是否存在
+        // 🔥 修复：使用 adapter 自动转换 ? 为 $1
         const subMenus = await db.query(
-          'SELECT * FROM sub_menus WHERE menu_id = $1 ORDER BY order_num',  // ✅ PostgreSQL 使用 $1
+          'SELECT * FROM sub_menus WHERE menu_id = ? ORDER BY order_num',
           [menu.id]
         );
         menu.sub_menus = subMenus || [];
       } catch (subErr) {
-        // 如果 sub_menus 表不存在或查询失败，设置为空数组
-        console.warn('获取子菜单失败:', subErr.message);
+        // 🔥 关键：子菜单失败不影响主菜单返回
+        console.warn(`⚠️ 菜单 ${menu.id} 子菜单查询失败:`, subErr.message);
         menu.sub_menus = [];
       }
     }
     
+    console.log(`✅ 成功返回 ${menus.length} 个菜单`);
     res.json(menus);
+    
   } catch (error) {
-    console.error('获取菜单失败:', error);
+    console.error('❌ 获取菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 创建菜单（需要认证）===
+// ========================================
+// 创建菜单（需要认证）
+// ========================================
 router.post('/', auth, async (req, res) => {
   console.log('==================== 创建菜单 ====================');
   console.log('🔵 请求数据:', req.body);
-  console.log('🔵 用户信息:', req.user);
   
   const { name, order_num, is_public } = req.body;
   
@@ -54,14 +59,21 @@ router.post('/', auth, async (req, res) => {
     console.log('🟢 创建成功，ID:', result.lastID);
     console.log('====================');
     
-    res.json({ id: result.lastID });
+    res.json({ 
+      id: result.lastID,
+      name,
+      order_num: order_num || 0,
+      is_public: is_public !== undefined ? is_public : 1
+    });
   } catch (error) {
-    console.error('创建菜单失败:', error);
+    console.error('❌ 创建菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 更新菜单（需要认证）===
+// ========================================
+// 更新菜单（需要认证）
+// ========================================
 router.put('/:id', auth, async (req, res) => {
   const { name, order_num, is_public } = req.body;
   
@@ -72,23 +84,27 @@ router.put('/:id', auth, async (req, res) => {
     );
     res.json({ changed: result.changes });
   } catch (error) {
-    console.error('更新菜单失败:', error);
+    console.error('❌ 更新菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 删除菜单（需要认证）===
+// ========================================
+// 删除菜单（需要认证）
+// ========================================
 router.delete('/:id', auth, async (req, res) => {
   try {
     const result = await db.run('DELETE FROM menus WHERE id=?', [req.params.id]);
     res.json({ deleted: result.changes });
   } catch (error) {
-    console.error('删除菜单失败:', error);
+    console.error('❌ 删除菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 菜单排序（需要认证）===
+// ========================================
+// 菜单排序（需要认证）
+// ========================================
 router.post('/sort', auth, async (req, res) => {
   const { ids } = req.body;
   
@@ -105,12 +121,14 @@ router.post('/sort', auth, async (req, res) => {
     
     res.json({ message: '顺序保存成功' });
   } catch (error) {
-    console.error('菜单排序失败:', error);
+    console.error('❌ 菜单排序失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 创建子菜单（需要认证）===
+// ========================================
+// 创建子菜单（需要认证）
+// ========================================
 router.post('/:menuId/sub', auth, async (req, res) => {
   const { name, order_num } = req.body;
   const menuId = req.params.menuId;
@@ -126,12 +144,14 @@ router.post('/:menuId/sub', auth, async (req, res) => {
     );
     res.json({ id: result.lastID });
   } catch (error) {
-    console.error('创建子菜单失败:', error);
+    console.error('❌ 创建子菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 更新子菜单（需要认证）===
+// ========================================
+// 更新子菜单（需要认证）
+// ========================================
 router.put('/sub/:id', auth, async (req, res) => {
   const { name, order_num } = req.body;
   
@@ -142,18 +162,20 @@ router.put('/sub/:id', auth, async (req, res) => {
     );
     res.json({ changed: result.changes });
   } catch (error) {
-    console.error('更新子菜单失败:', error);
+    console.error('❌ 更新子菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === 删除子菜单（需要认证）===
+// ========================================
+// 删除子菜单（需要认证）
+// ========================================
 router.delete('/sub/:id', auth, async (req, res) => {
   try {
     const result = await db.run('DELETE FROM sub_menus WHERE id=?', [req.params.id]);
     res.json({ deleted: result.changes });
   } catch (error) {
-    console.error('删除子菜单失败:', error);
+    console.error('❌ 删除子菜单失败:', error);
     res.status(500).json({ error: error.message });
   }
 });
