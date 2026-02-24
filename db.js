@@ -1,5 +1,6 @@
 const dbAdapter = require('./database/adapter');
 const config = require('./config');
+const bcrypt = require('bcrypt');
 
 async function initDatabase() {
   try {
@@ -9,30 +10,16 @@ async function initDatabase() {
     const isPostgres = process.env.DB_TYPE === 'postgres';
     
     if (isPostgres) {
-        console.log('⚠️ 正在执行数据库强制修复程序...');
+        console.log('⚠️ 正在同步 PostgreSQL 数据库结构...');
         
-        // --- 核心修复：直接运行原生 SQL 重置所有表结构 ---
-        // 这样可以跳过 adapter.js 里面可能存在的错误语法
-        const dropSql = 'DROP TABLE IF EXISTS cards, sub_menus, menus, users, ads, friends, configs CASCADE';
-        await dbAdapter.run(dropSql);
-        console.log('✅ 旧表已清理');
+        // --- 【关键】如果你想彻底重置一次，取消下面这一行的注释并推送，成功后记得再注释掉 ---
+        // await dbAdapter.run('DROP TABLE IF EXISTS cards, sub_menus, menus, users, ads, friends, configs CASCADE');
 
-        // 手动定义正确的建表语句，确保每个表都有 id SERIAL PRIMARY KEY
-        const createTables = [
-            `CREATE TABLE configs (id SERIAL PRIMARY KEY, key TEXT UNIQUE NOT NULL, value TEXT)`,
-            `CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, last_login_time TEXT, last_login_ip TEXT)`,
-            `CREATE TABLE menus (id SERIAL PRIMARY KEY, name TEXT NOT NULL, "order" INTEGER DEFAULT 0)`,
-            `CREATE TABLE sub_menus (id SERIAL PRIMARY KEY, parent_id INTEGER NOT NULL, name TEXT NOT NULL, "order" INTEGER DEFAULT 0)`,
-            `CREATE TABLE cards (id SERIAL PRIMARY KEY, menu_id INTEGER, sub_menu_id INTEGER, title TEXT NOT NULL, url TEXT NOT NULL, logo_url TEXT, "desc" TEXT, "order" INTEGER DEFAULT 0)`
-        ];
-
-        for (const sql of createTables) {
-            await dbAdapter.run(sql);
-        }
-        console.log('✅ 结构强制重建完成');
+        // 执行建表（adapter 里的 init 通常包含 CREATE TABLE）
+        await dbAdapter.init();
     }
     
-    // 2. 插入默认配置 (此时 id 列一定存在了)
+    // 2. 检查并插入默认配置
     if (config.defaultConfigs) {
       for (const [key, value] of Object.entries(config.defaultConfigs)) {
         const existing = await dbAdapter.get('SELECT * FROM configs WHERE key = ?', [key]);
@@ -43,22 +30,47 @@ async function initDatabase() {
       }
     }
 
-    // 3. 初始管理员
-    if (config.admin) {
-        const adminExists = await dbAdapter.get('SELECT * FROM users WHERE username = ?', [config.admin.username]);
-        if (!adminExists) {
-            const bcrypt = require('bcrypt');
-            const hashedPw = await bcrypt.hash(config.admin.password, 10);
-            await dbAdapter.run('INSERT INTO users (username, password) VALUES (?, ?)', [config.admin.username, hashedPw]);
-            console.log('👤 管理员账户已初始化');
+    // 3. 检查并初始化管理员 (解决 401)
+    const adminUser = config.admin.username || 'admin';
+    const adminExists = await dbAdapter.get('SELECT * FROM users WHERE username = ?', [adminUser]);
+    if (!adminExists) {
+        console.log('👤 正在创建管理员账户...');
+        const hashedPw = await bcrypt.hash(config.admin.password || 'admin123', 10);
+        await dbAdapter.run('INSERT INTO users (username, password) VALUES (?, ?)', [adminUser, hashedPw]);
+        console.log('✅ 管理员已就绪:', adminUser);
+    }
+
+    // 4. 检查并补全初始数据 (解决空白页)
+    const menuCheck = await dbAdapter.get('SELECT COUNT(*) as count FROM menus');
+    // 兼容 Postgres 和 SQLite 的计数返回格式
+    const menuCount = parseInt(menuCheck.rows ? menuCheck.rows[0].count : (menuCheck.count || 0));
+
+    if (menuCount === 0) {
+        console.log('📜 数据库为空，正在注入初始卡片和分组...');
+        
+        // 插入分组 (使用 Postgres 兼容的引号)
+        await dbAdapter.run('INSERT INTO menus (name, "order") VALUES (?, ?)', ['常用推荐', 1]);
+        await dbAdapter.run('INSERT INTO menus (name, "order") VALUES (?, ?)', ['技术社区', 2]);
+
+        const firstMenu = await dbAdapter.get('SELECT id FROM menus WHERE name = ?', ['常用推荐']);
+        if (firstMenu) {
+            const mId = firstMenu.id;
+            // 插入初始卡片
+            await dbAdapter.run(
+                'INSERT INTO cards (menu_id, title, url, "desc", "order") VALUES (?, ?, ?, ?, ?)',
+                [mId, 'Google', 'https://www.google.com', '全球搜索引擎', 1]
+            );
+            await dbAdapter.run(
+                'INSERT INTO cards (menu_id, title, url, "desc", "order") VALUES (?, ?, ?, ?, ?)',
+                [mId, 'GitHub', 'https://github.com', '开源代码托管', 2]
+            );
         }
+        console.log('✅ 初始数据注入完成！');
     }
     
-    console.log('🚀 数据库完美就绪，服务即将启动！');
+    console.log('🎉 数据库所有环节已就绪！');
   } catch (error) {
-    console.error('❌ 致命错误:', error.message);
-    // 打印堆栈信息协助排查
-    console.error(error.stack);
+    console.error('❌ 数据库初始化失败:', error.message);
     throw error;
   }
 }
