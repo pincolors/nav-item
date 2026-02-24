@@ -3,10 +3,10 @@ require('dotenv').config();
 module.exports = {
   admin: {
     username: process.env.ADMIN_USERNAME || 'admin',
-    password: process.env.ADMIN_PASSWORD || '123456'
+    password: process.env.ADMIN_PASSWORD || 'admin123'
   },
   server: {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 8080,
     jwtSecret: process.env.JWT_SECRET || 'nav-item-jwt-secret-2024-secure-key'
   }
 
@@ -29,4 +29,6 @@ const defaultConfigs = {
 module.exports = {
   // ... 你原有的导出 ...
   defaultConfigs  // 添加这一行
+ 
 };
+
