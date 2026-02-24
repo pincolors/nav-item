@@ -2,7 +2,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const compression = require('compression');
 const { db, initDatabase } = require('./db');
 
@@ -18,31 +17,27 @@ const userRoutes = require('./routes/user');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// 中间件配置
+// ==============================
+// 中间件
+// ==============================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 
-// 静态文件服务
+// ==============================
+// 静态资源
+// ==============================
+
+// 上传目录
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 前端打包目录
 app.use(express.static(path.join(__dirname, 'web/dist')));
 
-// 前端路由处理中间件（放在 API 路由之前）
-app.use((req, res, next) => {
-  if (
-    req.method === 'GET' &&
-    !req.path.startsWith('/api') &&
-    !req.path.startsWith('/uploads') &&
-    !fs.existsSync(path.join(__dirname, 'web/dist', req.path))
-  ) {
-    res.sendFile(path.join(__dirname, 'web/dist', 'index.html'));
-  } else {
-    next();
-  }
-});
-
-// API 路由
+// ==============================
+// API 路由（必须放在 fallback 前面）
+// ==============================
 app.use('/api/menus', menuRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -51,155 +46,110 @@ app.use('/api/ads', adRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/users', userRoutes);
 
-// 健康检查接口（可选，用于 Koyeb 等平台）
+// ==============================
+// 健康检查（用于 Koyeb 等平台）
+// ==============================
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     database: process.env.DB_TYPE || 'sqlite'
   });
 });
 
+// ==============================
+// 前端 SPA fallback（必须放最后）
+// ==============================
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'web/dist', 'index.html'));
+});
+
+// ==============================
 // 错误处理中间件
+// ==============================
 app.use((err, req, res, next) => {
   console.error('服务器错误:', err);
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? '服务器内部错误' 
-      : err.message
-  });
-});
 
-// 404 处理（放在最后）
-app.use((req, res) => {
   if (req.path.startsWith('/api')) {
-    res.status(404).json({ error: 'API 路由不存在' });
+    res.status(err.status || 500).json({
+      error:
+        process.env.NODE_ENV === 'production'
+          ? '服务器内部错误'
+          : err.message
+    });
   } else {
-    res.sendFile(path.join(__dirname, 'web/dist', 'index.html'));
+    res.status(500).send('服务器内部错误');
   }
 });
 
+// ==============================
 // 启动服务器
+// ==============================
 async function startServer() {
   try {
-    console.log('');
-    console.log('========================================');
+    console.log('\n========================================');
     console.log('🚀 正在启动服务器...');
     console.log('========================================');
-    
-    // 初始化数据库
+
     console.log('🔄 正在初始化数据库...');
     await initDatabase();
-    
-    // 启动 HTTP 服务
+
     app.listen(PORT, '0.0.0.0', () => {
-      console.log('');
-      console.log('========================================');
+      console.log('\n========================================');
       console.log('✅ 服务器启动成功！');
       console.log('----------------------------------------');
-      console.log(`🌐 本地地址: http://localhost:${PORT}`);
-      console.log(`🌐 网络地址: http://0.0.0.0:${PORT}`);
+      console.log(`🌐 访问地址: http://localhost:${PORT}`);
       console.log(`📊 数据库类型: ${process.env.DB_TYPE || 'sqlite'}`);
-      console.log(`🗄️  数据库路径: ${process.env.DB_TYPE === 'postgres' ? 'PostgreSQL (远程)' : (process.env.DB_PATH || './database/nav.db')}`);
-      console.log(`🌍 运行环境: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📦 压缩: 已启用`);
-      console.log(`🔐 CORS: 已启用`);
-      console.log('========================================');
-      console.log('');
-      console.log('💡 提示:');
-      console.log('  - API 接口: http://localhost:' + PORT + '/api');
-      console.log('  - 健康检查: http://localhost:' + PORT + '/health');
-      console.log('  - 前端页面: http://localhost:' + PORT);
-      console.log('');
-      console.log('按 Ctrl+C 停止服务器');
-      console.log('========================================');
-      console.log('');
+      console.log(
+        `🗄️  数据库: ${
+          process.env.DB_TYPE === 'postgres'
+            ? 'PostgreSQL'
+            : process.env.DB_PATH || './database/nav.db'
+        }`
+      );
+      console.log('========================================\n');
     });
-    
   } catch (error) {
-    console.error('');
-    console.error('========================================');
+    console.error('\n========================================');
     console.error('❌ 服务器启动失败！');
     console.error('========================================');
-    console.error('错误详情:', error);
-    console.error('');
-    
-    if (error.code === 'EADDRINUSE') {
-      console.error(`端口 ${PORT} 已被占用，请尝试:`);
-      console.error(`  1. 更改端口: PORT=3001 npm start`);
-      console.error(`  2. 或关闭占用该端口的程序`);
-    } else if (error.code === 'EACCES') {
-      console.error(`没有权限监听端口 ${PORT}`);
-      console.error(`  请尝试使用更高的端口号 (>1024)`);
-    } else {
-      console.error('请检查以上错误信息');
-    }
-    
-    console.error('========================================');
-    console.error('');
+    console.error(error);
     process.exit(1);
   }
 }
 
+// ==============================
 // 优雅关闭
+// ==============================
 async function gracefulShutdown(signal) {
-  console.log('');
-  console.log('========================================');
-  console.log(`🛑 收到 ${signal} 信号，正在优雅关闭...`);
-  console.log('========================================');
-  
+  console.log(`\n🛑 收到 ${signal}，正在关闭服务器...`);
   try {
-    // 关闭数据库连接
-    console.log('🔄 正在关闭数据库连接...');
     await db.close();
-    
-    console.log('');
-    console.log('========================================');
-    console.log('✅ 服务器已安全关闭');
-    console.log('========================================');
-    console.log('');
+    console.log('✅ 数据库连接已关闭');
     process.exit(0);
   } catch (error) {
-    console.error('');
-    console.error('========================================');
     console.error('❌ 关闭时发生错误:', error);
-    console.error('========================================');
-    console.error('');
     process.exit(1);
   }
 }
 
-// 监听关闭信号
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// 未捕获的异常处理
 process.on('uncaughtException', (error) => {
-  console.error('');
-  console.error('========================================');
-  console.error('❌ 未捕获的异常:');
-  console.error('========================================');
-  console.error(error);
-  console.error('');
+  console.error('未捕获异常:', error);
   gracefulShutdown('uncaughtException');
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('');
-  console.error('========================================');
-  console.error('❌ 未处理的 Promise 拒绝:');
-  console.error('========================================');
-  console.error('原因:', reason);
-  console.error('Promise:', promise);
-  console.error('');
+process.on('unhandledRejection', (reason) => {
+  console.error('未处理 Promise 拒绝:', reason);
   gracefulShutdown('unhandledRejection');
 });
 
-// 启动应用
+// 启动
 if (require.main === module) {
   startServer();
 }
 
-// 导出 app（用于测试）
 module.exports = app;
-
