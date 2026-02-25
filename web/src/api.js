@@ -1,12 +1,13 @@
+// web/src/api.js
+
 import axios from 'axios';
 
-// 1. 创建 axios 实例 (自动处理 baseURL)
 const request = axios.create({
   baseURL: '/api', 
-  timeout: 5000
+  timeout: 10000
 });
 
-// 2. 请求拦截器：自动给所有请求加上 Token
+// 请求拦截器
 request.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -18,24 +19,18 @@ request.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 3. 响应拦截器：自动处理 401 过期
+// 响应拦截器
 request.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      // window.location.reload(); // 可选：自动刷新跳转登录
     }
     return Promise.reject(error);
   }
 );
 
-// 🔥 必须导出默认对象
 export default request;
-
-/* ============================================================
-   API 函数定义
-   ============================================================ */
 
 // === 认证 API ===
 export const login = (username, password) => 
@@ -48,15 +43,18 @@ export const updateMenu = (id, data) => request.put(`/menus/${id}`, data);
 export const deleteMenu = (id) => request.delete(`/menus/${id}`);
 export const updateMenuOrder = (ids) => request.post('/menus/sort', { ids });
 
-// === 子菜单 API ===
+// === 🔥 子菜单 API（新增）===
 export const getSubMenus = (menuId) => 
-  request.get(`/menus/${menuId}/submenus`);
+  request.get(`/menus/${menuId}/sub`);
+
 export const addSubMenu = (menuId, data) => 
-  request.post(`/menus/${menuId}/submenus`, data);
+  request.post(`/menus/${menuId}/sub`, data);
+
 export const updateSubMenu = (id, data) => 
-  request.put(`/menus/submenus/${id}`, data);
+  request.put(`/menus/sub/${id}`, data);
+
 export const deleteSubMenu = (id) => 
-  request.delete(`/menus/submenus/${id}`);
+  request.delete(`/menus/sub/${id}`);
 
 // === 卡片 API ===
 export const getCards = (menuId, subMenuId = null) => {
@@ -64,19 +62,12 @@ export const getCards = (menuId, subMenuId = null) => {
   return request.get(`/cards/${menuId}`, { params });
 };
 
-export const addCard = (data) => 
-  request.post('/cards', data);
-
-// ✅ 只保留一个 updateCard，添加 async/await
+export const addCard = (data) => request.post('/cards', data);
 export const updateCard = async (id, data) => {
   return await request.put(`/cards/${id}`, data);
 };
-
-export const deleteCard = (id) => 
-  request.delete(`/cards/${id}`);
-
-export const updateCardOrder = (ids) => 
-  request.post('/cards/sort', { ids });
+export const deleteCard = (id) => request.delete(`/cards/${id}`);
+export const updateCardOrder = (ids) => request.post('/cards/sort', { ids });
 
 // === 上传 API ===
 export const uploadLogo = (file) => {
