@@ -45,13 +45,14 @@
               @mouseup="handleMouseUp"
               @mouseleave="handleMouseUp"
             >
+              <!-- 🔥 编辑按钮 - 打开编辑对话框 -->
               <button 
                 v-if="isEditMode" 
                 class="menu-edit" 
-                @click.stop="handleRename(menu)"
+                @click.stop="openEditDialog(menu)"
                 @touchstart.stop
                 type="button"
-                aria-label="重命名菜单"
+                aria-label="编辑菜单"
               >
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                   <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
@@ -117,12 +118,101 @@
         </button>
       </div>
     </div>
+
+    <!-- 🔥 编辑菜单对话框 -->
+    <div v-if="showEditDialog" class="modal-overlay" @click.self="closeEditDialog">
+      <div class="modal-content edit-menu-modal">
+        <div class="modal-header">
+          <h3>编辑菜单</h3>
+          <button @click="closeEditDialog" class="close-btn">✕</button>
+        </div>
+
+        <!-- 菜单名称 -->
+        <div class="form-group">
+          <label>菜单名称</label>
+          <input 
+            v-model="editForm.name" 
+            type="text" 
+            placeholder="请输入菜单名称"
+            class="modal-input"
+          />
+        </div>
+
+        <!-- 🔥 子菜单管理区域 -->
+        <div class="submenu-section">
+          <div class="submenu-header">
+            <h4>子菜单管理</h4>
+            <button @click="showAddSubMenuDialog" class="btn-add-sub">
+              ➕ 添加子菜单
+            </button>
+          </div>
+
+          <!-- 子菜单列表 -->
+          <div v-if="subMenus.length > 0" class="submenu-list">
+            <div 
+              v-for="sub in subMenus" 
+              :key="sub.id"
+              class="submenu-item"
+            >
+              <span class="submenu-name">{{ sub.name }}</span>
+              <div class="submenu-actions">
+                <button @click="editSubMenu(sub)" class="btn-edit-sub">✏️</button>
+                <button @click="deleteSubMenuAction(sub)" class="btn-delete-sub">🗑️</button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="empty-state">
+            暂无子菜单
+          </div>
+        </div>
+
+        <!-- 对话框按钮 -->
+        <div class="dialog-actions">
+          <button @click="closeEditDialog" class="btn-cancel">取消</button>
+          <button @click="saveMenu" class="btn-save">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔥 添加/编辑子菜单对话框 -->
+    <div v-if="showSubMenuDialog" class="modal-overlay" @click.self="closeSubMenuDialog">
+      <div class="modal-content submenu-modal">
+        <div class="modal-header">
+          <h3>{{ isEditingSubMenu ? '编辑子菜单' : '添加子菜单' }}</h3>
+          <button @click="closeSubMenuDialog" class="close-btn">✕</button>
+        </div>
+
+        <div class="form-group">
+          <label>子菜单名称</label>
+          <input 
+            v-model="subMenuForm.name" 
+            type="text" 
+            placeholder="请输入子菜单名称"
+            class="modal-input"
+            @keyup.enter="saveSubMenu"
+          />
+        </div>
+
+        <div class="dialog-actions">
+          <button @click="closeSubMenuDialog" class="btn-cancel">取消</button>
+          <button @click="saveSubMenu" class="btn-save">保存</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
 import draggable from 'vuedraggable';
+import { 
+  updateMenu, 
+  getSubMenus, 
+  addSubMenu, 
+  updateSubMenu, 
+  deleteSubMenu 
+} from '../api.js';
 
 const props = defineProps({
   menus: { type: Array, required: true },
@@ -140,6 +230,21 @@ const pressingId = ref(null);
 const pressTimer = ref(null);
 const progressOffset = ref(63);
 
+// 🔥 编辑对话框相关状态
+const showEditDialog = ref(false);
+const showSubMenuDialog = ref(false);
+const isEditingSubMenu = ref(false);
+const editForm = ref({
+  id: null,
+  name: ''
+});
+const subMenuForm = ref({
+  id: null,
+  name: '',
+  order_num: 0
+});
+const subMenus = ref([]);
+
 const localMenus = computed({
   get: () => props.menus,
   set: (value) => emit('update:menus', value)
@@ -153,19 +258,6 @@ function handleClick(menu) {
   if (isDragging.value) return;
   if (pressingId.value) return;
   emit('select', menu);
-}
-
-// 【新增】处理重命名逻辑
-function handleRename(menu) {
-  const newName = prompt('重命名菜单', menu.name);
-  if (newName === null || newName.trim() === '') return;
-  
-  const newMenus = [...props.menus];
-  const target = newMenus.find(m => m.id === menu.id);
-  if (target) {
-    target.name = newName.trim();
-    emit('update:menus', newMenus);
-  }
 }
 
 function handleTouchStart(menu) {
@@ -234,6 +326,142 @@ function onChange(evt) {
 
 function handleDelete(id) {
   emit('delete', id);
+}
+
+// 🔥 打开编辑菜单对话框
+async function openEditDialog(menu) {
+  editForm.value = {
+    id: menu.id,
+    name: menu.name
+  };
+  showEditDialog.value = true;
+  
+  // 加载子菜单
+  await loadSubMenus(menu.id);
+}
+
+// 🔥 加载子菜单
+async function loadSubMenus(menuId) {
+  try {
+    const response = await getSubMenus(menuId);
+    subMenus.value = response.data || [];
+  } catch (error) {
+    console.error('加载子菜单失败:', error);
+    subMenus.value = [];
+  }
+}
+
+// 🔥 保存菜单
+async function saveMenu() {
+  if (!editForm.value.name.trim()) {
+    alert('请输入菜单名称');
+    return;
+  }
+
+  try {
+    await updateMenu(editForm.value.id, {
+      name: editForm.value.name
+    });
+    
+    // 更新本地数据
+    const newMenus = [...props.menus];
+    const target = newMenus.find(m => m.id === editForm.value.id);
+    if (target) {
+      target.name = editForm.value.name;
+      emit('update:menus', newMenus);
+    }
+    
+    closeEditDialog();
+    alert('菜单保存成功');
+  } catch (error) {
+    console.error('保存菜单失败:', error);
+    alert('保存失败: ' + (error.response?.data?.error || error.message));
+  }
+}
+
+// 🔥 关闭编辑菜单对话框
+function closeEditDialog() {
+  showEditDialog.value = false;
+  editForm.value = { id: null, name: '' };
+  subMenus.value = [];
+}
+
+// 🔥 显示添加子菜单对话框
+function showAddSubMenuDialog() {
+  isEditingSubMenu.value = false;
+  subMenuForm.value = {
+    id: null,
+    name: '',
+    order_num: subMenus.value.length
+  };
+  showSubMenuDialog.value = true;
+}
+
+// 🔥 编辑子菜单
+function editSubMenu(subMenu) {
+  isEditingSubMenu.value = true;
+  subMenuForm.value = {
+    id: subMenu.id,
+    name: subMenu.name,
+    order_num: subMenu.order_num
+  };
+  showSubMenuDialog.value = true;
+}
+
+// 🔥 保存子菜单
+async function saveSubMenu() {
+  if (!subMenuForm.value.name.trim()) {
+    alert('请输入子菜单名称');
+    return;
+  }
+
+  try {
+    if (isEditingSubMenu.value) {
+      // 更新
+      await updateSubMenu(subMenuForm.value.id, {
+        name: subMenuForm.value.name,
+        order_num: subMenuForm.value.order_num
+      });
+      alert('子菜单更新成功');
+    } else {
+      // 创建
+      await addSubMenu(editForm.value.id, {
+        name: subMenuForm.value.name,
+        order_num: subMenuForm.value.order_num
+      });
+      alert('子菜单创建成功');
+    }
+
+    // 重新加载子菜单列表
+    await loadSubMenus(editForm.value.id);
+    
+    closeSubMenuDialog();
+  } catch (error) {
+    console.error('保存子菜单失败:', error);
+    alert('保存失败: ' + (error.response?.data?.error || error.message));
+  }
+}
+
+// 🔥 删除子菜单
+async function deleteSubMenuAction(subMenu) {
+  if (!confirm(`确定要删除子菜单"${subMenu.name}"吗？`)) {
+    return;
+  }
+
+  try {
+    await deleteSubMenu(subMenu.id);
+    alert('子菜单删除成功');
+    await loadSubMenus(editForm.value.id);
+  } catch (error) {
+    console.error('删除子菜单失败:', error);
+    alert('删除失败: ' + (error.response?.data?.error || error.message));
+  }
+}
+
+// 🔥 关闭子菜单对话框
+function closeSubMenuDialog() {
+  showSubMenuDialog.value = false;
+  subMenuForm.value = { id: null, name: '', order_num: 0 };
 }
 </script>
 
@@ -336,7 +564,6 @@ function handleDelete(id) {
   background: transparent;
 }
 
-/* 【修改】编辑模式下的内边距，给左右按钮留位置 */
 .menu-item.is-edit-mode { 
   padding-right: 28px; 
   padding-left: 28px; 
@@ -353,7 +580,6 @@ function handleDelete(id) {
   transform: scale(1.05);
 }
 
-/* 【修改】激活状态 - 下划线变细 */
 .menu-item.active {
   color: var(--accent-color) !important;
   -webkit-text-fill-color: var(--accent-color) !important;
@@ -364,11 +590,9 @@ function handleDelete(id) {
 .menu-item.active::after {
   content: '';
   position: absolute;
-  /* 稍微上移，悬浮感更好 */
   bottom: 2px; 
   left: 15px; 
   right: 15px;
-  /* 变细为 2px */
   height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--accent-light), var(--accent-color)) !important;
@@ -405,7 +629,7 @@ function handleDelete(id) {
 }
 
 /* =========================================
-   4. 按钮样式 (新增编辑按钮)
+   4. 按钮样式
    ========================================= */
 
 .press-indicator {
@@ -421,7 +645,6 @@ function handleDelete(id) {
   filter: drop-shadow(0 0 3px var(--accent-color));
 }
 
-/* 删除按钮 (红色) */
 .menu-del {
   position: absolute; top: -4px; right: -2px;
   background: #ff4d4f !important; color: white !important;
@@ -434,7 +657,6 @@ function handleDelete(id) {
   z-index: 10; cursor: pointer; padding: 0; line-height: 1;
 }
 
-/* 【新增】编辑按钮 (蓝色) */
 .menu-edit {
   position: absolute; top: -4px; left: -2px;
   background: #3b82f6 !important; color: white !important;
@@ -447,7 +669,6 @@ function handleDelete(id) {
   z-index: 10; cursor: pointer; padding: 0; line-height: 1;
 }
 
-/* 悬停时显示按钮 */
 .menu-item:hover .menu-del,
 .menu-item:hover .menu-edit { opacity: 1; transform: scale(1); }
 
@@ -457,7 +678,6 @@ function handleDelete(id) {
 .menu-edit:hover { background: #2563eb !important; transform: scale(1.15) !important; }
 .menu-edit:active { transform: scale(0.95) !important; }
 
-/* 手机端适配：编辑模式下常显按钮 */
 @media (max-width: 768px) {
   .menu-item { font-size: 16px; padding: 8px 16px; }
   .menu-item.is-edit-mode { 
@@ -466,7 +686,6 @@ function handleDelete(id) {
   }
   .sub-menu-item { font-size: 13px; padding: 5px 14px; }
   
-  /* 强制显示 */
   .menu-item.is-edit-mode .menu-del,
   .menu-item.is-edit-mode .menu-edit {
     opacity: 1 !important;
@@ -528,6 +747,260 @@ function handleDelete(id) {
   border: 1px solid var(--accent-color) !important;
 }
 
+/* 🔥 新增：对话框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--bg-color);
+  padding: 24px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.dark-theme .modal-content {
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.dark-theme .modal-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.submenu-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(128, 128, 128, 0.05);
+  border-radius: 12px;
+}
+
+.dark-theme .submenu-section {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.submenu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.submenu-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.btn-add-sub {
+  padding: 6px 12px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-add-sub:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
+.submenu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.submenu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-color);
+  border-radius: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.dark-theme .submenu-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.submenu-name {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.submenu-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit-sub,
+.btn-delete-sub {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-edit-sub:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.btn-delete-sub:hover {
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-cancel:hover {
+  background: var(--bg-hover-strong);
+}
+
+.btn-save {
+  background: var(--accent-color);
+  color: white;
+}
+
+.btn-save:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
 .menu-list *, .menu-item *, .sub-menu-item * {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
@@ -536,6 +1009,3 @@ function handleDelete(id) {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
-
-
-
