@@ -104,10 +104,10 @@
       </draggable>
     </div>
 
-    <div v-if="activeMenu && activeMenu.subMenus && activeMenu.subMenus.length" class="sub-menu-outer">
+   <div v-if="activeMenu && activeMenu.sub_menus && activeMenu.sub_menus.length" class="sub-menu-outer">
       <div class="sub-menu-bar">
         <button
-          v-for="sub in activeMenu.subMenus" 
+          v-for="sub in activeMenu.sub_menus"
           :key="sub.id" 
           class="sub-menu-item"
           :class="{ active: activeSubMenuId === sub.id }"
@@ -1009,3 +1009,4 @@ function closeSubMenuDialog() {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
+
