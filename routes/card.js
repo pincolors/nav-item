@@ -1,4 +1,5 @@
 // routes/card.js
+
 const express = require('express');
 const { db } = require('../db');
 const auth = require('./authMiddleware');
@@ -18,13 +19,16 @@ router.get('/:menuId', async (req, res) => {
   try {
     let sql, params;
     
-    if (subMenuId) {
+    if (subMenuId && subMenuId !== 'null' && subMenuId !== 'undefined') {
+      // 🔥 情况1：查询子菜单的卡片
       sql = 'SELECT * FROM cards WHERE menu_id = ? AND sub_menu_id = ? ORDER BY "order"';
       params = [menuId, subMenuId];
+      console.log('🔵 查询模式: 子菜单卡片');
     } else {
-      // 🔥 关键：使用带引号的 "order"
-      sql = 'SELECT * FROM cards WHERE menu_id = ? ORDER BY "order"';
+      // 🔥 情况2：查询主菜单的卡片（排除子菜单的卡片）
+      sql = 'SELECT * FROM cards WHERE menu_id = ? AND (sub_menu_id IS NULL OR sub_menu_id = 0) ORDER BY "order"';
       params = [menuId];
+      console.log('🔵 查询模式: 主菜单卡片（排除子菜单）');
     }
     
     console.log('🔵 SQL:', sql);
@@ -57,7 +61,6 @@ router.post('/', auth, async (req, res) => {
   }
   
   try {
-    // 🔥 使用带引号的 "order"
     const result = await db.run(
       'INSERT INTO cards (menu_id, sub_menu_id, title, url, logo_url, "desc", "order") VALUES (?, ?, ?, ?, ?, ?, ?)',
       [menu_id, sub_menu_id || null, title, url, logo_url || null, desc || null, order || 0]
@@ -78,13 +81,12 @@ router.post('/', auth, async (req, res) => {
 // 更新卡片（需要认证）
 // ========================================
 router.put('/:id', auth, async (req, res) => {
-  const { title, url, logo_url, desc, order } = req.body;
+  const { title, url, logo_url, desc, order, sub_menu_id } = req.body;
   
   try {
-    // 🔥 使用带引号的 "order"
     const result = await db.run(
-      'UPDATE cards SET title=?, url=?, logo_url=?, "desc"=?, "order"=? WHERE id=?',
-      [title, url, logo_url, desc, order, req.params.id]
+      'UPDATE cards SET title=?, url=?, logo_url=?, "desc"=?, "order"=?, sub_menu_id=? WHERE id=?',
+      [title, url, logo_url, desc, order, sub_menu_id || null, req.params.id]
     );
     res.json({ changed: result.changes });
   } catch (error) {
@@ -127,7 +129,6 @@ router.post('/sort', auth, async (req, res) => {
   try {
     await db.transaction(async () => {
       for (let i = 0; i < ids.length; i++) {
-        // 🔥 使用带引号的 "order"
         await db.run('UPDATE cards SET "order" = ? WHERE id = ?', [i, ids[i]]);
       }
     });
