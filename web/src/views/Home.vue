@@ -111,7 +111,7 @@
   v-model:visible="showSiteModal"
   :is-edit="isEditingSite"
   :initial-data="currentSiteData"
-  :current-menu-id="activeMenu?.id"  <!-- 🔥 新增这一行 -->
+
   @save="handleSiteSave"
 />
 
@@ -1262,6 +1262,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
