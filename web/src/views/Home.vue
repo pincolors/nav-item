@@ -106,12 +106,12 @@
   />
 </div> 
 
-    <!-- Home.vue -->
+<!-- 修改为（兼容）-->
 <SiteModal 
   v-model:visible="showSiteModal"
   :is-edit="isEditingSite"
   :initial-data="currentSiteData"
-
+  :current-menu-id="activeMenu ? activeMenu.id : null"  ✅
   @save="handleSiteSave"
 />
 
@@ -1262,6 +1262,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
