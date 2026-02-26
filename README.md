@@ -67,9 +67,10 @@ nav-item/
 
 
 ## 📸 截图
+![image](https://github.com/user-attachments/assets/fc8d6e3e-92ce-4d14-aefc-5f86790b2ced)
 
-[添加你的截图]
 
 ## 📄 License
 
 MIT
+
