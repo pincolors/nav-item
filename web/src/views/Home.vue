@@ -106,12 +106,14 @@
   />
 </div> 
 
-    <SiteModal 
-      v-model:visible="showSiteModal"
-      :is-edit="isEditingSite"
-      :initial-data="currentSiteData"
-      @save="handleSiteSave"
-    />
+    <!-- Home.vue -->
+<SiteModal 
+  v-model:visible="showSiteModal"
+  :is-edit="isEditingSite"
+  :initial-data="currentSiteData"
+  :current-menu-id="activeMenu?.id"  <!-- 🔥 新增这一行 -->
+  @save="handleSiteSave"
+/>
 
     <QuickImportModal
       v-model:visible="showQuickImportModal"
@@ -1260,6 +1262,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
