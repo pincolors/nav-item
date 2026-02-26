@@ -72,7 +72,7 @@
           <small class="tip">点击上方推荐图标可直接填入，或留空自动获取</small>
         </div>
 
-        <div class="form-group">
+                <div class="form-group">
           <label>描述（可选）</label>
           <textarea
             v-model="formData.desc"
@@ -82,7 +82,19 @@
           />
         </div>
 
+        <!-- 🔥 新增：子菜单选择器 -->
+        <div class="form-group" v-if="availableSubMenus.length > 0">
+          <label>所属分类</label>
+          <select v-model="formData.sub_menu_id" class="neumorphic-select">
+            <option :value="null">主菜单</option>
+            <option v-for="sub in availableSubMenus" :key="sub.id" :value="sub.id">
+              {{ sub.name }}
+            </option>
+          </select>
+        </div>
+
         <p v-if="errorMsg" class="form-error">{{ errorMsg }}</p>
+
       </div>
 
       <div class="modal-actions">
@@ -97,11 +109,13 @@
 
 <script setup>
 import { reactive, ref, watch, computed } from 'vue';
+import { getSubMenus } from '../api';  // 🔥 新增：导入 API
 
 const props = defineProps({
   visible: Boolean,
   isEdit: Boolean,
-  initialData: Object
+  initialData: Object,
+  currentMenuId: Number  // 🔥 新增：当前菜单 ID
 });
 
 const emit = defineEmits(['update:visible', 'save']);
@@ -111,10 +125,12 @@ const formData = reactive({
   title: '',
   url: '',
   logo_url: '',
-  desc: ''
+  desc: '',
+  sub_menu_id: null  // 🔥 新增：子菜单 ID
 });
 
 const errorMsg = ref('');
+const availableSubMenus = ref([]);  // 🔥 新增：可用子菜单列表
 
 /* =========== ⭐ 新增逻辑：图标源计算 =========== */
 
@@ -123,7 +139,6 @@ const domain = computed(() => {
   try {
     let u = formData.url;
     if (!u) return '';
-    // 补全协议防止 URL 解析报错
     if (!u.startsWith('http') && !u.startsWith('//')) u = `https://${u}`;
     return new URL(u).hostname;
   } catch {
@@ -144,6 +159,22 @@ function selectIcon(url) {
 }
 /* =========================================== */
 
+/* 🔥 新增：加载子菜单 */
+async function loadSubMenus() {
+  if (!props.currentMenuId) {
+    availableSubMenus.value = [];
+    return;
+  }
+  
+  try {
+    const response = await getSubMenus(props.currentMenuId);
+    availableSubMenus.value = response.data || [];
+  } catch (error) {
+    console.error('加载子菜单失败:', error);
+    availableSubMenus.value = [];
+  }
+}
+
 /* 初始化表单 */
 function resetForm(data = null) {
   formData.id = data?.id ?? null;
@@ -151,12 +182,14 @@ function resetForm(data = null) {
   formData.url = data?.url ?? '';
   formData.logo_url = data?.logo_url ?? '';
   formData.desc = data?.desc ?? '';
+  formData.sub_menu_id = data?.sub_menu_id ?? null;  // 🔥 新增
   errorMsg.value = '';
 }
 
 watch(() => props.visible, (visible) => {
   if (!visible) return;
   resetForm(props.isEdit ? props.initialData : null);
+  loadSubMenus();  // 🔥 新增：加载子菜单
 });
 
 /* 关闭 */
@@ -167,7 +200,6 @@ function close() {
 /* URL 校验 */
 function isValidUrl(url) {
   try {
-    // 简单的协议补全校验
     let u = url;
     if (!u.startsWith('http')) u = `https://${u}`;
     new URL(u);
@@ -194,9 +226,6 @@ function save() {
 
 /* logo 加载失败回退 */
 function handleImgError() {
-  // 如果预览图片加载失败，不需要清空，可能是网络问题，
-  // 或者让用户看到是个裂图，如果不喜欢用户自己会删掉。
-  // 这里暂时保持原逻辑，或者你可以选择注释掉下面这行：
   formData.logo_url = ''; 
 }
 
@@ -218,6 +247,7 @@ const vFocus = {
   }
 };
 </script>
+
 
 <style scoped>
 /* 遮罩层 */
@@ -456,4 +486,48 @@ label {
   font-weight: 700;
   color: var(--text-color);
 }
+
+/* 🔥 新增：select 下拉框样式 */
+.neumorphic-select {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-color, #e0e5ec);
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow:
+    inset 5px 5px 10px rgba(163,177,198,0.5),
+    inset -5px -5px 10px rgba(255,255,255,0.8);
+  transition: all 0.2s ease;
+}
+
+.neumorphic-select:focus {
+  outline: none;
+  color: var(--primary-color);
+  box-shadow:
+    inset 6px 6px 12px rgba(163,177,198,0.6),
+    inset -6px -6px 12px rgba(255,255,255,0.9);
+}
+
+.neumorphic-select option {
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 10px;
+}
+
+/* 暗色模式下的 select */
+:global(.dark-mode) .neumorphic-select {
+  box-shadow:
+    inset 3px 3px 6px rgba(0,0,0,0.4),
+    inset -3px -3px 6px rgba(255,255,255,0.05);
+}
+
+:global(.dark-mode) .neumorphic-select option {
+  background: #25262b;
+  color: #e0e0e0;
+}
+           
 </style>
