@@ -110,9 +110,10 @@
   v-model:visible="showSiteModal"
   :is-edit="isEditingSite"
   :initial-data="currentSiteData"
-  :current-menu-id="activeMenu ? activeMenu.id : null"  ✅
+  :current-menu-id="activeMenu ? activeMenu.id : null"
   @save="handleSiteSave"
 />
+
 
     <QuickImportModal
       v-model:visible="showQuickImportModal"
@@ -1261,6 +1262,7 @@ onMounted(async () => {
  
 
 </style>
+
 
 
 
