@@ -69,8 +69,14 @@ nav-item/
 ## 📸 截图
 ![image](https://github.com/user-attachments/assets/fc8d6e3e-92ce-4d14-aefc-5f86790b2ced)
 
+![image](https://github.com/user-attachments/assets/1215da02-47cb-44af-9b1d-3ee3d68d8730)
+
+![image](https://github.com/user-attachments/assets/2753d2e8-9b10-47ea-bd33-3b850712a652)
+
+
 
 ## 📄 License
 
 MIT
+
 
