@@ -104,20 +104,33 @@
       </draggable>
     </div>
 
-   <div v-if="activeMenu && activeMenu.sub_menus && activeMenu.sub_menus.length" class="sub-menu-outer">
-      <div class="sub-menu-bar">
-        <button
-          v-for="sub in activeMenu.sub_menus"
-          :key="sub.id" 
-          class="sub-menu-item"
-          :class="{ active: activeSubMenuId === sub.id }"
-          type="button"
-          @click="$emit('select', sub, activeMenu)"
-        >
-          {{ sub.name }}
-        </button>
-      </div>
-    </div>
+   <!-- 🔥 添加"全部"按钮 -->
+<div v-if="activeMenu && activeMenu.sub_menus && activeMenu.sub_menus.length" class="sub-menu-outer">
+  <div class="sub-menu-bar">
+    <!-- 🔥 新增：全部按钮 -->
+    <button
+      class="sub-menu-item"
+      :class="{ active: !activeSubMenuId }"
+      type="button"
+      @click="$emit('select', activeMenu)"
+    >
+      📋 全部
+    </button>
+    
+    <!-- 原有的子菜单按钮 -->
+    <button
+      v-for="sub in activeMenu.sub_menus" 
+      :key="sub.id" 
+      class="sub-menu-item"
+      :class="{ active: activeSubMenuId === sub.id }"
+      type="button"
+      @click="$emit('select', sub, activeMenu)"
+    >
+      {{ sub.name }}
+    </button>
+  </div>
+</div>
+
 
     <!-- 🔥 编辑菜单对话框 -->
     <div v-if="showEditDialog" class="modal-overlay" @click.self="closeEditDialog">
@@ -1009,4 +1022,5 @@ function closeSubMenuDialog() {
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
 }
 </style>
+
 
