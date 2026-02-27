@@ -18,14 +18,16 @@
 
         <div class="header-right">
           <button class="icon-btn" @click="toggleTheme" title="切换主题">
-            <svg v-if="isDarkMode" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            <svg v-else width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <Icon :name="isDarkMode ? 'sun' : 'moon'" style="font-size: 26px;" />
           </button>
           
           <div class="user-menu-container">
-            <button class="icon-btn" @click.stop="handleUserIconClick">
-              <svg v-if="isLoggedIn" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" transform="translate(0, 1) scale(0.9)"></path><circle cx="8.5" cy="7" r="4" transform="translate(0, 1) scale(0.9)"></circle><circle cx="19" cy="11" r="2"></circle><path d="M19 8v1m0 4v1m2-3h1m-4 0h-1m2.8-2.1l-.7.7m-2.8 2.8l-.7.7m0-4.2l.7.7m2.8 2.8l.7.7"></path></svg>
+            <button 
+              class="icon-btn admin-btn" 
+              :class="{ 'is-logged-in': isLoggedIn }"
+              @click.stop="handleUserIconClick"
+            >
+              <Icon name="user-cog" style="font-size: 20px;" />
             </button>
             
             <transition name="fade">
@@ -90,30 +92,29 @@
     </div>
     
    <div 
-  class="content-area"
-  @touchstart="handleTouchStart"
-  @touchmove="handleTouchMove"
-  @touchend="handleTouchEnd"
->
-  <CardGrid 
-    :cards="filteredCards" 
-    :is-edit-mode="isLoggedIn"
-    :is-dark-mode="isDarkMode"
-    @update:cards="handleCardSort"
-    @edit="openEditModal"
-    @delete="deleteCard"
-    @add="openAddModal"
-  />
-</div> 
+      class="content-area"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
+    >
+      <CardGrid 
+        :cards="filteredCards" 
+        :is-edit-mode="isLoggedIn"
+        :is-dark-mode="isDarkMode"
+        @update:cards="handleCardSort"
+        @edit="openEditModal"
+        @delete="deleteCard"
+        @add="openAddModal"
+      />
+    </div> 
 
-<SiteModal 
-  v-model:visible="showSiteModal"
-  :is-edit="isEditingSite"
-  :initial-data="currentSiteData"
-  :current-menu-id="activeMenu ? activeMenu.id : null"
-  @save="handleSiteSave"
-/>
-
+    <SiteModal 
+      v-model:visible="showSiteModal"
+      :is-edit="isEditingSite"
+      :initial-data="currentSiteData"
+      :current-menu-id="activeMenu ? activeMenu.id : null"
+      @save="handleSiteSave"
+    />
 
     <QuickImportModal
       v-model:visible="showQuickImportModal"
@@ -195,6 +196,9 @@ import CardGrid from '../components/CardGrid.vue';
 import SiteModal from '../components/SiteModal.vue';
 import QuickImportModal from '../components/QuickImportModal.vue';
 import UserManage from '../components/UserManage.vue';
+
+// 👇 引入刚封装的图标组件
+import Icon from '../components/Icon.vue'; 
   
 // ==================== 主题管理 ====================
 const isDarkMode = ref(localStorage.getItem('theme') === 'dark');
@@ -276,7 +280,6 @@ const handleMenuSelect = (menu, parent = null) => {
   }
   loadCards();
   
-  // 滚动菜单到可视范围
   setTimeout(() => {
     const activeMenuItem = document.querySelector('.menu-item.active');
     if (activeMenuItem) {
@@ -342,10 +345,7 @@ const loadCards = async () => {
   try {
     const res = await getCards(activeMenu.value.id, activeSubMenu.value?.id);
     console.log('🔵 加载的卡片数据:', res.data);
-    
-    // ✅ 使用 order 字段排序（后端返回的是 order，不是 sort_order）
     cards.value = (res.data || []).sort((a, b) => (a.order || 0) - (b.order || 0));
-    
     console.log('🟢 卡片总数:', cards.value.length);
   } catch (e) {
     console.error('加载卡片失败:', e);
@@ -379,13 +379,7 @@ const openEditModal = (card) => {
 const handleSiteSave = async (formData) => {
   try {
     if (isEditingSite.value) {
-      // ========== 编辑卡片 ==========
-      console.log('==================== 开始编辑 ====================');
-      console.log('🔵 编辑卡片 ID:', formData.id);
-      console.log('🔵 表单数据:', formData);
-      
       const originalCard = cards.value.find(c => c.id === formData.id);
-      
       if (!originalCard) {
         alert('卡片不存在，无法编辑');
         return;
@@ -394,7 +388,7 @@ const handleSiteSave = async (formData) => {
       const payload = {
         id: formData.id,
         menu_id: formData.menu_id || originalCard.menu_id,
-        sub_menu_id: formData.sub_menu_id !== undefined ? formData.sub_menu_id : originalCard.sub_menu_id,  // 🔥 关键
+        sub_menu_id: formData.sub_menu_id !== undefined ? formData.sub_menu_id : originalCard.sub_menu_id,
         title: formData.title,
         url: formData.url,
         logo_url: formData.logo_url || '',
@@ -403,11 +397,7 @@ const handleSiteSave = async (formData) => {
         order: formData.order !== undefined ? formData.order : (originalCard.order || 0)
       };
       
-      console.log('🔵 实际发送的数据:', payload);
-      
       const response = await apiUpdateCard(formData.id, payload);
-      console.log('🟢 后端返回:', response.data);
-      
       const index = cards.value.findIndex(c => c.id === formData.id);
       if (index !== -1) {
         const updatedCard = response.data?.data || payload;
@@ -415,25 +405,15 @@ const handleSiteSave = async (formData) => {
         newCards[index] = updatedCard;
         cards.value = newCards;
       }
-      
-      console.log('==================== 编辑完成 ====================');
-      
     } else {
-      // ========== 添加卡片 ==========
-      console.log('==================== 开始添加 ====================');
-      
       const maxOrder = cards.value.length > 0 
         ? Math.max(...cards.value.map(c => c.order || 0))
         : 0;
       const nextOrder = maxOrder + 1;
       
-      console.log('🔵 当前最大 order:', maxOrder);
-      console.log('🔵 新卡片 order:', nextOrder);
-      console.log('🔵 表单数据:', formData);
-      
       const payload = {
         menu_id: activeMenu.value.id,
-        sub_menu_id: formData.sub_menu_id || null,  // 🔥 关键：添加 sub_menu_id
+        sub_menu_id: formData.sub_menu_id || null,
         title: formData.title,
         url: formData.url,
         logo_url: formData.logo_url || '',
@@ -442,32 +422,20 @@ const handleSiteSave = async (formData) => {
         order: nextOrder
       };
       
-      console.log('🔵 开始添加卡片:', payload);
-      
       const res = await apiAddCard(payload);
-      console.log('🟢 后端返回:', res.data);
-      
       const newCard = res.data?.data || res.data || { ...payload, id: res.data?.id || Date.now() };
-      console.log('🟢 新卡片数据:', newCard);
       
       cards.value = [...cards.value, newCard];
-      console.log('🟢 添加成功，当前卡片总数:', cards.value.length);
       
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 100);
-      
-      console.log('==================== 添加完成 ====================');
     }
     
     showSiteModal.value = false;
     
   } catch (e) {
-    console.error('==================== 保存失败 ====================');
-    console.error('❌ 错误对象:', e);
-    console.error('❌ 错误消息:', e.message);
-    console.error('❌ 响应数据:', e.response?.data);
-    console.error('==================== ====================');
+    console.error('保存失败:', e);
     alert('保存失败: ' + (e.response?.data?.error || e.message));
   }
 };
@@ -484,9 +452,9 @@ const deleteCard = async (id) => {
 };
 
 
-// === 快速导入 & 用户管理功能 (整合版) ===
+// === 快速导入 & 用户管理功能 ===
 const showQuickImportModal = ref(false);
-const showUserManageModal = ref(false); // ✅ 只定义一次
+const showUserManageModal = ref(false); 
 
 const openQuickImport = () => {
   showQuickImportModal.value = true;
@@ -675,6 +643,7 @@ const vClickOutside = {
   },
   unmounted(el) { document.removeEventListener('click', el._clickOutside); delete el._clickOutside; }
 };
+
 // ==================== 移动端滑动切换菜单 ====================
 let touchStartX = 0;
 let touchEndX = 0;
@@ -682,9 +651,7 @@ let touchStartTime = 0;
 let isSwiping = false;
 
 const handleTouchStart = (e) => {
-  // 编辑模式下禁用滑动切换（避免与卡片拖拽冲突）
   if (isLoggedIn.value) return;
-  
   touchStartX = e.changedTouches[0].screenX;
   touchStartTime = Date.now();
   isSwiping = true;
@@ -692,11 +659,8 @@ const handleTouchStart = (e) => {
 
 const handleTouchMove = (e) => {
   if (!isSwiping || isLoggedIn.value) return;
-  
   const touchCurrentX = e.changedTouches[0].screenX;
   const diff = touchCurrentX - touchStartX;
-  
-  // 限制滑动范围，避免过度滑动
   if (Math.abs(diff) > 100) {
     e.preventDefault();
   }
@@ -704,64 +668,47 @@ const handleTouchMove = (e) => {
 
 const handleTouchEnd = (e) => {
   if (!isSwiping || isLoggedIn.value) return;
-  
   touchEndX = e.changedTouches[0].screenX;
   const touchDuration = Date.now() - touchStartTime;
-  
   isSwiping = false;
   handleSwipe(touchDuration);
 };
 
 const handleSwipe = (duration) => {
   const swipeDistance = touchStartX - touchEndX;
-  const swipeThreshold = 50; // 最小滑动距离（像素）
+  const swipeThreshold = 50; 
   const swipeSpeed = Math.abs(swipeDistance) / duration;
-  
-  // 快速滑动或滑动距离足够
   if (Math.abs(swipeDistance) > swipeThreshold || swipeSpeed > 0.5) {
     if (swipeDistance > 0) {
-      switchToNextMenu(); // 向左滑 - 下一个
+      switchToNextMenu(); 
     } else {
-      switchToPreviousMenu(); // 向右滑 - 上一个
+      switchToPreviousMenu(); 
     }
   }
 };
 
 const switchToNextMenu = () => {
   if (!menus.value.length) return;
-  
   const currentIndex = menus.value.findIndex(m => m.id === activeMenu.value?.id);
   if (currentIndex === -1 || currentIndex === menus.value.length - 1) return;
-  
   const nextMenu = menus.value[currentIndex + 1];
   handleMenuSelect(nextMenu);
-  
-  // 触觉反馈（可选）
-  if (navigator.vibrate) {
-    navigator.vibrate(10);
-  }
+  if (navigator.vibrate) navigator.vibrate(10);
 };
 
 const switchToPreviousMenu = () => {
   if (!menus.value.length) return;
-  
   const currentIndex = menus.value.findIndex(m => m.id === activeMenu.value?.id);
   if (currentIndex <= 0) return;
-  
   const prevMenu = menus.value[currentIndex - 1];
   handleMenuSelect(prevMenu);
-  
-  // 触觉反馈（可选）
-  if (navigator.vibrate) {
-    navigator.vibrate(10);
-  }
+  if (navigator.vibrate) navigator.vibrate(10);
 };
+
 onMounted(async () => {
   await loadMenus();
   if (activeMenu.value) {
     await loadCards();
-    
-    // ✅ 新增：初始化时滚动到第一个菜单
     setTimeout(() => {
       const activeMenuItem = document.querySelector('.menu-item.active');
       if (activeMenuItem) {
@@ -771,16 +718,14 @@ onMounted(async () => {
           inline: 'center'
         });
       }
-    }, 300); // 稍微延长延迟，确保菜单已渲染
+    }, 300);
   }
 });
-
 </script>
 
 <style scoped>
 /* 全局样式 */
 .home-container {
-  /* 定义基本颜色变量 */
   --primary-color: #00ff9d; 
   --bg-color: #e0e5ec; 
   --text-color: #4a5568; 
@@ -818,6 +763,37 @@ onMounted(async () => {
 .icon-btn:hover { background: var(--bg-color); box-shadow: inset 2px 2px 5px rgba(163, 177, 198, 0.4), inset -2px -2px 5px rgba(255,255,255,0.5); color: var(--primary-color); }
 .dark-mode .icon-btn:hover { box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.3); }
 
+/* =========================================
+   管理员头像按钮专属样式 (新增部分)
+   ========================================= */
+.header-right .admin-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  padding: 0;
+  background-color: #00bcd4;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header-right .admin-btn:hover {
+  background-color: #00acc1;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 188, 212, 0.5);
+}
+
+.header-right .admin-btn.is-logged-in {
+  background-color: #ff4d4f;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.4);
+}
+
+.header-right .admin-btn.is-logged-in:hover {
+  background-color: #ff7875;
+  box-shadow: 0 6px 16px rgba(255, 77, 79, 0.5);
+}
+
 /* Dropdown */
 .user-menu-container { position: relative; }
 .dropdown-menu {
@@ -838,281 +814,100 @@ onMounted(async () => {
 
 /* Sections */
 .menu-wrapper { margin: 0 0 20px; }
-/* ==================== 搜索框样式（新拟态立体效果）==================== */
-.search-section { 
-  padding: 0 20px 30px; 
-  display: flex; 
-  justify-content: center; 
-}
-
-.search-box-wrapper {
-  width: 100%;
-  max-width: 640px;
-}
-
-.content-area {
-  width: 100%;
-  max-width: 1400px; 
-  margin: 0 auto;    
-  padding: 0 50px 60px; 
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
+.search-section { padding: 0 20px 30px; display: flex; justify-content: center; }
+.search-box-wrapper { width: 100%; max-width: 640px; }
+.content-area { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 50px 60px; box-sizing: border-box; overflow-x: hidden; }
 
 @media (max-width: 768px) {
-  .content-area {
-    padding: 0 16px 60px;
-  }
+  .content-area { padding: 0 16px 60px; }
 }
 
 /* Search */
 .search-container {
-  display: flex; 
-  align-items: center; 
-  background: var(--card-bg);
- border-radius: 16px;  /* 👈 从 20px 改为 16px（更扁平）*/
-  padding: 6px 12px;    /* 👈 从 8px 14px 改为 6px 12px（减小内边距）*/
-
-  width: 100%;
+  display: flex; align-items: center; background: var(--card-bg);
+  border-radius: 16px; padding: 6px 12px; width: 100%;
   border: 1px solid var(--card-border);
-  
-  /* 🌟🌟🌟 与卡片完全一致的多层阴影 🌟🌟🌟 */
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  
-  /* 🌟 与卡片一致的背景模糊 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
 }
 
-/* 深色模式 */
 .dark-mode .search-container {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  
-  /* 深色模式的多层阴影 */
-  box-shadow: 
-    0 4px 6px rgba(0, 0, 0, 0.4),
-    0 8px 16px rgba(0, 0, 0, 0.5),
-    0 16px 48px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.5), 0 16px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* 悬停效果 - 与卡片一致 */
 .search-container:hover {
-  transform: translateY(-4px) scale(1.01);
-  border-color: rgba(0, 255, 157, 0.4);
-  
-  /* 悬停时的发光阴影 */
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.12),
-    0 12px 32px rgba(0, 0, 0, 0.15),
-    0 0 30px rgba(0, 255, 157, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px) scale(1.01); border-color: rgba(0, 255, 157, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 255, 157, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
-  .dark-mode .search-container:hover {
+.dark-mode .search-container:hover {
   border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.6),
-    0 16px 48px rgba(0, 0, 0, 0.8),
-    0 0 40px rgba(0, 255, 157, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 255, 157, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* 聚焦效果 */
 .search-container:focus-within {
-  transform: translateY(-6px) scale(1.02);
-  border-color: var(--primary-color);
-  
-  /* 聚焦时的强烈发光 */
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.15),
-    0 16px 48px rgba(0, 0, 0, 0.2),
-    0 0 0 3px rgba(0, 255, 157, 0.2),
-    0 0 50px rgba(0, 255, 157, 0.4);
+  transform: translateY(-6px) scale(1.02); border-color: var(--primary-color);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 16px 48px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 255, 157, 0.2), 0 0 50px rgba(0, 255, 157, 0.4);
 }
 
 .dark-mode .search-container:focus-within {
-  box-shadow: 
-    0 16px 48px rgba(0, 0, 0, 0.6),
-    0 20px 64px rgba(0, 0, 0, 0.8),
-    0 0 0 3px rgba(0, 255, 157, 0.25),
-    0 0 60px rgba(0, 255, 157, 0.5);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 20px 64px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(0, 255, 157, 0.25), 0 0 60px rgba(0, 255, 157, 0.5);
 }
 
-/* 搜索引擎选择器 */
 .engine-select { 
-  border: none; 
-  background: transparent; 
-  color: var(--text-color); 
-  font-weight: 700; 
-  padding-right: 10px;  /* 👈 从 12px 改为 10px */
-  margin-right: 8px;    /* 👈 从 10px 改为 8px */ 
-  border-right: 2px solid rgba(0, 255, 157, 0.2);  /* 绿色分割线 */
-  outline: none; 
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 13px;
+  border: none; background: transparent; color: var(--text-color); font-weight: 700; padding-right: 10px; margin-right: 8px; border-right: 2px solid rgba(0, 255, 157, 0.2); outline: none; cursor: pointer; transition: all 0.2s; font-size: 13px;
 }
+.engine-select:hover { color: var(--primary-color); border-right-color: var(--primary-color); }
+.engine-select option { background-color: var(--card-bg); color: var(--text-color); padding: 10px; font-weight: 600; }
+.dark-mode .engine-select { border-right-color: rgba(0, 255, 157, 0.3); }
+.dark-mode .engine-select option { background-color: #25262b; color: #e0e0e0; }
 
-.engine-select:hover {
-  color: var(--primary-color);
-  border-right-color: var(--primary-color);
-}
-
-
-.engine-select option {
-  background-color: var(--card-bg); 
-  color: var(--text-color);
-  padding: 10px;
-  font-weight: 600;
-}
-
-.dark-mode .engine-select {
-  border-right-color: rgba(0, 255, 157, 0.3);
-}
-
-.dark-mode .engine-select option {
-  background-color: #25262b; 
-  color: #e0e0e0;
-}
-
-/* 搜索输入框 */
 .search-input { 
-  flex: 1; 
-  border: none; 
-  background: transparent; 
-  padding: 10px 8px;    /* 👈 从 14px 10px 改为 10px 8px（减小垂直内边距）*/
-  color: var(--text-color); 
-  font-size: 15px;      /* 👈 从 16px 改为 15px */
-  outline: none; 
-  font-weight: 500;
+  flex: 1; border: none; background: transparent; padding: 10px 8px; color: var(--text-color); font-size: 15px; outline: none; font-weight: 500;
 }
+.search-input::placeholder { color: rgba(163, 177, 198, 0.6); transition: color 0.2s; }
+.search-container:focus-within .search-input::placeholder { color: rgba(0, 255, 157, 0.5); }
+.dark-mode .search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
 
-.search-input::placeholder { 
-  color: rgba(163, 177, 198, 0.6);
-  transition: color 0.2s;
-}
-
-.search-container:focus-within .search-input::placeholder {
-  color: rgba(0, 255, 157, 0.5);
-}
-
-.dark-mode .search-input::placeholder { 
-  color: rgba(255, 255, 255, 0.4); 
-}
-
-/* 清除按钮 */
 .clear-btn { 
-  background: transparent; 
-  border: none; 
-  color: #888; 
-  cursor: pointer; 
-  padding: 0 8px;       /* 👈 从 0 10px 改为 0 8px */
-  font-size: 18px;      /* 👈 从 20px 改为 18px */
-  transition: all 0.2s;
-  opacity: 0.6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: transparent; border: none; color: #888; cursor: pointer; padding: 0 8px; font-size: 18px; transition: all 0.2s; opacity: 0.6; display: flex; align-items: center; justify-content: center;
 }
+.clear-btn:hover { color: var(--primary-color); opacity: 1; transform: scale(1.2) rotate(90deg); }
 
-.clear-btn:hover {
-  color: var(--primary-color);
-  opacity: 1;
-  transform: scale(1.2) rotate(90deg);
-}
-
-/* 🌟🌟🌟 搜索按钮 - 立体效果增强 🌟🌟🌟 */
 .search-btn { 
-  background: var(--icon-bg);  /* 使用与图标容器相同的渐变 */
-  color: var(--primary-color); 
-  width: 38px;          /* 👈 从 44px 改为 38px */
-  height: 38px;         /* 👈 从 44px 改为 38px */
-  border-radius: 10px;  /* 👈 从 12px 改为 10px */
-  border: 1px solid rgba(0, 255, 157, 0.2);   
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  flex-shrink: 0;
-  
-  /* 🌟 多层阴影立体效果 */
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  
+  background: var(--icon-bg); color: var(--primary-color); width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(0, 255, 157, 0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .dark-mode .search-btn { 
   background: var(--card-bg);
-  box-shadow: 
-    4px 4px 8px rgba(0, 0, 0, 0.4),
-    -4px -4px 8px rgba(255, 255, 255, 0.05);
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.05);
 }
 
-/* 搜索按钮悬停 */
 .search-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    6px 6px 12px rgba(163, 177, 198, 0.5), 
-    -6px -6px 12px rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px); box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.6);
 }
-
 .dark-mode .search-btn:hover {
-  box-shadow: 
-    6px 6px 12px rgba(0, 0, 0, 0.5),
-    -6px -6px 12px rgba(255, 255, 255, 0.08);
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.08);
 }
 
-/* 搜索按钮按下 */
 .search-btn:active {
-  transform: translateY(0);
-  box-shadow: 
-    inset 3px 3px 6px rgba(163, 177, 198, 0.4), 
-    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+  transform: translateY(0); box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
 }
-
 .dark-mode .search-btn:active {
-  box-shadow: 
-    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.05);
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.05);
 }
 
-/* 移动端优化 */
 @media (max-width: 768px) {
-  .search-section {
-    padding: 0 16px 24px;
-  }
-
-  
-  .search-container {
-    padding: 6px 10px;
-  }
-
-  
-  .search-input {
-    padding: 12px 8px;
-    font-size: 15px;
-  }
-  
-  .search-btn {
-    width: 40px;
-    height: 40px;
-  }
-   /* 移动端减弱悬停效果 */
-  .search-container:hover {
-    transform: translateY(-2px) scale(1.005);
-  }
+  .search-section { padding: 0 16px 24px; }
+  .search-container { padding: 6px 10px; }
+  .search-input { padding: 12px 8px; font-size: 15px; }
+  .search-btn { width: 40px; height: 40px; }
+  .search-container:hover { transform: translateY(-2px) scale(1.005); }
 }
-
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
@@ -1140,106 +935,33 @@ onMounted(async () => {
   .modal-content { padding: 30px 20px; }
   
   .header-inner, 
-  .content-area { 
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-  }
-}
-.engine-select option {
-  background-color: var(--card-bg); 
-  color: var(--text-color);
-}
-.dark-mode .engine-select option {
-  background-color: #25262b; 
-  color: #e0e0e0;
+  .content-area { padding-left: 12px !important; padding-right: 12px !important; }
 }
 
-/* =========== 👇 新增：进度条样式 👇 =========== */
+/* =========== 进度条样式 =========== */
 .import-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;
 }
-
 .import-box {
-  background: var(--card-bg);
-  color: var(--text-color);
-  width: 90%;
-  max-width: 400px;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-  text-align: center;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--card-bg); color: var(--text-color); width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; border: 1px solid rgba(255,255,255,0.1);
 }
-
 .import-box h3 { margin: 0 0 20px 0; font-size: 1.2rem; color: var(--primary-color); }
-
 .progress-track {
-  width: 100%; height: 10px; background: rgba(120, 120, 120, 0.2);
-  border-radius: 10px; overflow: hidden; margin-bottom: 15px;
-  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+  width: 100%; height: 10px; background: rgba(120, 120, 120, 0.2); border-radius: 10px; overflow: hidden; margin-bottom: 15px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
 }
-
 .progress-fill {
-  height: 100%; background: var(--primary-color); width: 0%;
-  border-radius: 10px; transition: width 0.3s ease-out;
-  box-shadow: 0 0 10px var(--primary-color);
+  height: 100%; background: var(--primary-color); width: 0%; border-radius: 10px; transition: width 0.3s ease-out; box-shadow: 0 0 10px var(--primary-color);
 }
-
 .import-status {
-  display: flex; justify-content: space-between; font-size: 13px;
-  color: var(--text-desc); font-weight: 500;
+  display: flex; justify-content: space-between; font-size: 13px; color: var(--text-desc); font-weight: 500;
 }
-
 .percent-num { font-weight: bold; color: var(--text-color); }
-/* ✅ 新增：大号弹窗样式（适配表格） */
-.large-modal {
-  width: 90%;          /* 宽度占屏幕 90% */
-  max-width: 900px;    /* 最大宽度 900px */
-  max-height: 85vh;    /* 防止太高超出屏幕 */
-  overflow-y: auto;    /* 内容多了出现滚动条 */
-  padding: 25px;
-}
 
-/* 手机端适配 */
-@media (max-width: 768px) {
-  .large-modal {
-    width: 95%;
-    padding: 15px;
-  }
-}
- /* ==================== 移动端滑动优化 ==================== */
-.content-area {
-  transition: opacity 0.3s ease;
-  touch-action: pan-y; /* 允许垂直滚动，拦截水平滑动 */
-}
+/* 大号弹窗样式 */
+.large-modal { width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; padding: 25px; }
+@media (max-width: 768px) { .large-modal { width: 95%; padding: 15px; } }
 
-@media (max-width: 768px) {
-  /* 滑动时的视觉反馈 */
-  .content-area:active {
-    opacity: 0.95;
-  }
-}
- 
-
+/* 移动端滑动优化 */
+.content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
+@media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
