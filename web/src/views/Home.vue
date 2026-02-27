@@ -236,10 +236,16 @@ const doLogin = async () => {
     const res = await login(loginForm.username, loginForm.password);
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
-      isLoggedIn.value = true;
-      showLoginModal.value = false;
-      loginForm.username = '';
-      loginForm.password = '';
+      
+      // 1. 设置已登录状态，此时图标会开始变红并旋转
+      isLoggedIn.value = true; 
+      
+      // 2. 延迟 0.6 秒后再关闭弹窗，让动画飞一会儿
+      setTimeout(() => {
+        showLoginModal.value = false;
+        loginForm.username = '';
+        loginForm.password = '';
+      }, 600);
     }
   } catch (e) {
     alert('登录失败: ' + (e.response?.data?.message || e.message));
@@ -994,4 +1000,5 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
 
