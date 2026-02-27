@@ -17,10 +17,7 @@
         </div>
 
         <div class="header-right">
-          <button class="icon-btn" @click="toggleTheme" title="切换主题">
-            <Icon :name="isDarkMode ? 'sun' : 'moon'" style="font-size: 26px;" />
-          </button>
-          
+                 
           <div class="user-menu-container">
             <button 
               class="icon-btn admin-btn" 
@@ -49,6 +46,9 @@
               </div>
             </transition>
           </div>
+           <button class="icon-btn" @click="toggleTheme" title="切换主题">
+            <Icon :name="isDarkMode ? 'sun' : 'moon'" style="font-size: 26px;" />
+          </button>
         </div>
       </div>
     </header>
@@ -134,9 +134,14 @@
       </div>
     </div>
 
-    <Teleport to="body">
+       <Teleport to="body">
       <div v-if="showLoginModal" class="modal-overlay" @click="showLoginModal = false">
         <div class="modal-content login-modal" @click.stop>
+          
+          <div class="admin-login-icon" :class="{ 'logged-in': isLoggedIn }">
+            <Icon name="user-cog" />
+          </div>
+          
           <h3>管理员登录</h3>
           <div class="form-group">
             <input v-model="loginForm.username" placeholder="用户名" class="modal-input" v-focus>
@@ -924,7 +929,31 @@ onMounted(async () => {
 .modal-btn { width: 100%; padding: 14px; background: var(--primary-color); border: none; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; box-shadow: 4px 4px 10px rgba(0, 255, 157, 0.3); transition: all 0.2s; }
 .modal-btn:hover { transform: translateY(-2px); box-shadow: 6px 6px 15px rgba(0, 255, 157, 0.4); }
 .modal-btn:active { transform: translateY(0); }
+/* =========================================
+   弹窗顶部的管理员大图标样式
+   ========================================= */
+.admin-login-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #00bcd4; /* 登录前：青色背景 */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 20px auto; /* 居中并与下方文字留白 */
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带弹性的动画效果 */
+}
 
+.admin-login-icon.logged-in {
+  background-color: #ff4d4f; /* 登录后：红色背景 */
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.6);
+  transform: rotate(360deg) scale(1.1); /* 旋转一圈并稍微放大 */
+}
+
+  
 /* Footer & Responsive */
 .footer { text-align: center; opacity: 0.6; padding: 20px; font-size: 13px; font-weight: 500; }
 @media (max-width: 768px) {
@@ -965,3 +994,4 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
