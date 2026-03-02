@@ -15,6 +15,15 @@
 
 ## 🚀 快速开始
 
+Enviorment variables
+PORT="8080"
+JWT_SECRET="32位”
+DATABASE_URL="postgres:/…”
+DB_TYPE="postgres"
+NODE_ENV="production" ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="7admin123" sslmode="require"
+
+
 ### 本地开发
 
 \`\`\`bash
@@ -78,5 +87,6 @@ nav-item/
 ## 📄 License
 
 MIT
+
 
 
