@@ -13,7 +13,20 @@
 - 💾 **数据持久化**：PostgreSQL 数据库
 - 🔍 **多引擎搜索**：Google、百度、Bing 等
 
-## 🚀 快速开始
+## ENVIORMENT VARIABLES
+- 
+PORT="8080"
+JWT_SECRET="32位”
+DATABASE_URL="postgres:/…”
+DB_TYPE="postgres"
+NODE_ENV="production" ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="7admin123" sslmode="require"
+PORT="8080"
+JWT_SECRET="32位”
+DATABASE_URL="postgres:/…”
+DB_TYPE="postgres"
+NODE_ENV="production" ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="7admin123" sslmode="require"
 
 Enviorment variables
 PORT="8080"
@@ -87,6 +100,7 @@ nav-item/
 ## 📄 License
 
 MIT
+
 
 
 
