@@ -209,8 +209,10 @@ function isValidUrl(url) {
   }
 }
 
-/* 保存 */
 function save() {
+  console.log('🔴 save formData:', JSON.stringify({ ...formData }));
+
+         
   if (!formData.title || !formData.url) {
     errorMsg.value = '标题和链接是必填项';
     return;
