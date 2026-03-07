@@ -193,7 +193,7 @@ import {
   updateCard as apiUpdateCard, 
   deleteCard as apiDeleteCard,
   updateCardOrder, 
-  updateMenuOrder  
+  updateMenuOrder,
   getSubMenus,   // 👈 新增
   addSubMenu     // 👈 新增
 } from '../api'; 
@@ -1065,6 +1065,7 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
 
 
 
