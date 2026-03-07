@@ -390,8 +390,11 @@ const openEditModal = (card) => {
   showSiteModal.value = true;
 };
 const handleSiteSave = async (formData) => {
+  console.log('🟡 isEditingSite:', isEditingSite.value);
+  console.log('🟡 formData:', JSON.stringify(formData));
   try {
     if (isEditingSite.value) {
+      console.log('🔵 进入编辑分支');
       const originalCard = cards.value.find(c => c.id === formData.id);
       if (!originalCard) {
         alert('卡片不存在，无法编辑');
@@ -411,7 +414,7 @@ const handleSiteSave = async (formData) => {
       };
       
       const response = await apiUpdateCard(formData.id, payload);
-      console.log('服务器返回:', JSON.stringify(response.data));
+      console.log('🟢 服务器返回:', JSON.stringify(response.data));
       const index = cards.value.findIndex(c => c.id === formData.id);
       if (index !== -1) {
         const updatedCard = response.data?.data || payload;
@@ -1066,6 +1069,7 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
 
 
 
