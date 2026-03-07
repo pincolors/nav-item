@@ -194,6 +194,8 @@ import {
   deleteCard as apiDeleteCard,
   updateCardOrder, 
   updateMenuOrder  
+  getSubMenus,   // 👈 新增
+  addSubMenu     // 👈 新增
 } from '../api'; 
 
 import MenuBar from '../components/MenuBar.vue';
@@ -543,8 +545,33 @@ const exportData = async () => {
     
     for (const menu of menus.value) {
       const menuObj = { ...menu, subMenus: [], cards: [] };
-      const res = await getCards(menu.id);
-      menuObj.cards = res.data || [];
+      
+      // 备份子菜单
+      try {
+        const subRes = await getSubMenus(menu.id);
+        menuObj.subMenus = subRes.data || [];
+      } catch (e) {
+        menuObj.subMenus = [];
+      }
+
+      // 备份主菜单下的卡片（不属于任何子菜单的）
+      try {
+        const res = await getCards(menu.id);
+        menuObj.cards = res.data || [];
+      } catch (e) {
+        menuObj.cards = [];
+      }
+
+      // 备份每个子菜单下的卡片
+      for (const sub of menuObj.subMenus) {
+        try {
+          const subCardsRes = await getCards(menu.id, sub.id);
+          sub.cards = subCardsRes.data || [];
+        } catch (e) {
+          sub.cards = [];
+        }
+      }
+
       fullData.menus.push(menuObj);
     }
     
@@ -558,7 +585,6 @@ const exportData = async () => {
     alert('备份失败: ' + e.message);
   }
 };
-
 
 /* =========== 进度条状态和逻辑 =========== */
 const importState = reactive({
@@ -577,10 +603,17 @@ const importData = (event) => {
       const data = JSON.parse(e.target.result);
       if (!data.menus) throw new Error('无效的备份文件');
 
-      const menuCount = data.menus.length;
-      let totalItems = menuCount; 
+      // 计算总数（菜单 + 子菜单 + 所有卡片）
+      let totalItems = 0;
       data.menus.forEach(m => {
-        if (m.cards) totalItems += m.cards.length;
+        totalItems += 1; // 主菜单本身
+        if (m.subMenus?.length) {
+          totalItems += m.subMenus.length; // 子菜单
+          m.subMenus.forEach(sub => {
+            if (sub.cards?.length) totalItems += sub.cards.length; // 子菜单卡片
+          });
+        }
+        if (m.cards?.length) totalItems += m.cards.length; // 主菜单卡片
       });
 
       if (!confirm(`解析成功！共 ${totalItems} 个项目。\n确定开始恢复吗？`)) {
@@ -594,31 +627,63 @@ const importData = (event) => {
 
       const updateProgress = (msg) => {
         processedCount++;
-        importState.percent = Math.floor((processedCount / totalItems) * 100);
+        importState.percent = Math.min(Math.floor((processedCount / totalItems) * 100), 99);
         importState.text = msg;
       };
 
-      for (const [index, menu] of data.menus.entries()) {
+      for (const menu of data.menus) {
+        // 1. 创建主菜单
         const menuRes = await apiAddMenu({ 
           name: menu.name, 
           order: 9999 
         });
         const newMenuId = menuRes.data.id;
-        
         updateProgress(`正在创建菜单: ${menu.name}`);
 
-        if (menu.cards && menu.cards.length > 0) {
+        // 2. 恢复主菜单下的卡片
+        if (menu.cards?.length) {
           for (const card of menu.cards) {
             await apiAddCard({
               menu_id: newMenuId,
+              sub_menu_id: null,
               title: card.title,
               url: card.url,
-              description: card.description || '',
-              logo_url: card.logo_url || '', 
-              icon: card.icon || '',       
-              sort_order: card.sort_order || 0
+              description: card.description || card.desc || '',
+              logo_url: card.logo_url || '',
+              custom_logo_path: card.custom_logo_path || '',
+              sort_order: card.sort_order || card.order || 0
             });
             updateProgress(`正在导入: ${card.title}`);
+          }
+        }
+
+        // 3. 恢复子菜单及其卡片
+        if (menu.subMenus?.length) {
+          for (const sub of menu.subMenus) {
+            // 创建子菜单
+            const subRes = await addSubMenu(newMenuId, {
+              name: sub.name,
+              order_num: sub.order_num || 0
+            });
+            const newSubId = subRes.data.id;
+            updateProgress(`正在创建子菜单: ${sub.name}`);
+
+            // 恢复子菜单下的卡片
+            if (sub.cards?.length) {
+              for (const card of sub.cards) {
+                await apiAddCard({
+                  menu_id: newMenuId,
+                  sub_menu_id: newSubId,
+                  title: card.title,
+                  url: card.url,
+                  description: card.description || card.desc || '',
+                  logo_url: card.logo_url || '',
+                  custom_logo_path: card.custom_logo_path || '',
+                  sort_order: card.sort_order || card.order || 0
+                });
+                updateProgress(`正在导入: ${card.title}`);
+              }
+            }
           }
         }
       }
@@ -636,7 +701,7 @@ const importData = (event) => {
       alert('❌ 恢复失败: ' + err.message);
       importState.visible = false;
     } finally {
-      event.target.value = ''; 
+      event.target.value = '';
       showUserMenu.value = false;
     }
   };
@@ -1000,5 +1065,6 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
 
 
