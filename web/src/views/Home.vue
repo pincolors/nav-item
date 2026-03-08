@@ -440,7 +440,11 @@ const handleSiteSave = async (formData) => {
       };
       
       const res = await apiAddCard(payload);
-      const newCard = res.data?.data || res.data || { ...payload, id: res.data?.id || Date.now() };
+     const newCard = {
+  ...payload,
+  ...(res.data?.data || res.data || {}),
+  logo_url: payload.logo_url,
+};
       
       cards.value = [...cards.value, newCard];
       
@@ -1069,6 +1073,7 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
 
 
 
