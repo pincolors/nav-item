@@ -455,9 +455,12 @@ const handleSiteSave = async (formData) => {
     
     showSiteModal.value = false;
     
-  } catch (e) {
+   } catch (e) {
     console.error('保存失败:', e);
     alert('保存失败: ' + (e.response?.data?.error || e.message));
+  } finally {
+    isEditingSite.value = false;
+    currentSiteData.value = null;
   }
 };
 
@@ -1073,6 +1076,7 @@ onMounted(async () => {
 .content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 </style>
+
 
 
 
