@@ -4,26 +4,26 @@
       <h3>{{ isEdit ? '编辑站点' : '添加新站点' }}</h3>
 
       <div class="form-container">
-        <div class="form-group">
-          <label>标题 <span class="required">*</span></label>
-          <input
-  v-model="formData.url"
-  class="neumorphic-input"
-  placeholder="https://..."
-  @compositionend="formData.url = $event.target.value"
-  @change="formData.url = $event.target.value"
-            v-focus
-          />
-        </div>
+       <div class="form-group">
+  <label>标题 <span class="required">*</span></label>
+  <input
+    v-model="formData.title"
+    class="neumorphic-input"
+    placeholder="例如：Google"
+    v-focus
+  />
+</div>
 
-        <div class="form-group">
-          <label>链接 URL <span class="required">*</span></label>
-          <input
-            v-model="formData.url"
-            class="neumorphic-input"
-            placeholder="https://..."
-          />
-        </div>
+       <div class="form-group">
+  <label>链接 URL <span class="required">*</span></label>
+  <input
+    v-model="formData.url"
+    class="neumorphic-input"
+    placeholder="https://..."
+    @compositionend="formData.url = $event.target.value"
+    @change="formData.url = $event.target.value"
+  />
+</div>
 
         <div class="form-group">
           <label>Logo 图片链接（可选）</label>
