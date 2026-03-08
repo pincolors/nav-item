@@ -7,9 +7,11 @@
         <div class="form-group">
           <label>标题 <span class="required">*</span></label>
           <input
-            v-model="formData.title"
-            class="neumorphic-input"
-            placeholder="例如：Google"
+  v-model="formData.url"
+  class="neumorphic-input"
+  placeholder="https://..."
+  @compositionend="formData.url = $event.target.value"
+  @change="formData.url = $event.target.value"
             v-focus
           />
         </div>
