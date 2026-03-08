@@ -185,11 +185,14 @@ function resetForm(data = null) {
   formData.sub_menu_id = data?.sub_menu_id ?? null;  // 🔥 新增
   errorMsg.value = '';
 }
-
 watch(() => props.visible, (visible) => {
-  if (!visible) return;
-  resetForm(props.isEdit ? props.initialData : null);
-  loadSubMenus();  // 🔥 新增：加载子菜单
+  if (visible) {
+    resetForm(props.isEdit ? props.initialData : null);
+    loadSubMenus();
+    window.addEventListener('keydown', handleKeydown);
+  } else {
+    window.removeEventListener('keydown', handleKeydown);
+  }
 });
 
 /* 关闭 */
@@ -236,11 +239,6 @@ function handleKeydown(e) {
   if (e.key === 'Escape') close();
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') save();
 }
-
-watch(() => props.visible, (v) => {
-  if (v) window.addEventListener('keydown', handleKeydown);
-  else window.removeEventListener('keydown', handleKeydown);
-});
 
 /* 自动聚焦指令 */
 const vFocus = {
