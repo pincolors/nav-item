@@ -264,7 +264,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   border-radius: 16px; 
   position: relative;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  cursor: grab; 
+  cursor: pointer; 
   box-sizing: border-box; 
   touch-action: pan-y;
 }
@@ -549,6 +549,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   }
 }
 </style>
+
 
 
 
