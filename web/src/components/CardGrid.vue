@@ -541,28 +541,42 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 @media (max-width: 768px) {
   .card-grid {
     grid-template-columns: repeat(var(--mobile-columns, 2), 1fr);
-    padding: 0 12px 60px;
-    gap: 12px;  /* 👈 间距缩小 */
+    padding: 0 8px 60px;
+    gap: 10px;
     width: 100%;
     box-sizing: border-box;
   }
 
-  
+  .card-wrapper {
+    min-height: unset;
+  }
+
   .card-item {
-    padding: 16px;
-    min-height: 180px;
+    padding: 10px 6px;
+    min-height: unset;
+    height: 100%;
   }
-  
+
   .card-icon-wrapper {
-    width: 76px;
-    height: 76px;
-    padding: 10px;
+    width: 48px;
+    height: 48px;
+    padding: 8px;
+    margin-bottom: 8px;
   }
-  
+
+  .card-title {
+    font-size: 11px;
+  }
+
+  .card-desc {
+    display: none;
+  }
+
   .card-item:hover {
-    transform: translateY(-6px) scale(1.03);
+    transform: translateY(-4px) scale(1.02);
   }
 }
+
 </style>
 
 

@@ -882,8 +882,7 @@ onMounted(async () => {
   --text-color: #4a5568; 
   --card-bg: #e0e5ec; 
   --header-bg: rgba(224, 229, 236, 0.85);
-   overflow-x: hidden;  /* 👈 加这行 */
-  width: 100%;
+  
   min-height: 100vh; background-color: var(--bg-color); color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease; padding-top: 70px;
 }
@@ -968,6 +967,10 @@ onMounted(async () => {
 .menu-wrapper { margin: 0 0 20px; }
 .search-section { padding: 0 20px 30px; display: flex; justify-content: center; }
 .search-box-wrapper { width: 100%; max-width: 640px; }
+.home-container {
+  overflow-x: hidden;  /* 👈 加这行 */
+  width: 100%;
+}
 .content-area { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 50px 60px; box-sizing: border-box; overflow-x: hidden; }
 
 @media (max-width: 768px) {
