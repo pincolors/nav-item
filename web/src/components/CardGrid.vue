@@ -553,6 +553,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   .grid-container[style*="--mobile-columns: 3"] .card-wrapper,
   .grid-container[style*="--mobile-columns:3"] .card-wrapper {
     min-height: unset;
+   gap: 12px 8px; /* 减小间距 */
     height: 140px;  /* 👈 固定行高 */
   }
 
