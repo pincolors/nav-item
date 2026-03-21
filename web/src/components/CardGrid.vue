@@ -542,8 +542,11 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   .card-grid {
     grid-template-columns: repeat(var(--mobile-columns, 2), 1fr);
     padding: 0 12px 60px;
-    gap: 20px 16px;
+    gap: 12px;  /* 👈 间距缩小 */
+    width: 100%;
+    box-sizing: border-box;
   }
+
   
   .card-item {
     padding: 16px;

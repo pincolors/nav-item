@@ -882,7 +882,8 @@ onMounted(async () => {
   --text-color: #4a5568; 
   --card-bg: #e0e5ec; 
   --header-bg: rgba(224, 229, 236, 0.85);
-  
+   overflow-x: hidden;  /* 👈 加这行 */
+  width: 100%;
   min-height: 100vh; background-color: var(--bg-color); color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease; padding-top: 70px;
 }
