@@ -542,35 +542,38 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   .card-grid {
     grid-template-columns: repeat(var(--mobile-columns, 2), 1fr);
     padding: 0 8px 60px;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
     box-sizing: border-box;
   }
+}
 
-  .card-wrapper {
-    min-height: unset;
-  }
-
-  .card-item {
+/* 只在3列时缩小卡片 */
+@media (max-width: 768px) {
+  .grid-container[style*="--mobile-columns: 3"] .card-item,
+  .grid-container[style*="--mobile-columns:3"] .card-item {
     padding: 10px 6px;
     min-height: unset;
-    height: 100%;
   }
 
-  .card-icon-wrapper {
+  .grid-container[style*="--mobile-columns: 3"] .card-icon-wrapper,
+  .grid-container[style*="--mobile-columns:3"] .card-icon-wrapper {
     width: 48px;
     height: 48px;
     padding: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
-  .card-title {
+  .grid-container[style*="--mobile-columns: 3"] .card-title,
+  .grid-container[style*="--mobile-columns:3"] .card-title {
     font-size: 11px;
   }
 
-  .card-desc {
+  .grid-container[style*="--mobile-columns: 3"] .card-desc,
+  .grid-container[style*="--mobile-columns:3"] .card-desc {
     display: none;
   }
+
 
   .card-item:hover {
     transform: translateY(-4px) scale(1.02);
