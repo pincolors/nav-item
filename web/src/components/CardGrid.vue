@@ -550,10 +550,17 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 
 /* 只在3列时缩小卡片 */
 @media (max-width: 768px) {
+  .grid-container[style*="--mobile-columns: 3"] .card-wrapper,
+  .grid-container[style*="--mobile-columns:3"] .card-wrapper {
+    min-height: unset;
+    height: 140px;  /* 👈 固定行高 */
+  }
+
   .grid-container[style*="--mobile-columns: 3"] .card-item,
   .grid-container[style*="--mobile-columns:3"] .card-item {
     padding: 10px 6px;
     min-height: unset;
+    height: 100%;  /* 👈 填满 wrapper */
   }
 
   .grid-container[style*="--mobile-columns: 3"] .card-icon-wrapper,
@@ -573,7 +580,6 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   .grid-container[style*="--mobile-columns:3"] .card-desc {
     display: none;
   }
-
 
   .card-item:hover {
     transform: translateY(-4px) scale(1.02);
