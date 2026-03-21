@@ -239,6 +239,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   min-height: 100%; 
   overflow: visible; 
 }
+
 @media (min-width: 1024px) {
   .card-grid { 
     grid-template-columns: repeat(var(--desktop-columns, 6), 1fr);
