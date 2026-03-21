@@ -1,9 +1,13 @@
 // app.js
+
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const compression = require('compression');
 const { db, initDatabase } = require('./db');
+const configRoutes = require('./routes/config');  // 👈 加这行
+
 
 // 导入路由
 const menuRoutes = require('./routes/menu');
@@ -38,6 +42,8 @@ app.use(express.static(path.join(__dirname, 'web/dist')));
 // ==============================
 // API 路由（必须放在 fallback 前面）
 // ==============================
+app.use('/api/configs', configRoutes);  // 👈 加这行
+
 app.use('/api/menus', menuRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/upload', uploadRoutes);

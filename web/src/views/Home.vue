@@ -1,6 +1,16 @@
 <template>
   <div class="home-container" :class="{ 'dark-mode': isDarkMode }">
-    
+    <!-- 在 header 前面加上背景层 -->
+<div 
+  v-if="siteConfig.backgroundImage" 
+  class="bg-wallpaper"
+  :style="{ 
+    backgroundImage: `url(${siteConfig.backgroundImage})`,
+    opacity: siteConfig.backgroundOpacity 
+  }"
+></div>
+
+
     <header class="header-fixed">
       <div class="header-inner">
         <div class="header-left">
@@ -97,15 +107,17 @@
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
     >
-      <CardGrid 
-        :cards="filteredCards" 
-        :is-edit-mode="isLoggedIn"
-        :is-dark-mode="isDarkMode"
-        @update:cards="handleCardSort"
-        @edit="openEditModal"
-        @delete="deleteCard"
-        @add="openAddModal"
-      />
+     <CardGrid 
+  :cards="filteredCards" 
+  :is-edit-mode="isLoggedIn"
+  :is-dark-mode="isDarkMode"
+  :desktop-columns="siteConfig.desktopColumns"
+  :mobile-columns="siteConfig.mobileColumns"
+  @update:cards="handleCardSort"
+  @edit="openEditModal"
+  @delete="deleteCard"
+  @add="openAddModal"
+/>
     </div> 
 
     <SiteModal 
@@ -153,12 +165,17 @@
         </div>
       </div>
     </Teleport>
+<footer class="footer">
+  <div class="footer-content">
+    <p class="copyright">{{ siteConfig.copyright }}</p>
+  </div>
+</footer>
 
-    <footer class="footer">
-      <div class="footer-content">
-        <p class="copyright">Copyright © 2026 Nav-Item</p>
-      </div>
-    </footer>
+<SystemSettings
+  v-model:visible="showSystemSettings"
+  :is-dark-mode="isDarkMode"
+  @saved="handleSettingsSaved"
+/>
 
     <div v-if="importState.visible" class="import-overlay">
       <div class="import-box">
@@ -203,6 +220,9 @@ import CardGrid from '../components/CardGrid.vue';
 import SiteModal from '../components/SiteModal.vue';
 import QuickImportModal from '../components/QuickImportModal.vue';
 import UserManage from '../components/UserManage.vue';
+import SystemSettings from '../components/SystemSettings.vue';
+import { getConfigs, saveConfigs, clearAllData } from '../api';
+
 
 // 👇 引入刚封装的图标组件
 import Icon from '../components/Icon.vue'; 
@@ -254,6 +274,16 @@ const doLogin = async () => {
   }
 };
 
+const showSystemSettings = ref(false);
+const siteConfig = ref({
+  copyright: 'Copyright © 2026 Nav-Item',
+  desktopColumns: 6,
+  mobileColumns: 2,
+  defaultEngine: 'site',
+  backgroundImage: '',
+  backgroundOpacity: 0.15,
+});
+
 const logout = () => {
   if (confirm('确定退出登录？')) {
     localStorage.removeItem('token');
@@ -282,6 +312,12 @@ const loadMenus = async () => {
     console.error('加载菜单失败:', e);
   }
 };
+const handleSettingsSaved = (config) => {
+  siteConfig.value = { ...config };
+  const engine = searchEngines.find(e => e.name === config.defaultEngine);
+  if (engine) selectedEngine.value = engine;
+};
+
 
 const handleMenuSelect = (menu, parent = null) => {
   if (parent) {
@@ -517,7 +553,11 @@ const openUserManagement = () => {
   showUserMenu.value = false;
 };
 
-const openSystemSettings = () => { alert('系统设置开发中...'); showUserMenu.value = false; };
+const openSystemSettings = () => {
+  showSystemSettings.value = true;
+  showUserMenu.value = false;
+};
+
 
 watch([activeMenu, activeSubMenu], loadCards);
 
@@ -791,9 +831,26 @@ const switchToPreviousMenu = () => {
   handleMenuSelect(prevMenu);
   if (navigator.vibrate) navigator.vibrate(10);
 };
-
 onMounted(async () => {
   await loadMenus();
+  
+  // 加载系统配置
+  try {
+    const res = await getConfigs();
+    const c = res.data;
+    if (c['site.copyright']) siteConfig.value.copyright = c['site.copyright'];
+    if (c['site.desktopColumns']) siteConfig.value.desktopColumns = parseInt(c['site.desktopColumns']);
+    if (c['site.mobileColumns']) siteConfig.value.mobileColumns = parseInt(c['site.mobileColumns']);
+    if (c['site.defaultEngine']) {
+      const engine = searchEngines.find(e => e.name === c['site.defaultEngine']);
+      if (engine) selectedEngine.value = engine;
+    }
+    if (c['site.backgroundImage']) siteConfig.value.backgroundImage = c['site.backgroundImage'];
+    if (c['site.backgroundOpacity']) siteConfig.value.backgroundOpacity = parseFloat(c['site.backgroundOpacity']);
+  } catch (e) {
+    console.error('加载配置失败:', e);
+  }
+
   if (activeMenu.value) {
     await loadCards();
     setTimeout(() => {
@@ -808,9 +865,16 @@ onMounted(async () => {
     }, 300);
   }
 });
+
 </script>
 
 <style scoped>
+.bg-wallpaper {
+  position: fixed; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  pointer-events: none;
+}
+
 /* 全局样式 */
 .home-container {
   --primary-color: #00ff9d; 

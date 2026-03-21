@@ -32,6 +32,12 @@ request.interceptors.response.use(
 
 export default request;
 
+// === 配置 API ===
+export const getConfigs = () => request.get('/configs');
+export const saveConfigs = (data) => request.post('/configs', data);
+export const clearAllData = () => request.delete('/configs/clear-all');
+
+
 // === 认证 API ===
 export const login = (username, password) => 
   request.post('/login', { username, password });

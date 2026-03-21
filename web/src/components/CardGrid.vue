@@ -1,5 +1,13 @@
 <template>
-  <div class="grid-container" :class="{ 'dark-theme': isDarkMode }">
+
+ <div class="grid-container" 
+  :class="{ 'dark-theme': isDarkMode }"
+  :style="{ 
+    '--desktop-columns': props.desktopColumns,
+    '--mobile-columns': props.mobileColumns
+  }"
+>
+
     
     <draggable 
       :list="localCards" 
@@ -88,8 +96,11 @@ import draggable from 'vuedraggable';
 const props = defineProps({ 
   cards: Array, 
   isEditMode: Boolean,
-  isDarkMode: Boolean
+  isDarkMode: Boolean,
+  desktopColumns: { type: Number, default: 6 },  // 👈 新增
+  mobileColumns: { type: Number, default: 2 },    // 👈 新增
 });
+
 
 const emit = defineEmits(['update:cards', 'edit', 'delete', 'add']);
 
@@ -230,7 +241,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
 }
 @media (min-width: 1024px) {
   .card-grid { 
-    grid-template-columns: repeat(6, 1fr); 
+    grid-template-columns: repeat(var(--desktop-columns, 6), 1fr);
     gap: 28px 20px; 
   }
 }
@@ -528,6 +539,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
    ========================================= */
 @media (max-width: 768px) {
   .card-grid {
+    grid-template-columns: repeat(var(--mobile-columns, 2), 1fr);
     padding: 0 12px 60px;
     gap: 20px 16px;
   }
@@ -543,7 +555,6 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
     padding: 10px;
   }
   
-  /* 移动端悬停效果减弱（避免误触） */
   .card-item:hover {
     transform: translateY(-6px) scale(1.03);
   }
