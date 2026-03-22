@@ -4,7 +4,8 @@
   :class="{ 'dark-theme': isDarkMode }"
   :style="{ 
     '--desktop-columns': props.desktopColumns,
-    '--mobile-columns': props.mobileColumns
+    '--mobile-columns': props.mobileColumns,
+    '--mobile-gap': props.mobileColumns === 3 ? '12px 10px' : '20px 16px'
   }"
 >
 
@@ -542,7 +543,7 @@ function handleClick(e) { if (props.isEditMode) e.preventDefault(); }
   .card-grid {
     grid-template-columns: repeat(var(--mobile-columns, 2), 1fr);
     padding: 0 8px 60px;
-    gap: 20px 16px;
+    gap: var(--mobile-gap, 12px);  /* 👈 用变量控制间距 */
     width: 100%;
     box-sizing: border-box;
   }
