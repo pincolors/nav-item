@@ -581,7 +581,6 @@ const openSystemSettings = () => {
   showUserMenu.value = false;
 };
 
-
 watch([activeMenu, activeSubMenu], loadCards);
 
 // ==================== 搜索与工具 ====================
@@ -590,8 +589,11 @@ const searchEngines = [
   { name: 'site', label: '站内', placeholder: '搜索书签...', icon: 'site', url: q => `/search?query=${q}` }, 
   { name: 'google', label: 'Google', placeholder: 'Google 搜索...', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=64', url: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
   { name: 'baidu', label: '百度', placeholder: '百度搜索...', icon: 'https://www.google.com/s2/favicons?domain=baidu.com&sz=64', url: q => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}` },
-  { name: 'bing', label: 'Bing', placeholder: 'Bing 搜索...', icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=64', url: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}` },
+  { name: 'bing', label: 'B ing', placeholder: 'Bing 搜索...', icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=64', url: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}` },
   { name: 'github', label: 'GitHub', placeholder: 'GitHub 搜索...', icon: 'https://www.google.com/s2/favicons?domain=github.com&sz=64', url: q => `https://github.com/search?q=${encodeURIComponent(q)}&type=repositories` },
+  { name: 'Youtube', label: 'Youtube', placeholder: 'youtube搜索...', icon: 'https://www.google.com/s2/favicons?domain=youtube.com&sz=64', url: q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` },
+  { name: 'bilibili', label: '哔哩哔哩', placeholder: '哔哩搜索...', icon: 'https://www.google.com/s2/favicons?domain=bilibili.com&sz=64', url: q => `https://search.bilibili.com/all?keyword=${encodeURIComponent(q)}` },
+
 ];
 
 const selectedEngine = ref(searchEngines[0]);
