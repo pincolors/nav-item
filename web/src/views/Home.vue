@@ -1,9 +1,9 @@
-<template>
+contai<template>
   <div class="home-container" :class="{ 'dark-mode': isDarkMode }">
     <!-- 在 header 前面加上背景层 -->
 <div 
   v-if="siteConfig.backgroundImage" 
-  class="bg-wallpaper"
+  class="bg-wallpaper"search-container
   :style="{ 
     backgroundImage: `url(${siteConfig.backgroundImage})`,
     opacity: siteConfig.backgroundOpacity 
@@ -79,12 +79,33 @@
 
     <div class="search-section">
       <div class="search-box-wrapper">
-        <div class="search-container">
-          <select v-model="selectedEngine" class="engine-select">
-            <option v-for="engine in searchEngines" :key="engine.name" :value="engine">
-              {{ engine.label }}
-            </option>
-          </select>
+        <div class="search-container" v-click-outside="() => showEngineMenu = false">
+
+         <div class="engine-selector">
+  <div class="engine-current" @click="showEngineMenu = !showEngineMenu">
+    <img v-if="selectedEngine.icon.startsWith('http')" :src="selectedEngine.icon" class="engine-icon" />
+   <span v-else class="engine-emoji">🏠</span>
+    <span class="engine-arrow">▾</span>
+  </div>
+  
+<div v-if="showEngineMenu" class="engine-dropdown">
+
+    <div 
+      v-for="engine in searchEngines" 
+      :key="engine.name"
+      class="engine-option"
+      :class="{ active: selectedEngine.name === engine.name }"
+      @click="selectedEngine = engine; showEngineMenu = false"
+    >
+      <img v-if="engine.icon.startsWith('http')" :src="engine.icon" class="engine-icon" />
+     <span v-else class="engine-emoji">🏠</span>
+
+
+      <span class="engine-label">{{ engine.label }}</span>
+    </div>
+  </div>
+</div>
+
           
           <input 
             v-model="searchQuery" 
@@ -238,6 +259,8 @@ const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value;
   localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light');
 };
+
+const showEngineMenu = ref(false);
 
 // ==================== 认证管理 ====================
 const isLoggedIn = ref(!!localStorage.getItem('token'));
@@ -564,12 +587,13 @@ watch([activeMenu, activeSubMenu], loadCards);
 // ==================== 搜索与工具 ====================
 const searchQuery = ref('');
 const searchEngines = [
-  { name: 'site', label: '站内', placeholder: '搜索书签...', url: q => `/search?query=${q}` }, 
-  { name: 'google', label: 'Google', placeholder: 'Google 搜索...', url: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
-  { name: 'baidu', label: '百度', placeholder: '百度搜索...', url: q => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}` },
-  { name: 'bing', label: 'Bing', placeholder: 'Bing 搜索...', url: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}` },
-  { name: 'github', label: 'GitHub', placeholder: 'GitHub 搜索...', url: q => `https://github.com/search?q=${encodeURIComponent(q)}&type=repositories` },
+  { name: 'site', label: '站内', placeholder: '搜索书签...', icon: 'site', url: q => `/search?query=${q}` }, 
+  { name: 'google', label: 'Google', placeholder: 'Google 搜索...', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=64', url: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
+  { name: 'baidu', label: '百度', placeholder: '百度搜索...', icon: 'https://www.google.com/s2/favicons?domain=baidu.com&sz=64', url: q => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}` },
+  { name: 'bing', label: 'Bing', placeholder: 'Bing 搜索...', icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=64', url: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}` },
+  { name: 'github', label: 'GitHub', placeholder: 'GitHub 搜索...', icon: 'https://www.google.com/s2/favicons?domain=github.com&sz=64', url: q => `https://github.com/search?q=${encodeURIComponent(q)}&type=repositories` },
 ];
+
 const selectedEngine = ref(searchEngines[0]);
 
 const filteredCards = computed(() => {
@@ -832,8 +856,16 @@ const switchToPreviousMenu = () => {
   if (navigator.vibrate) navigator.vibrate(10);
 };
 onMounted(async () => {
-  await loadMenus();
+    // 预加载搜索引擎图标
+  searchEngines.forEach(engine => {
+    if (engine.icon !== 'site') {
+      const img = new Image();
+      img.src = engine.icon;
+    }
+  });
   
+  // ... 原有的 onMounted 代码
+  await loadMenus();  
   // 加载系统配置
   try {
     const res = await getConfigs();
@@ -965,7 +997,14 @@ onMounted(async () => {
 
 /* Sections */
 .menu-wrapper { margin: 0 0 20px; }
-.search-section { padding: 0 20px 30px; display: flex; justify-content: center; }
+.search-section {
+  padding: 0 20px 30px;
+  display: flex;
+  justify-content: center;
+  overflow: visible;  /* 👈 加这行 */
+  position: relative;
+  z-index: 100;       /* 👈 加这行 */
+}
 .search-box-wrapper { width: 100%; max-width: 640px; }
 .home-container {
   overflow-x: hidden;  /* 👈 加这行 */
@@ -988,6 +1027,100 @@ onMounted(async () => {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
 }
+.engine-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  border-right: 2px solid rgba(0, 255, 157, 0.2);
+  padding-right: 10px;
+  flex-shrink: 0;
+}
+
+.engine-current {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.engine-current:hover {
+  background: rgba(0, 255, 157, 0.1);
+}
+
+.engine-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.engine-emoji {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-color);
+}
+
+.engine-arrow {
+  font-size: 10px;
+  opacity: 0.5;
+  color: var(--text-color);
+}
+
+.engine-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--bg-color);
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 9999;  /* 👈 改成 9999 */
+  min-width: 120px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+
+.dark-mode .engine-dropdown {
+  background: #25262b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.engine-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.engine-option:hover {
+  background: rgba(0, 255, 157, 0.1);
+}
+
+.engine-option.active {
+  background: rgba(0, 255, 157, 0.15);
+}
+
+.engine-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.engine-option.active .engine-label {
+  color: #00ff9d;
+}
+
 
 .dark-mode .search-container {
   background: var(--card-bg); border: 1px solid var(--card-border);
@@ -1012,13 +1145,6 @@ onMounted(async () => {
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 20px 64px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(0, 255, 157, 0.25), 0 0 60px rgba(0, 255, 157, 0.5);
 }
 
-.engine-select { 
-  border: none; background: transparent; color: var(--text-color); font-weight: 700; padding-right: 10px; margin-right: 8px; border-right: 2px solid rgba(0, 255, 157, 0.2); outline: none; cursor: pointer; transition: all 0.2s; font-size: 13px;
-}
-.engine-select:hover { color: var(--primary-color); border-right-color: var(--primary-color); }
-.engine-select option { background-color: var(--card-bg); color: var(--text-color); padding: 10px; font-weight: 600; }
-.dark-mode .engine-select { border-right-color: rgba(0, 255, 157, 0.3); }
-.dark-mode .engine-select option { background-color: #25262b; color: #e0e0e0; }
 
 .search-input { 
   flex: 1; border: none; background: transparent; padding: 10px 8px; color: var(--text-color); font-size: 15px; outline: none; font-weight: 500;

@@ -14,21 +14,15 @@
 - 🔍 **多引擎搜索**：Google、百度、Bing 等
 
 ## ENVIORMENT VARIABLES
-- 
-- PORT="8080"
--NJWT_SECRET="32位”
-- DATABASE_URL="postgres:/…”
- -  DB_TYPE="postgres"
-- NODE_ENV="production"
-- ADMIN_USERNAME="admin"
-- ADMIN_PASSWORD="7admin123"
-- sslmode="require"
-- PORT="8080"
-- JWT_SECRET="32位”
-- DATABASE_URL="postgres:/…”
-- DB_TYPE="postgres"
-- NODE_ENV="production" ADMIN_USERNAME="admin"
-- ADMIN_PASSWORD="7admin123" sslmode="require"
+
+NODE_ENV=production
+PORT=8080
+ADMIN_USERNAME=YOUR_USERNAME
+ADMIN_PASSWORD=7YOUR_PASSWORD
+JWT_SECRET=32位
+DB_TYPE=postgres
+DATABASE_URL=postgres:/…
+sslmode=require
 
 ### 本地开发
 
@@ -59,26 +53,94 @@ docker run -p 8080:8080 nav-hub
 
 📊 项目架构总结
 
-nav-item/
-├── backend/
-│   ├── routes/
-│   │   ├── menu.js        ✅ 菜单 + 子菜单管理
-│   │   ├── card.js        ✅ 卡片管理（支持分组）
-│   │   ├── auth.js        ✅ 认证
-│   │   └── ...
-│   ├── database/
-│   │   └── adapter.js     ✅ 双数据库适配器
-│   ├── db.js              ✅ 数据库初始化
-│   └── app.js             ✅ Express 服务器
-├── frontend/
-│   ├── components/
-│   │   ├── MenuBar.vue    ✅ 菜单栏（含子菜单编辑）
-│   │   ├── SiteModal.vue  ✅ 卡片编辑（含分组选择）
-│   │   └── CardGrid.vue   ✅ 卡片展示
-│   ├── views/
-│   │   └── Home.vue       ✅ 主页面
-│   └── api.js             ✅ API 封装
-└── Dockerfile             ✅ Docker 配置
+
+nav-item
+│  .dockerignore
+│  .env
+│  .gitignore
+│  app.js
+│  config.js
+│  db.js
+│  docker-compose.yml
+│  Dockerfile
+│  LICENSE
+│  package-lock.json
+│  package.json
+│  README.md
+├─.github
+│  └─workflows
+│          build-image.yml
+│          buildpushdocker.yml
+│
+├─assets
+│      1.jpg
+│      7.jpg
+│
+├─database
+│      adapter.js
+│      nav.db
+│
+├─routes
+│      ad.js
+│      auth.js
+│      authMiddleware.js
+│      card.js
+│      config.js
+│      friend.js
+│      menu.js
+│      upload.js
+│      user.js
+│
+├─uploads
+│      default-favicon.png
+│
+└─web
+    │  index.html
+    │  package-lock.json
+    │  package.json
+    │  vite.config.mjs
+    │
+    ├─public
+    │      apple-touch-icon.png
+    │      background.webp
+    │      favicon-96x96.png
+    │      favicon.ico
+    │      logo-cropped.svg
+    │      logo-dark.svg
+    │      logo-light.svg
+    │      masked-icon.svg
+    │      pwa-192x192.png
+    │      pwa-512x512.png
+    │      robots.txt
+    │
+    └─src
+        │  api.js
+        │  App.vue
+        │  main.js
+        │  router.js
+        │
+        ├─components
+        │      CardGrid.vue
+        │      Icon.vue
+        │      MenuBar.vue
+        │      QuickImportModal.vue
+        │      SiteModal.vue
+        │      SubMenuManager.vue
+        │      SystemSettings.vue
+        │      UserManage.vue
+        │
+        └─views
+            │  Admin.vue
+            │  Home.vue
+            │
+            └─admin
+                    AdManage.vue
+                    CardManage.vue
+                    FriendLinkManage.vue
+                    MenuManage.vue
+                    UserManage.vue
+
+
 
 
 ## 📸 截图
