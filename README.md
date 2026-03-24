@@ -14,7 +14,7 @@
 - 🔍 **多引擎搜索**：Google、百度、Bing 等
 
 ## ENVIORMENT VARIABLES
-
+```text
 NODE_ENV=production
 PORT=8080
 ADMIN_USERNAME=YOUR_USERNAME
@@ -23,6 +23,10 @@ JWT_SECRET=32位
 DB_TYPE=postgres
 DATABASE_URL=postgres:/…
 sslmode=require
+
+Note:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
 ### 本地开发
 
