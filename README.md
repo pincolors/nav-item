@@ -53,118 +53,33 @@ docker run -p 8080:8080 nav-hub
 
 📊 项目架构总结
 
-,pre.
+Nav-item
+├── .github/workflows/        # GitHub Actions 自动化部署配置 (Docker 构建等)
+├── assets/                  # 静态资源文件 (图片、素材)
+├── database/                # 数据库相关
+│   ├── adapter.js           # 数据库适配层
+│   └── nav.db               # SQLite 数据库文件
+├── routes/                  # 后端路由接口 (API Routes)
+│   ├── auth.js              # 权限认证相关
+│   ├── card.js              # 卡片内容管理
+│   └── ...                  # 其他功能接口
+├── uploads/                 # 用户上传的静态资源 (如 Favicon)
+├── web/                     # 前端项目根目录 (Vue.js + Vite)
+│   ├── src/                 # 前端源码
+│   │   ├── components/      # 公共组件 (卡片展示、弹窗、设置等)
+│   │   ├── views/           # 页面级组件 (首页、后台管理等)
+│   │   ├── App.vue          # 根组件
+│   │   └── main.js          # 入口文件
+│   ├── public/              # 前端公共静态资源 (PWA 图标、Robots 等)
+│   ├── package.json         # 前端依赖配置
+│   └── vite.config.mjs      # Vite 构建配置
+├── app.js                   # 后端入口文件 (Express/Node.js)
+├── config.js                # 全局配置文件
+├── db.js                    # 数据库连接初始化
+├── Dockerfile               # Docker 镜像构建脚本
+├── docker-compose.yml       # Docker 容器编排配置
+└── package.json             # 后端项目依赖配置
 
-text
-
-nav-item
-|   .dockerignore
-|   .env
-|   .gitignore
-|   app.js
-|   config.js
-|   db.js
-|   docker-compose.yml
-|   Dockerfile
-|   LICENSE
-|   package-lock.json
-|   package.json
-|   README.md
-|
-+---.github
-|   \---workflows
-|           build-image.yml
-|           buildpushdocker.yml
-|
-+---assets
-|       1.jpg
-|       7.jpg
-|
-+---database
-|       adapter.js
-|       nav.db
-|
-+---routes
-|       ad.js
-|       auth.js
-|       authMiddleware.js
-|       card.js
-|       config.js
-|       friend.js
-|       menu.js
-|       upload.js
-|       user.js
-|
-+---uploads
-|       default-favicon.png
-|
-\---web
-    |   index.html
-    |   package-lock.json
-    |   package.json
-    |   vite.config.mjs
-    |
-    +---dev-dist
-    |       registerSW.js
-    |       sw.js
-    |       workbox-5a5d9309.js
-    |
-    +---dist
-    |   |   background.webp
-    |   |   default-favicon.png
-    |   |   index.html
-    |   |   robots.txt
-    |   |
-    |   \---assets
-    |           Admin-DlnzhA9A.js
-    |           Admin-oEmicR-T.css
-    |           api-CnoDXQnA.js
-    |           Home-DLnxbPJC.css
-    |           Home-zKHLVLxB.js
-    |           index-Db68wrlo.js
-    |
-    +---public
-    |       apple-touch-icon.png
-    |       background.webp
-    |       favicon-96x96.png
-    |       favicon.ico
-    |       logo-cropped.svg
-    |       logo-dark.svg
-    |       logo-light.svg
-    |       masked-icon.svg
-    |       pwa-192x192.png
-    |       pwa-512x512.png
-    |       robots.txt
-    |
-    \---src
-        |   api.js
-        |   App.vue
-        |   main.js
-        |   router.js
-        |
-        +---components
-        |       CardGrid.vue
-        |       Icon.vue
-        |       MenuBar.vue
-        |       QuickImportModal.vue
-        |       SiteModal.vue
-        |       SubMenuManager.vue
-        |       SystemSettings.vue
-        |       UserManage.vue
-        |
-        \---views
-            |   Admin.vue
-            |   Home.vue
-            |
-            \---admin
-                    AdManage.vue
-                    CardManage.vue
-                    FriendLinkManage.vue
-                    MenuManage.vue
-                    UserManage.vue
-
-
-,/pre.
 
 
 ## 📸 截图
