@@ -51,34 +51,32 @@ docker run -p 8080:8080 nav-hub
 - **数据库**: PostgreSQL / SQLite
 - **部署**: Docker容器等
 
-📊 项目架构总结
+### 📊 项目架构总结
 
+```text
 Nav-item
-├── .github/workflows/        # GitHub Actions 自动化部署配置 (Docker 构建等)
-├── assets/                  # 静态资源文件 (图片、素材)
-├── database/                # 数据库相关
-│   ├── adapter.js           # 数据库适配层
-│   └── nav.db               # SQLite 数据库文件
-├── routes/                  # 后端路由接口 (API Routes)
-│   ├── auth.js              # 权限认证相关
-│   ├── card.js              # 卡片内容管理
-│   └── ...                  # 其他功能接口
-├── uploads/                 # 用户上传的静态资源 (如 Favicon)
-├── web/                     # 前端项目根目录 (Vue.js + Vite)
-│   ├── src/                 # 前端源码
-│   │   ├── components/      # 公共组件 (卡片展示、弹窗、设置等)
-│   │   ├── views/           # 页面级组件 (首页、后台管理等)
-│   │   ├── App.vue          # 根组件
-│   │   └── main.js          # 入口文件
-│   ├── public/              # 前端公共静态资源 (PWA 图标、Robots 等)
-│   ├── package.json         # 前端依赖配置
-│   └── vite.config.mjs      # Vite 构建配置
-├── app.js                   # 后端入口文件 (Express/Node.js)
-├── config.js                # 全局配置文件
-├── db.js                    # 数据库连接初始化
-├── Dockerfile               # Docker 镜像构建脚本
-├── docker-compose.yml       # Docker 容器编排配置
-└── package.json             # 后端项目依赖配置
+├── .github/workflows/    # CI/CD 自动化部署配置
+├── assets/               # 静态资源 (图片、素材)
+├── database/             # 数据库相关文件
+│   ├── adapter.js        # 数据库适配器
+│   └── nav.db            # SQLite 数据库
+├── routes/               # 后端接口路由 (Express API)
+│   ├── auth.js           # 权限验证
+│   ├── card.js           # 卡片管理
+│   └── ...               # 其他业务逻辑
+├── uploads/              # 用户上传的资源 (如 Favicon)
+├── web/                  # 前端项目 (Vue 3 + Vite)
+│   ├── src/              # 前端源码
+│   │   ├── components/   # UI 组件 (卡片、弹窗等)
+│   │   └── views/        # 页面组件 (首页、管理页)
+│   ├── public/           # 前端公共资源 (PWA/图标)
+│   └── vite.config.mjs   # 前端构建配置
+├── app.js                # 后端入口程序
+├── config.js             # 配置文件
+├── db.js                 # 数据库初始化
+├── Dockerfile            # Docker 镜像配置文件
+└── docker-compose.yml    # Docker 容器编排```
+
 
 
 
