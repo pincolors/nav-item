@@ -7,7 +7,7 @@ contai<template>
   :style="{ 
     backgroundImage: `url(${siteConfig.backgroundImage})`,
     opacity: siteConfig.backgroundOpacity 
-  }"
+  }"dologin
 ></div>
 
 
@@ -29,32 +29,50 @@ contai<template>
         <div class="header-right">
                  
           <div class="user-menu-container">
-            <button 
-              class="icon-btn admin-btn" 
-              :class="{ 'is-logged-in': isLoggedIn }"
-              @click.stop="handleUserIconClick"
-            >
-              <Icon name="user-cog" style="font-size: 20px;" />
-            </button>
+           <button 
+  class="icon-btn admin-btn" 
+  :class="{ 
+    'is-admin': isAdmin, 
+    'is-user': isLoggedIn && !isAdmin, 
+    'is-logged-out': !isLoggedIn 
+  }"
+  @click.stop="handleUserIconClick"
+>
+  <Icon name="user-cog" style="font-size: 20px;" />
+</button>
+
             
-            <transition name="fade">
-              <div v-if="showUserMenu && isLoggedIn" class="dropdown-menu" v-click-outside="closeUserMenu">
-                <div class="menu-header-label">管理员菜单</div>
-                <div class="menu-item" @click="openQuickImport"><span class="menu-icon">⚡</span> 快速导入</div>
-                <div class="menu-item" @click="openUserManagement"><span class="menu-icon">👥</span> 用户管理</div>
-                <div class="menu-item" @click="openSystemSettings"><span class="menu-icon">⚙️</span> 系统设置</div>
-                <div class="menu-divider"></div>
-                <div class="menu-item" @click="exportData"><span class="menu-icon">📤</span> 备份数据</div>
-                <div class="menu-item">
-                  <label for="importFile" style="cursor:pointer; display:flex; align-items:center; width:100%">
-                    <span class="menu-icon">📥</span> 恢复数据
-                  </label>
-                  <input type="file" id="importFile" style="display:none" @change="importData" accept=".json"/>
-                </div>
-                <div class="menu-divider"></div>
-                <div class="menu-item logout" @click="logout"><span class="menu-icon">🚪</span> 退出登录</div>
-              </div>
-            </transition>
+          <transition name="fade">
+  <div v-if="showUserMenu && isLoggedIn" class="dropdown-menu" v-click-outside="closeUserMenu">
+    <div class="menu-header-label">{{ isAdmin ? '管理员菜单' : '普通用户 (只读)' }}</div>
+    
+    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(openQuickImport)">
+      <span class="menu-icon">⚡</span> 快速导入
+    </div>
+    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(openUserManagement)">
+      <span class="menu-icon">👥</span> 用户管理
+    </div>
+    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(openSystemSettings)">
+      <span class="menu-icon">⚙️</span> 系统设置
+    </div>
+    
+    <div class="menu-divider"></div>
+    
+    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(exportData)">
+      <span class="menu-icon">📤</span> 备份数据
+    </div>
+    
+    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }">
+      <label :for="isAdmin ? 'importFile' : ''" style="display:flex; align-items:center; width:100%" :style="{ cursor: isAdmin ? 'pointer' : 'not-allowed' }" @click="!isAdmin && handleAdminAction()">
+        <span class="menu-icon">📥</span> 恢复数据
+      </label>
+      <input v-if="isAdmin" type="file" id="importFile" style="display:none" @change="importData" accept=".json"/>
+    </div>
+    
+    <div class="menu-divider"></div>
+    <div class="menu-item logout" @click="logout"><span class="menu-icon">🚪</span> 退出登录</div>
+  </div>
+</transition>
           </div>
            <button class="icon-btn" @click="toggleTheme" title="切换主题">
             <Icon :name="isDarkMode ? 'sun' : 'moon'" style="font-size: 26px;" />
@@ -68,7 +86,7 @@ contai<template>
         :menus="menus" 
         :activeId="activeMenu?.id" 
         :activeSubMenuId="activeSubMenu?.id"
-        :is-edit-mode="isLoggedIn"
+       :is-edit-mode="isAdmin"
         :is-dark-mode="isDarkMode"
         @select="handleMenuSelect"
         @update:menus="handleMenuSort"
@@ -130,7 +148,7 @@ contai<template>
     >
      <CardGrid 
   :cards="filteredCards" 
-  :is-edit-mode="isLoggedIn"
+ :is-edit-mode="isAdmin"
   :is-dark-mode="isDarkMode"
   :desktop-columns="siteConfig.desktopColumns"
   :mobile-columns="siteConfig.mobileColumns"
@@ -220,6 +238,7 @@ contai<template>
 </template>
 
 <script setup>
+
 import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { 
   getMenus, 
@@ -243,7 +262,6 @@ import QuickImportModal from '../components/QuickImportModal.vue';
 import UserManage from '../components/UserManage.vue';
 import SystemSettings from '../components/SystemSettings.vue';
 import { getConfigs, saveConfigs, clearAllData } from '../api';
-
 
 // 👇 引入刚封装的图标组件
 import Icon from '../components/Icon.vue'; 
@@ -270,10 +288,20 @@ const loginForm = reactive({ username: '', password: '' });
 
 const handleUserIconClick = () => {
   if (isLoggedIn.value) {
+    // 允许普通用户也打开菜单，以便看到菜单项
     showUserMenu.value = !showUserMenu.value;
   } else {
     showLoginModal.value = true;
   }
+};
+
+// 新增：统一权限拦截函数
+const handleAdminAction = (callback) => {
+  if (!isAdmin.value) {
+    alert('🚫 权限不足：只有管理员可以执行此操作。');
+    return;
+  }
+  if (callback) callback();
 };
 
 const doLogin = async () => {
@@ -281,11 +309,10 @@ const doLogin = async () => {
     const res = await login(loginForm.username, loginForm.password);
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('userRole', res.data.user.role || 'admin');
+      isLoggedIn.value = true;
+      userRole.value = res.data.user.role || 'admin';  // 👈 立即更新 role
       
-      // 1. 设置已登录状态，此时图标会开始变红并旋转
-      isLoggedIn.value = true; 
-      
-      // 2. 延迟 0.6 秒后再关闭弹窗，让动画飞一会儿
       setTimeout(() => {
         showLoginModal.value = false;
         loginForm.username = '';
@@ -297,6 +324,7 @@ const doLogin = async () => {
   }
 };
 
+
 const showSystemSettings = ref(false);
 const siteConfig = ref({
   copyright: 'Copyright © 2026 Nav-Item',
@@ -306,11 +334,15 @@ const siteConfig = ref({
   backgroundImage: '',
   backgroundOpacity: 0.15,
 });
+const userRole = ref(localStorage.getItem('userRole') || 'user');
+const isAdmin = computed(() => isLoggedIn.value && userRole.value === 'admin');
 
 const logout = () => {
   if (confirm('确定退出登录？')) {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');  // 👈 加这行
     isLoggedIn.value = false;
+    userRole.value = 'user';              // 👈 加这行
     showUserMenu.value = false;
   }
 };
@@ -804,14 +836,14 @@ let touchStartTime = 0;
 let isSwiping = false;
 
 const handleTouchStart = (e) => {
-  if (isLoggedIn.value) return;
+   if (isAdmin.value) return;
   touchStartX = e.changedTouches[0].screenX;
   touchStartTime = Date.now();
   isSwiping = true;
 };
 
 const handleTouchMove = (e) => {
-  if (!isSwiping || isLoggedIn.value) return;
+   if (!isSwiping || isAdmin.value) return;
   const touchCurrentX = e.changedTouches[0].screenX;
   const diff = touchCurrentX - touchStartX;
   if (Math.abs(diff) > 100) {
@@ -820,7 +852,7 @@ const handleTouchMove = (e) => {
 };
 
 const handleTouchEnd = (e) => {
-  if (!isSwiping || isLoggedIn.value) return;
+ if (!isSwiping || isAdmin.value) return;
   touchEndX = e.changedTouches[0].screenX;
   const touchDuration = Date.now() - touchStartTime;
   isSwiping = false;
@@ -954,13 +986,32 @@ onMounted(async () => {
 .header-right .admin-btn {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  padding: 0;
+  border-radius: 50% !important;
+   padding: 0;
   background-color: #00bcd4;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+ transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+
+/* 1. 未登录状态：保持原来的蓝色 */
+.admin-btn.is-logged-out {
+  background-color: #00bcd4 !important; 
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4) !important;
+}
+
+/* 2. 普通用户登录：显示为灰色 */
+.admin-btn.is-user {
+  background-color: #6b7280 !important; /* 经典深灰色 */
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4) !important;
+}
+
+/* 3. 管理员登录：显示为红色 */
+.admin-btn.is-admin {
+  background-color: #ff4d4f !important;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.4) !important;
+}
+
 
 .header-right .admin-btn:hover {
   background-color: #00acc1;
@@ -995,7 +1046,13 @@ onMounted(async () => {
 .menu-divider { height: 1px; background: rgba(163, 177, 198, 0.3); margin: 6px 0; }
 .logout { color: #ff4d4f; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-from, .fade-leave-to { opacity: 0 !important;
+}
+
+/* 角色颜色区分 (可选：管理员红色，普通用户蓝色) */
+.header-right .admin-btn.is-logged-in {
+  /* 我们可以利用 v-bind 直接在 CSS 中使用变量 */
+}
 
 /* Sections */
 .menu-wrapper { margin: 0 0 20px; }

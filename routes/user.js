@@ -115,7 +115,8 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     // 不分页查询
     if (!page && !pageSize) {
-      const users = await db.query('SELECT id, username FROM users');
+    const users = await db.query('SELECT id, username, role, created_at FROM users');
+
       return res.json({ data: users });
     }
     
@@ -129,10 +130,11 @@ router.get('/', authMiddleware, async (req, res) => {
     const total = countRow.total;
     
     // 获取分页数据
-    const users = await db.query(
-      'SELECT id, username FROM users LIMIT ? OFFSET ?', 
-      [size, offset]
-    );
+   const users = await db.query(
+  'SELECT id, username, role, created_at FROM users LIMIT ? OFFSET ?', // 👈 加上 role 和 created_at
+  [size, offset]
+);
+
     
     res.json({
       total,
@@ -150,8 +152,12 @@ router.get('/', authMiddleware, async (req, res) => {
 // ========================================
 // 创建新用户（管理员功能）
 // ========================================
+// ========================================
+// 创建新用户（管理员功能）
+// ========================================
 router.post('/', authMiddleware, async (req, res) => {
-  const { username, password } = req.body;
+  // 修正点：合并为一行，避免重复声明
+  const { username, password, role = 'user' } = req.body;
   
   // 输入验证
   if (!username || !password) {
@@ -182,8 +188,8 @@ router.post('/', authMiddleware, async (req, res) => {
     
     // 创建用户
     const result = await db.run(
-      'INSERT INTO users (username, password) VALUES (?, ?)', 
-      [username, passwordHash]
+      'INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
+      [username, passwordHash, role]
     );
     
     console.log('🟢 新用户创建成功，ID:', result.lastID);
@@ -191,7 +197,8 @@ router.post('/', authMiddleware, async (req, res) => {
       message: '用户创建成功', 
       data: { 
         id: result.lastID, 
-        username 
+        username,
+        role // 返回角色信息
       } 
     });
   } catch (error) {
@@ -199,6 +206,7 @@ router.post('/', authMiddleware, async (req, res) => {
     res.status(500).json({ message: '服务器错误' });
   }
 });
+
 
 // ========================================
 // 获取单个用户信息（管理员功能）
@@ -228,7 +236,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 // ========================================
 router.put('/:id', authMiddleware, async (req, res) => {
   const userId = parseInt(req.params.id);
-  const { username, password } = req.body;
+  const { username, password, role } = req.body;
   
   // 不能修改自己的账号（可选限制）
   if (userId === req.user.id) {
@@ -263,11 +271,17 @@ router.put('/:id', authMiddleware, async (req, res) => {
       if (password.length < 6) {
         return res.status(400).json({ message: '密码长度至少6位' });
       }
+
       const passwordHash = await bcrypt.hash(password, 10);
       updates.push('password = ?');
       params.push(passwordHash);
     }
-    
+
+    if (role && ['admin', 'user'].includes(role)) {
+  updates.push('role = ?');
+  params.push(role);
+}
+
     if (updates.length === 0) {
       return res.status(400).json({ message: '没有要更新的内容' });
     }
@@ -333,10 +347,10 @@ router.get('/search', authMiddleware, async (req, res) => {
   }
   
   try {
-    const users = await db.query(
-      'SELECT id, username, last_login_time FROM users WHERE username LIKE ?', 
-      [`%${keyword}%`]
-    );
+   const users = await db.query(
+  'SELECT id, username, role, created_at FROM users LIMIT ? OFFSET ?', 
+  [size, offset]
+);
     
     res.json({ 
       count: users.length, 

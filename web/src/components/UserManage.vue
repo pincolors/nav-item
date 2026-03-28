@@ -100,8 +100,8 @@ onMounted(() => {
 const fetchUsers = async () => {
   try {
     // 真实接口调用 (请确保后端有这个接口)
-    const res = await request.get('/users'); 
-    userList.value = res.data;
+ const res = await request.get('/users'); 
+userList.value = res.data.data || res.data;
   } catch (e) {
     console.error('加载用户失败, 使用模拟数据演示:', e);
     // 👇 兜底：如果后端接口没通，显示模拟数据，防止页面空白
@@ -172,8 +172,12 @@ const formatDate = (str) => {
 
 <style scoped>
 .manage-container {
-  /* 移除白色背景和边框，因为现在是嵌入在弹窗里的 */
   min-height: 300px;
+  color: #333;
+}
+
+.manage-container.dark-mode {
+  color: #e0e6ed;
 }
 
 .toolbar {
@@ -183,9 +187,16 @@ const formatDate = (str) => {
   margin-bottom: 20px;
 }
 
-/* 表格样式 */
 .table-wrapper {
   overflow-x: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.dark-mode .table-wrapper {
+  background: #1b202d;
+  border-color: #2d3340;
 }
 
 .data-table {
@@ -195,85 +206,173 @@ const formatDate = (str) => {
 }
 
 .data-table th, .data-table td {
-  padding: 12px;
+  padding: 16px 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e5e7eb;
   color: #333;
+}
+
+.dark-mode .data-table th,
+.dark-mode .data-table td {
+  border-bottom-color: #2d3340;
+  color: #e0e6ed;
 }
 
 .data-table th {
   background: #f8f9fa;
+  color: #6b7280;
   font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
 }
 
-/* 角色标签 */
+.dark-mode .data-table th {
+  background: rgba(255, 255, 255, 0.02);
+  color: #8892b0;
+}
+
 .role-tag {
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
 }
-.role-tag.admin { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
-.role-tag.user { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
 
-/* 操作按钮 */
+.role-tag.admin { 
+  background: rgba(56, 189, 248, 0.1); 
+  color: #0284c7; 
+  border: 1px solid rgba(56, 189, 248, 0.3); 
+}
+
+.role-tag.user { 
+  background: rgba(16, 185, 129, 0.1); 
+  color: #059669; 
+  border: 1px solid rgba(16, 185, 129, 0.3); 
+}
+
+.dark-mode .role-tag.admin { color: #38bdf8; }
+.dark-mode .role-tag.user { color: #10b981; }
+
 .action-btn {
   margin-right: 8px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border: none;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 12px;
-  transition: opacity 0.2s;
-}
-.action-btn:hover { opacity: 0.8; }
-.action-btn.edit { background: #1890ff; color: #fff; }
-.action-btn.delete { background: #ff4d4f; color: #fff; }
-
-/* 顶部主要按钮 */
-.btn-primary {
-  background: #00ff9d;
-  color: #000;
-  border: none;
-  padding: 8px 16px;
   border-radius: 6px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.action-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+.action-btn.edit { background: #2563eb; color: #fff; }
+.action-btn.delete { background: #dc2626; color: #fff; }
+
+.btn-primary {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  box-shadow: 0 2px 6px rgba(0, 255, 157, 0.3);
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+.btn-primary:hover {
+  background: #059669;
 }
 
-/* 内部弹窗 (新增/编辑) 样式 */
+/* 弹窗 */
 .modal-overlay {
-  position: absolute; /* 注意：这里的 absolute 是相对于父级大弹窗的 */
+  position: absolute;
   inset: 0;
-  background: rgba(255,255,255,0.8); /* 稍微浅一点的遮罩，区分层级 */
-  backdrop-filter: blur(2px);
-  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 2000;
 }
+
 .modal-content {
-  background: #fff;
+  background: #ffffff;
   padding: 24px;
-  border-radius: 12px;
-  width: 320px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  border: 1px solid #eee;
+  border-radius: 16px;
+  width: 340px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
 }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; font-weight: bold;}
-.form-group input, .form-group select {
+
+.dark-mode .modal-content {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: bold;
+}
+
+.dark-mode .form-group label { color: #94a3b8; }
+
+.form-group input,
+.form-group select {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  color: #111827;
+  border-radius: 8px;
   box-sizing: border-box;
   outline: none;
+  transition: border-color 0.2s;
 }
-.form-group input:focus { border-color: #00ff9d; }
+
+.form-group input:focus { border-color: #10b981; }
+
+.dark-mode .form-group input,
+.dark-mode .form-group select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dark-mode .form-group input:focus { border-color: #38bdf8; }
 
 .modal-actions {
-  display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
 }
-.btn-cancel { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 16px; border-radius: 6px; cursor: pointer; color: #666; }
-.btn-confirm { background: #00ff9d; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #000; }
+
+.btn-cancel { 
+  background: #f3f4f6;
+  border: none; 
+  padding: 10px 18px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  color: #6b7280;
+}
+
+.dark-mode .btn-cancel {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.btn-confirm { 
+  background: #10b981; 
+  border: none; 
+  padding: 10px 18px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: bold; 
+  color: #fff; 
+}
 </style>

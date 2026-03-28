@@ -117,17 +117,18 @@ router.post('/login', async (req, res) => {
     
     console.log('🟢 登录成功，用户:', username, 'ID:', user.id);
     console.log('====================');
-    
     res.json({
-      success: true,
-      message: '登录成功',
-      token,
-      expiresIn,
-      user: {
-        id: user.id,
-        username: user.username
-      }
-    });
+  success: true,
+  message: '登录成功',
+  token,
+  expiresIn,
+  user: {
+    id: user.id,
+    username: user.username,
+    role: user.role || 'admin'  // 👈 加上 role
+  }
+});
+    
   } catch (error) {
     console.error('❌ 登录失败:', error);
     res.status(500).json({ error: error.message });
@@ -195,13 +196,15 @@ router.post('/refresh', authMiddleware, async (req, res) => {
     
     // 生成新 token
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        username: user.username 
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+  { 
+    id: user.id, 
+    username: user.username,
+    role: user.role || 'admin'  // 👈 加上 role
+  },
+  JWT_SECRET,
+  { expiresIn }
+);
+
     
     console.log('🟢 Token 刷新成功，用户:', user.username);
     
