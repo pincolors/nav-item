@@ -269,9 +269,7 @@ import Icon from '../components/Icon.vue';
 // ==================== 主题管理 ====================
 const isDarkMode = ref(localStorage.getItem('theme') === 'dark');
 
-const currentLogo = computed(() => {
-  return isDarkMode.value ? '/logo-dark.svg' : '/logo-light.svg';
-});
+const currentLogo = '/logo-transp.svg';
 
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value;
@@ -968,7 +966,7 @@ onMounted(async () => {
 }
 .header-inner { width: 100%; max-width: 1400px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
 .header-left { display: flex; align-items: center; gap: 12px; }
-.site-logo { height: 48px; width: auto; }
+.site-logo { height: 40px; width: auto; }
 .site-title { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px; color: var(--text-color); }
 .header-right { display: flex; gap: 16px; align-items: center; }
 
