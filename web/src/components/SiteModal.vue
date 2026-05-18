@@ -28,7 +28,7 @@
         <div class="form-group">
           <label>Logo 图片链接（可选）</label>
                     <div class="icon-quick-select" v-if="domain">
-            <span class="select-label">源：</span>
+           <!-- <span class="select-label">源：</span> -->
             
             <div class="icon-option" @click="selectIcon(googleIcon)" title="Google API">
               <img :src="googleIcon" loading="lazy" />
@@ -72,17 +72,7 @@
             </div>
           </div>
           <small class="tip">点击上方推荐图标可直接填入，或留空自动获取</small>
-        </div>
-
-                <div class="form-group">
-          <label>描述（可选）</label>
-          <textarea
-            v-model="formData.desc"
-            class="neumorphic-input textarea"
-            placeholder="简短描述..."
-            rows="3"
-          />
-        </div>
+        </div>                
 
         <!-- 🔥 新增：菜单选择器 -->        
 <div class="form-group">
@@ -107,6 +97,16 @@
         <p v-if="errorMsg" class="form-error">{{ errorMsg }}</p>
 
       </div>
+      
+      <div class="form-group">
+          <label>描述（可选）</label>
+          <textarea
+            v-model="formData.desc"
+            class="neumorphic-input textarea"
+            placeholder="简短描述..."
+            rows="3"
+          />
+        </div>
 
       <div class="modal-actions">
         <button class="neumorphic-btn cancel" @click="close">取消</button>
@@ -298,8 +298,14 @@ const vFocus = {
   box-shadow:
     15px 15px 30px rgba(163,177,198,0.6),
     -15px -15px 30px rgba(255,255,255,0.6);
-  border: 1px solid rgba(255,255,255,0.4);
+  /* 🛠️ 核心增加以下 3 行： */
+  max-height: 80vh;      /* 限制弹窗最高只能占整个屏幕高度的 80% */
+  overflow-y: auto;      /* 当内容超出 80% 时，白框内部自动出现滚动条 */
+  position: relative;    /* 保证内部元素（如滚动条）定位正常 */
+  /* 🛠️ 核心增加这一行：彻底阻止滚动穿透 */
+  overscroll-behavior: contain; 
 }
+
 
 /* 暗色模式 Modal */
 :global(.dark-mode) .modal-content {
@@ -314,6 +320,25 @@ h3 {
   font-weight: 800;
   color: var(--primary-color, #00ff9d);
 }
+/* ✨ 为弹窗内容大框定制的丝滑滚动条 */
+.modal-content::-webkit-scrollbar {
+  width: 6px; /* 把滚动条宽度缩窄到 6px，显得精致 */
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: transparent; /* 轨道完全透明，不破坏你的浅灰色/暗色背景 */
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15); /* 浅色模式下，轻微的灰色滑块 */
+  border-radius: 10px;
+}
+
+/* 暗色模式下的滚动条滑块 */
+:global(.dark-mode) .modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2); /* 暗色模式下，带有一点点亮光的滑块 */
+}
+
 
 /* 表单 */
 .form-group { margin-bottom: 20px; }
