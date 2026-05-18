@@ -81,12 +81,12 @@ router.post('/', auth, async (req, res) => {
 // 更新卡片（需要认证）
 // ========================================
 router.put('/:id', auth, async (req, res) => {
-  const { title, url, logo_url, desc, order, sub_menu_id } = req.body;
+  const { title, url, logo_url, desc, order, sub_menu_id, menu_id } = req.body;
   
   try {
     const result = await db.run(
-      'UPDATE cards SET title=?, url=?, logo_url=?, "desc"=?, "order"=?, sub_menu_id=? WHERE id=?',
-      [title, url, logo_url, desc, order, sub_menu_id || null, req.params.id]
+      'UPDATE cards SET title=?, url=?, logo_url=?, "desc"=?, "order"=?, sub_menu_id=?, menu_id=? WHERE id=?',
+      [title, url, logo_url, desc, order, sub_menu_id || null, menu_id, req.params.id]
     );
     res.json({ changed: result.changes });
   } catch (error) {

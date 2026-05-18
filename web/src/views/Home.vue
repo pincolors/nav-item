@@ -1,9 +1,9 @@
-contai<template>
+<template>
   <div class="home-container" :class="{ 'dark-mode': isDarkMode }">
     <!-- 在 header 前面加上背景层 -->
 <div 
   v-if="siteConfig.backgroundImage" 
-  class="bg-wallpaper"search-container
+  class="bg-wallpaper"
   :style="{ 
     backgroundImage: `url(${siteConfig.backgroundImage})`,
     opacity: siteConfig.backgroundOpacity 
@@ -160,12 +160,13 @@ contai<template>
     </div> 
 
     <SiteModal 
-      v-model:visible="showSiteModal"
-      :is-edit="isEditingSite"
-      :initial-data="currentSiteData"
-      :current-menu-id="activeMenu ? activeMenu.id : null"
-      @save="handleSiteSave"
-    />
+  v-model:visible="showSiteModal"
+  :is-edit="isEditingSite"
+  :initial-data="currentSiteData"
+  :current-menu-id="activeMenu ? activeMenu.id : null"
+  :menus="menus"  
+  @save="handleSiteSave"
+   />
 
     <QuickImportModal
       v-model:visible="showQuickImportModal"
@@ -286,7 +287,7 @@ const loginForm = reactive({ username: '', password: '' });
 
 const handleUserIconClick = () => {
   if (isLoggedIn.value) {
-    // 允许普通用户也打开菜单，以便看到菜单项
+  
     showUserMenu.value = !showUserMenu.value;
   } else {
     showLoginModal.value = true;
@@ -316,10 +317,10 @@ const doLogin = async () => {
         loginForm.username = '';
         loginForm.password = '';
       }, 600);
-    }
+     } 
   } catch (e) {
     alert('登录失败: ' + (e.response?.data?.message || e.message));
-  }
+  } 
 };
 
 
@@ -350,6 +351,7 @@ const closeUserMenu = () => {
 };
 
 // ==================== 菜单管理 ====================
+// ==================== 菜单管理 ====================
 const menus = ref([]);
 const activeMenu = ref(null);
 const activeSubMenu = ref(null);
@@ -365,12 +367,12 @@ const loadMenus = async () => {
     console.error('加载菜单失败:', e);
   }
 };
+
 const handleSettingsSaved = (config) => {
   siteConfig.value = { ...config };
   const engine = searchEngines.find(e => e.name === config.defaultEngine);
   if (engine) selectedEngine.value = engine;
 };
-
 
 const handleMenuSelect = (menu, parent = null) => {
   if (parent) {
@@ -392,8 +394,6 @@ const handleMenuSelect = (menu, parent = null) => {
       });
     }
   }, 100);
-
-  loadCards();
 };
 
 const handleMenuSort = async (newMenus) => {
@@ -478,6 +478,7 @@ const openEditModal = (card) => {
   currentSiteData.value = { ...card };
   showSiteModal.value = true;
 };
+
 const handleSiteSave = async (formData) => {
   console.log('🟡 isEditingSite:', isEditingSite.value);
   console.log('🟡 formData:', JSON.stringify(formData));
@@ -504,15 +505,39 @@ const handleSiteSave = async (formData) => {
       
       const response = await apiUpdateCard(formData.id, payload);
       console.log('🟢 服务器返回:', JSON.stringify(response.data));
-      const index = cards.value.findIndex(c => c.id === formData.id);
-      if (index !== -1) {
-        const updatedCard = response.data?.data || payload;
-        const newCards = [...cards.value];
-        newCards[index] = updatedCard;
-        cards.value = newCards;
+
+      if (payload.menu_id !== activeMenu.value.id) {
+  // 1. 从当前旧菜单列表中移除它
+  cards.value = cards.value.filter(c => c.id !== formData.id);
+  // 2. 在前端的 menus 数组里找到那个新菜单对象
+  const targetMenu = menus.value.find(m => m.id === payload.menu_id);
+  if (targetMenu) {
+    // 3. 自动高亮、选中新菜单，并触发 loadCards()
+    handleMenuSelect(targetMenu); 
+  }
+
+      } else {
+        const index = cards.value.findIndex(c => c.id === formData.id);
+        if (index !== -1) {
+          const updatedCard = {
+            ...cards.value[index],
+            ...(response.data?.data || {}),
+            logo_url: payload.logo_url,
+            title: payload.title,
+            url: payload.url,
+            desc: payload.desc,
+            menu_id: payload.menu_id,
+            sub_menu_id: payload.sub_menu_id,
+          };
+          const newCards = [...cards.value];
+          newCards[index] = updatedCard;
+          cards.value = newCards;
+        }
       }
+
     } else {
-      const maxOrder = cards.value.length > 0 
+      // 新建卡片分支
+      const maxOrder = cards.value.length > 0
         ? Math.max(...cards.value.map(c => c.order || 0))
         : 0;
       const nextOrder = maxOrder + 1;
@@ -529,11 +554,11 @@ const handleSiteSave = async (formData) => {
       };
       
       const res = await apiAddCard(payload);
-     const newCard = {
-  ...payload,
-  ...(res.data?.data || res.data || {}),
-  logo_url: payload.logo_url,
-};
+      const newCard = {
+        ...payload,
+        ...(res.data?.data || res.data || {}),
+        logo_url: payload.logo_url,
+      };
       
       cards.value = [...cards.value, newCard];
       
@@ -544,7 +569,7 @@ const handleSiteSave = async (formData) => {
     
     showSiteModal.value = false;
     
-   } catch (e) {
+  } catch (e) {
     console.error('保存失败:', e);
     alert('保存失败: ' + (e.response?.data?.error || e.message));
   } finally {
@@ -563,7 +588,6 @@ const deleteCard = async (id) => {
     alert('删除失败: ' + e.message);
   }
 };
-
 
 // === 快速导入 & 用户管理功能 ===
 const showQuickImportModal = ref(false);
@@ -612,6 +636,7 @@ const openSystemSettings = () => {
 };
 
 watch([activeMenu, activeSubMenu], loadCards);
+
 
 // ==================== 搜索与工具 ====================
 const searchQuery = ref('');

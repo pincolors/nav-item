@@ -84,7 +84,16 @@
           />
         </div>
 
-        <!-- 🔥 新增：子菜单选择器 -->
+        <!-- 🔥 新增：菜单选择器 -->        
+<div class="form-group">
+  <label>所属主菜单</label>
+  <select v-model="formData.menu_id" class="neumorphic-select">
+    <option v-for="menu in props.menus" :key="menu.id" :value="menu.id">
+      {{ menu.name }}
+    </option>
+  </select>
+</div>
+
         <div class="form-group" v-if="availableSubMenus.length > 0">
           <label>所属分类</label>
           <select v-model="formData.sub_menu_id" class="neumorphic-select">
@@ -117,7 +126,8 @@ const props = defineProps({
   visible: Boolean,
   isEdit: Boolean,
   initialData: Object,
-  currentMenuId: Number  // 🔥 新增：当前菜单 ID
+  currentMenuId: Number,  // 🔥 新增：当前菜单 ID
+  menus: { type: Array, default: () => [] }  // 👈 新增
 });
 
 const emit = defineEmits(['update:visible', 'save']);
@@ -128,7 +138,8 @@ const formData = reactive({
   url: '',
   logo_url: '',
   desc: '',
-  sub_menu_id: null  // 🔥 新增：子菜单 ID
+  menu_id: null,      // 👈 新增
+  sub_menu_id: null
 });
 
 const errorMsg = ref('');
@@ -162,20 +173,31 @@ function selectIcon(url) {
 /* =========================================== */
 
 /* 🔥 新增：加载子菜单 */
-async function loadSubMenus() {
-  if (!props.currentMenuId) {
-    availableSubMenus.value = [];
-    return;
-  }
-  
+async function loadSubMenusById(menuId) {
   try {
-    const response = await getSubMenus(props.currentMenuId);
+    const response = await getSubMenus(menuId);
     availableSubMenus.value = response.data || [];
   } catch (error) {
-    console.error('加载子菜单失败:', error);
     availableSubMenus.value = [];
   }
 }
+
+async function loadSubMenus() {
+  const menuId = formData.menu_id || props.currentMenuId;
+  if (!menuId) {
+    availableSubMenus.value = [];
+    return;
+  }
+  await loadSubMenusById(menuId);
+}
+
+watch(() => formData.menu_id, (newMenuId) => {
+  if (newMenuId) {
+    formData.sub_menu_id = null;
+    loadSubMenusById(newMenuId);
+  }
+});
+
 
 /* 初始化表单 */
 function resetForm(data = null) {
@@ -184,7 +206,8 @@ function resetForm(data = null) {
   formData.url = data?.url ?? '';
   formData.logo_url = data?.logo_url ?? '';
   formData.desc = data?.desc ?? '';
-  formData.sub_menu_id = data?.sub_menu_id ?? null;  // 🔥 新增
+  formData.menu_id = data?.menu_id ?? props.currentMenuId ?? null;  // 👈 新增
+  formData.sub_menu_id = data?.sub_menu_id ?? null;
   errorMsg.value = '';
 }
 watch(() => props.visible, (visible) => {
