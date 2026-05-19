@@ -85,7 +85,7 @@
 </div>
 
         <div class="form-group" v-if="availableSubMenus.length > 0">
-          <label>所属分类</label>
+          <label>所属子菜单</label>
           <select v-model="formData.sub_menu_id" class="neumorphic-select">
             <option :value="null">主菜单</option>
             <option v-for="sub in availableSubMenus" :key="sub.id" :value="sub.id">
