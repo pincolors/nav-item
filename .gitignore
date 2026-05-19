@@ -1,4 +1,3 @@
 node_modules
-".env"
-"database/nav.db"
-dev-dist/
+.env
+web/dev-dist/
