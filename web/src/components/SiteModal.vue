@@ -291,7 +291,8 @@ const vFocus = {
 .modal-content {
   background: var(--bg-color, #e0e5ec);
   color: var(--text-color, #333);
-  padding: 32px;
+   /* 🛠️ 核心修改：顺序是 [上] [右] [下] [左] */
+  padding: 16px 32px 32px 32px; /* 👈 把顶部的 32px 缩减到了 18px */
   border-radius: 24px;
   width: 90%;
   max-width: 420px;
@@ -306,19 +307,32 @@ const vFocus = {
   overscroll-behavior: contain; 
 }
 
-
 /* 暗色模式 Modal */
 :global(.dark-mode) .modal-content {
   box-shadow: 0 20px 50px rgba(0,0,0,0.6);
   border: 1px solid rgba(255,255,255,0.08);
+  max-height: 80vh;      /* 限制弹窗最高只能占整个屏幕高度的 80% */
+  overflow-y: auto;      /* 当内容超出 80% 时，白框内部自动出现滚动条 */
+  position: relative;    /* 保证内部元素（如滚动条）定位正常 */
+  /* 🛠️ 核心增加这一行：彻底阻止滚动穿透 */
+  overscroll-behavior: contain;
 }
 
+/* ☀️ 浅色（白色）背景下的标题样式 */
 h3 {
   margin-bottom: 24px;
   text-align: center;
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--primary-color, #00ff9d);
+  
+  /* 🛠️ 核心修改：在白色背景下，使用高对比度的深蓝灰色（或者纯黑 #111111），保证清晰度 */
+  color: #2c3e50; 
+}
+
+/* 🌙 暗色（黑色）背景下的标题样式 */
+:global(.dark-mode) h3 {
+  /* 🛠️ 当切换到暗色模式时，再变回原本亮眼的荧光绿 */
+  color: #00ff9d; 
 }
 /* ✨ 为弹窗内容大框定制的丝滑滚动条 */
 .modal-content::-webkit-scrollbar {
@@ -440,28 +454,54 @@ label {
 }
 
 /* 主按钮 */
+/* ☀️ 浅色模式（精准定位到保存按钮） */
 .save {
-  background: var(--primary-color, #00ff9d);
-  color: #fff;
+  background: #00a372;
+  color: #ffffff;
+  transition: all 0.2s ease; /* 👈 核心：告诉浏览器在 0.2 秒内丝滑过渡所有变化 */
+}
+
+/* 🌙 暗色模式（同样精准定位到保存按钮） */
+:global(.dark-mode) .save {
+  background: #00ff9d;
+  color: #111111;
+  /* 推荐加上这一行，让暗色下的立体感更好 */
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); 
+}
+/* ==================== 🖱️ 保存按钮悬浮效果 ==================== */
+
+/* ☀️ 浅色模式 - 保存按钮悬浮 */
+.save:hover {
+  background: #00be85;       /* 稍微变亮一点的青色 */
+  transform: translateY(-1px); /* 向上轻微浮动 1 像素，显得有弹性 */
+  box-shadow: 0 4px 12px rgba(0, 163, 114, 0.3); /* 增加一层柔和的投影 */
+}
+
+/* 🌙 暗色模式 - 保存按钮悬浮 */
+:global(.dark-mode) .save:hover {
+  background: #26ffb0;       /* 变成更亮、更有光感的极光绿 */
+  transform: translateY(-1px); 
+  box-shadow: 0 0 25px rgba(0, 255, 157, 0.6); /* 霓虹外发光能量加强！ */
 }
 
 /* 取消按钮（亮色模式） */
+
 .cancel {
-  background: transparent;
-  color: var(--text-color);
-  opacity: 0.7;
+  background: #e0e5ec; /* 跟新古典主义背景融为一体 */
+  color: #666666;      /* 柔和的灰色字 */
+  transition: all 0.2s ease; /* 👈 核心：告诉浏览器在 0.2 秒内丝滑过渡所有变化 */
 }
 
-/* 暗色模式下的取消按钮 */
+/* 🌙 暗色模式下的取消按钮 */
 :global(.dark-mode) .cancel {
-  color: #e6e6e6;
-  opacity: 1;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: #2d3748; /* 深灰背景 */
+  color: #a0aec0;      /* 浅灰字 */
 }
 
-:global(.dark-mode) .cancel:hover {
-  background: rgba(255,255,255,0.14);
+/* 当用户真正用鼠标按下去（Active）的那一瞬间，按钮往下沉，模拟机械按键感 */
+.save:active, .cancel:active {
+  transform: translateY(1px); /* 按下去时下沉 */
+  box-shadow: none;           /* 消失投影，感觉像是贴在地面上 */
 }
 
 /* ⭐ 新增样式：图标快速选择栏 ⭐ */
