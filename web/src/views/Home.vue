@@ -175,36 +175,52 @@
       @import="handleBatchImport"
     />
 
-    <div v-if="showUserManageModal" class="modal-overlay" @click.self="showUserManageModal = false">
-      <div class="modal-content large-modal">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-          <h3 style="margin:0">用户管理</h3>
-          <button @click="showUserManageModal = false" style="background:none; border:none; color:inherit; cursor:pointer; font-size:20px; padding:0 10px;">✕</button>
-        </div>
-        
-        <UserManage />
-      </div>
+    <div v-if="showUserManageModal" class="glass-overlay" @click.self="showUserManageModal = false">
+  <div class="glass-dialog large-glass-dialog">
+      <div class="dialog-header">
+      <h3>用户管理</h3>
+      <button class="dialog-close-btn" @click="showUserManageModal = false">✕</button>
     </div>
+    <UserManage />
+  </div>
+</div>
 
-       <Teleport to="body">
-      <div v-if="showLoginModal" class="modal-overlay" @click="showLoginModal = false">
-        <div class="modal-content login-modal" @click.stop>
-          
-          <div class="admin-login-icon" :class="{ 'logged-in': isLoggedIn }">
-            <Icon name="user-cog" />
-          </div>
-          
-          <h3>管理员登录</h3>
-          <div class="form-group">
-            <input v-model="loginForm.username" placeholder="用户名" class="modal-input" v-focus>
-          </div>
-          <div class="form-group">
-            <input v-model="loginForm.password" type="password" placeholder="密码" class="modal-input" @keyup.enter="doLogin">
-          </div>
-          <button class="modal-btn primary" @click="doLogin">登录</button>
-        </div>
+     <Teleport to="body">
+  <div v-if="showLoginModal" 
+       class="glass-overlay" 
+       :class="{ 'dark-mode': isDarkMode }"
+       @click="showLoginModal = false">
+    <div class="glass-dialog login-glass-dialog" @click.stop>
+
+      <div class="admin-login-icon" :class="{ 'logged-in': loginSuccess }">
+        <Icon name="user-cog" />
       </div>
-    </Teleport>
+
+      <h3>{{ loginSuccess ? '登录成功' : '管理员登录' }}</h3>
+
+      <template v-if="!loginSuccess">
+        <div class="glass-form-group">
+          <input v-model="loginForm.username" placeholder="用户名" class="glass-input" v-focus />
+        </div>
+        <div class="glass-form-group">
+          <input v-model="loginForm.password" type="password" placeholder="密码" 
+                 class="glass-input" @keyup.enter="doLogin" />
+        </div>
+        <button class="glass-btn-primary login-btn" :class="{ 'btn-empty': !canLogin }" @click="doLogin">登录</button>
+      </template>
+
+      <template v-else>
+        <div class="glass-actions">
+          <button class="glass-btn-cancel" @click="showLoginModal = false">取消</button>
+          <button class="glass-btn-primary logout-btn" @click="doLogout">确认退出</button>
+        </div>
+      </template>
+
+    </div>
+  </div>
+</Teleport>
+
+
 <footer class="footer">
   <div class="footer-content">
     <p class="copyright">{{ siteConfig.copyright }}</p>
@@ -217,24 +233,39 @@
   @saved="handleSettingsSaved"
 />
 
-    <div v-if="importState.visible" class="import-overlay">
-      <div class="import-box">
-        <h3>正在恢复数据...</h3>
-        
-        <div class="progress-track">
-          <div 
-            class="progress-fill" 
-            :style="{ width: importState.percent + '%' }"
-          ></div>
-        </div>
-        
-        <div class="import-status">
-          <span>{{ importState.text }}</span>
-          <span class="percent-num">{{ importState.percent }}%</span>
-        </div>
-      </div>
+    <div v-if="importState.visible" class="glass-overlay">
+  <div class="glass-dialog import-glass-dialog">
+    <h3 class="import-title">正在恢复数据...</h3>
+
+    <div class="progress-track">
+      <div class="progress-fill" :style="{ width: importState.percent + '%' }"></div>
     </div>
-    
+
+    <div class="import-status">
+      <span>{{ importState.text }}</span>
+      <span class="percent-num">{{ importState.percent }}%</span>
+    </div>
+  </div>
+</div>
+  <div v-if="showAddMenuDialog" class="glass-overlay" @click.self="showAddMenuDialog = false">
+  <div class="glass-dialog glass-dialog-sm" @click.stop>
+    <h3>添加菜单</h3>
+    <div class="glass-form-group">
+      <label>菜单名称</label>
+      <input
+        v-model="newMenuName"
+        class="glass-input"
+        placeholder="请输入菜单名称"
+        @keyup.enter="confirmAddMenu"
+        v-focus-if-visible="showAddMenuDialog"
+      />
+    </div>
+    <div class="glass-actions">
+      <button class="glass-btn-cancel" @click="showAddMenuDialog = false">取消</button>
+      <button class="glass-btn-primary" @click="confirmAddMenu">添加</button>
+    </div>
+  </div>
+</div>  
   </div> 
 </template>
 
@@ -303,6 +334,8 @@ const handleAdminAction = (callback) => {
   if (callback) callback();
 };
 
+const loginSuccess = ref(false);
+
 const doLogin = async () => {
   try {
     const res = await login(loginForm.username, loginForm.password);
@@ -310,14 +343,17 @@ const doLogin = async () => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('userRole', res.data.user.role || 'admin');
       isLoggedIn.value = true;
-      userRole.value = res.data.user.role || 'admin';  // 👈 立即更新 role
-      
+      userRole.value = res.data.user.role || 'admin';
+
+      loginSuccess.value = true; // 触发图标变红转圈
+
       setTimeout(() => {
         showLoginModal.value = false;
+        loginSuccess.value = false; // 重置，下次打开恢复青色
         loginForm.username = '';
         loginForm.password = '';
       }, 600);
-     } 
+    } 
   } catch (e) {
     alert('登录失败: ' + (e.response?.data?.message || e.message));
   } 
@@ -408,11 +444,23 @@ const handleMenuSort = async (newMenus) => {
   }
 };
 
-const addMenu = async () => {
-  const name = prompt("请输入新菜单名称:");
-  if (!name?.trim()) return;
+// 新增菜单弹窗状态
+const showAddMenuDialog = ref(false);
+const newMenuName = ref('');
+
+// 打开添加菜单弹窗（替换原来直接 emit 的 addMenu）
+const addMenu = () => {
+  newMenuName.value = '';
+  showAddMenuDialog.value = true;
+};
+
+// 确认添加菜单
+const confirmAddMenu = async () => {
+  if (!newMenuName.value.trim()) return;
   try {
-    await apiAddMenu({ name: name.trim(), order: menus.value.length + 1 });
+    await apiAddMenu({ name: newMenuName.value.trim(), order: menus.value.length + 1 });
+    showAddMenuDialog.value = false;
+    newMenuName.value = '';
     await loadMenus();
   } catch (e) {
     alert('添加菜单失败: ' + e.message);
@@ -842,6 +890,12 @@ const importData = (event) => {
 
 const handleLogoError = (e) => e.target.style.display = 'none';
 const vFocus = { mounted: (el) => el.focus() };
+// v-focus-if-visible 指令（在 vFocus 附近添加）
+const vFocusIfVisible = {
+  updated(el, binding) {
+    if (binding.value) requestAnimationFrame(() => el.focus());
+  }
+};
 const vClickOutside = {
   mounted(el, binding) {
     el._clickOutside = (event) => {
@@ -957,28 +1011,29 @@ onMounted(async () => {
 
 </script>
 
-<style scoped>
+ <style scoped>
 .bg-wallpaper {
   position: fixed; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
   pointer-events: none;
 }
 
-/* 全局样式 */
+/* ===== 全局变量 ===== */
 .home-container {
-  --primary-color: #00ff9d; 
-  --bg-color: #e0e5ec; 
-  --text-color: #4a5568; 
-  --card-bg: #e0e5ec; 
+  --primary-color: #00ff9d;
+  --bg-color: #e0e5ec;
+  --text-color: #4a5568;
+  --card-bg: #e0e5ec;
   --header-bg: rgba(224, 229, 236, 0.85);
-  
+
   min-height: 100vh; background-color: var(--bg-color); color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease; padding-top: 70px;
+  overflow-x: hidden; width: 100%;
 }
 .home-container.dark-mode {
-  --bg-color: #1a1b1e; 
-  --text-color: #e0e0e0; 
-  --card-bg: #25262b; 
+  --bg-color: #1a1b1e;
+  --text-color: #e0e0e0;
+  --card-bg: #25262b;
   --header-bg: rgba(26, 27, 30, 0.8);
 }
 
@@ -1052,8 +1107,7 @@ onMounted(async () => {
   background-color: #ff7875;
   box-shadow: 0 6px 16px rgba(255, 77, 79, 0.5);
 }
-
-/* Dropdown */
+/* ===== Dropdown ===== */
 .user-menu-container { position: relative; }
 .dropdown-menu {
   position: absolute; top: 120%; right: 0; background: var(--bg-color); border-radius: 16px;
@@ -1069,202 +1123,84 @@ onMounted(async () => {
 .menu-divider { height: 1px; background: rgba(163, 177, 198, 0.3); margin: 6px 0; }
 .logout { color: #ff4d4f; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0 !important;
+.fade-enter-from, .fade-leave-to { opacity: 0 !important; }
+.is-disabled { opacity: 0.4; cursor: not-allowed !important; pointer-events: none; }
+.logout-btn {
+  background: #ff4d4f !important;
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.3) !important;
 }
-
-/* 角色颜色区分 (可选：管理员红色，普通用户蓝色) */
-.header-right .admin-btn.is-logged-in {
-  /* 我们可以利用 v-bind 直接在 CSS 中使用变量 */
+.logout-btn:hover {
+  background: #ff7875 !important;
+  box-shadow: 0 6px 24px rgba(255, 77, 79, 0.45) !important;
 }
-
-/* Sections */
+/* ===== Sections ===== */
 .menu-wrapper { margin: 0 0 20px; }
 .search-section {
-  padding: 0 20px 30px;
-  display: flex;
-  justify-content: center;
-  overflow: visible;  /* 👈 加这行 */
-  position: relative;
-  z-index: 100;       /* 👈 加这行 */
+  padding: 0 20px 30px; display: flex; justify-content: center;
+  overflow: visible; position: relative; z-index: 100;
 }
 .search-box-wrapper { width: 100%; max-width: 640px; }
-.home-container {
-  overflow-x: hidden;  /* 👈 加这行 */
-  width: 100%;
-}
-.content-area { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 50px 60px; box-sizing: border-box; overflow-x: hidden; }
+.content-area { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 50px 60px; box-sizing: border-box; overflow-x: hidden; transition: opacity 0.3s ease; touch-action: pan-y; }
+@media (max-width: 768px) { .content-area { padding: 0 16px 60px; } }
+@media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 
-@media (max-width: 768px) {
-  .content-area { padding: 0 16px 60px; }
-}
-
-/* Search */
+/* ===== Search ===== */
 .search-container {
   display: flex; align-items: center; background: var(--card-bg);
   border-radius: 16px; padding: 6px 12px; width: 100%;
   border: 1px solid var(--card-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+  backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
 }
-.engine-selector {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-right: 8px;
-  border-right: 2px solid rgba(0, 255, 157, 0.2);
-  padding-right: 10px;
-  flex-shrink: 0;
-}
-
-.engine-current {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.engine-current:hover {
-  background: rgba(0, 255, 157, 0.1);
-}
-
-.engine-icon {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-.engine-emoji {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-color);
-}
-
-.engine-arrow {
-  font-size: 10px;
-  opacity: 0.5;
-  color: var(--text-color);
-}
-
-.engine-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  background: var(--bg-color);
-  border-radius: 12px;
-  padding: 6px;
-  z-index: 9999;  /* 👈 改成 9999 */
-  min-width: 120px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-
-.dark-mode .engine-dropdown {
-  background: #25262b;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.engine-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.engine-option:hover {
-  background: rgba(0, 255, 157, 0.1);
-}
-
-.engine-option.active {
-  background: rgba(0, 255, 157, 0.15);
-}
-
-.engine-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.engine-option.active .engine-label {
-  color: #00ff9d;
-}
-
-
 .dark-mode .search-container {
   background: var(--card-bg); border: 1px solid var(--card-border);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.5), 0 16px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.5), 0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
 }
+.search-container:hover { transform: translateY(-4px) scale(1.01); border-color: rgba(0,255,157,0.4); box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.15), 0 0 30px rgba(0,255,157,0.25), inset 0 1px 0 rgba(255,255,255,0.2); }
+.dark-mode .search-container:hover { border-color: rgba(255,255,255,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 16px 48px rgba(0,0,0,0.8), 0 0 40px rgba(0,255,157,0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+.search-container:focus-within { transform: translateY(-6px) scale(1.02); border-color: var(--primary-color); box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 16px 48px rgba(0,0,0,0.2), 0 0 0 3px rgba(0,255,157,0.2), 0 0 50px rgba(0,255,157,0.4); }
+.dark-mode .search-container:focus-within { box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 20px 64px rgba(0,0,0,0.8), 0 0 0 3px rgba(0,255,157,0.25), 0 0 60px rgba(0,255,157,0.5); }
 
-.search-container:hover {
-  transform: translateY(-4px) scale(1.01); border-color: rgba(0, 255, 157, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 255, 157, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.engine-selector { position: relative; display: flex; align-items: center; margin-right: 8px; border-right: 2px solid rgba(0,255,157,0.2); padding-right: 10px; flex-shrink: 0; }
+.engine-current { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 2px 4px; border-radius: 8px; transition: all 0.2s; }
+.engine-current:hover { background: rgba(0,255,157,0.1); }
+.engine-icon { width: 22px; height: 22px; object-fit: contain; border-radius: 4px; }
+.engine-emoji { font-size: 16px; font-weight: 700; line-height: 1; color: var(--text-color); }
+.engine-arrow { font-size: 10px; opacity: 0.5; color: var(--text-color); }
+.engine-dropdown {
+  position: absolute; top: calc(100% + 8px); left: 0;
+  background: var(--bg-color); border-radius: 12px; padding: 6px;
+  z-index: 9999; min-width: 120px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 2px;
 }
-.dark-mode .search-container:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 255, 157, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
+.dark-mode .engine-dropdown { background: #25262b; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); }
+.engine-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.engine-option:hover { background: rgba(0,255,157,0.1); }
+.engine-option.active { background: rgba(0,255,157,0.15); }
+.engine-label { font-size: 13px; font-weight: 600; color: var(--text-color); }
+.engine-option.active .engine-label { color: #00ff9d; }
 
-.search-container:focus-within {
-  transform: translateY(-6px) scale(1.02); border-color: var(--primary-color);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 16px 48px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 255, 157, 0.2), 0 0 50px rgba(0, 255, 157, 0.4);
-}
-
-.dark-mode .search-container:focus-within {
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 20px 64px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(0, 255, 157, 0.25), 0 0 60px rgba(0, 255, 157, 0.5);
-}
-
-
-.search-input { 
-  flex: 1; border: none; background: transparent; padding: 10px 8px; color: var(--text-color); font-size: 15px; outline: none; font-weight: 500;
-}
-.search-input::placeholder { color: rgba(163, 177, 198, 0.6); transition: color 0.2s; }
-.search-container:focus-within .search-input::placeholder { color: rgba(0, 255, 157, 0.5); }
-.dark-mode .search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
-
-.clear-btn { 
-  background: transparent; border: none; color: #888; cursor: pointer; padding: 0 8px; font-size: 18px; transition: all 0.2s; opacity: 0.6; display: flex; align-items: center; justify-content: center;
-}
+.search-input { flex: 1; border: none; background: transparent; padding: 10px 8px; color: var(--text-color); font-size: 15px; outline: none; font-weight: 500; }
+.search-input::placeholder { color: rgba(163,177,198,0.6); transition: color 0.2s; }
+.search-container:focus-within .search-input::placeholder { color: rgba(0,255,157,0.5); }
+.dark-mode .search-input::placeholder { color: rgba(255,255,255,0.4); }
+.clear-btn { background: transparent; border: none; color: #888; cursor: pointer; padding: 0 8px; font-size: 18px; transition: all 0.2s; opacity: 0.6; display: flex; align-items: center; justify-content: center; }
 .clear-btn:hover { color: var(--primary-color); opacity: 1; transform: scale(1.2) rotate(90deg); }
-
-.search-btn { 
-  background: var(--icon-bg); color: var(--primary-color); width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(0, 255, 157, 0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-.dark-mode .search-btn { 
-  background: var(--card-bg);
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.05);
-}
-
-.search-btn:hover {
-  transform: translateY(-2px); box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.6);
-}
-.dark-mode .search-btn:hover {
-  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.08);
-}
-
-.search-btn:active {
-  transform: translateY(0); box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
-}
-.dark-mode .search-btn:active {
-  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.05);
-}
+.search-btn { background: var(--icon-bg); color: var(--primary-color); width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(0,255,157,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.dark-mode .search-btn { background: var(--card-bg); box-shadow: 4px 4px 8px rgba(0,0,0,0.4), -4px -4px 8px rgba(255,255,255,0.05); }
+.search-btn:hover { transform: translateY(-2px); box-shadow: 6px 6px 12px rgba(163,177,198,0.5), -6px -6px 12px rgba(255,255,255,0.6); }
+.dark-mode .search-btn:hover { box-shadow: 6px 6px 12px rgba(0,0,0,0.5), -6px -6px 12px rgba(255,255,255,0.08); }
+.search-btn:active { transform: translateY(0); box-shadow: inset 3px 3px 6px rgba(163,177,198,0.4), inset -3px -3px 6px rgba(255,255,255,0.5); }
+.dark-mode .search-btn:active { box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4), inset -3px -3px 6px rgba(255,255,255,0.05); }
 
 @media (max-width: 768px) {
+  .site-title { display: none; }
+  .header-fixed { padding: 0 16px; }
+  .header-inner { padding: 0; }
+  .home-container { padding-top: 70px; }
+  .header-inner, .content-area { padding-left: 12px !important; padding-right: 12px !important; }
   .search-section { padding: 0 16px 24px; }
   .search-container { padding: 6px 10px; }
   .search-input { padding: 12px 8px; font-size: 15px; }
@@ -1272,91 +1208,97 @@ onMounted(async () => {
   .search-container:hover { transform: translateY(-2px) scale(1.005); }
 }
 
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.modal-content { background: var(--bg-color); color: var(--text-color); padding: 40px; border-radius: 24px; width: 90%; max-width: 360px; box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.6), -15px -15px 30px rgba(255,255,255,0.6); border: none; animation: slideUp 0.3s ease; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.dark-mode .modal-content { background: #25262b; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-.modal-content h3 { margin: 0 0 30px; text-align: center; font-size: 1.5rem; }
-.form-group { margin-bottom: 20px; }
-.modal-input { width: 100%; padding: 14px; background: var(--bg-color); border-radius: 12px; color: var(--text-color); border: none; box-sizing: border-box; outline: none; box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.4), inset -4px -4px 8px rgba(255,255,255,0.5); font-size: 15px; }
-.dark-mode .modal-input { background: rgba(0,0,0,0.2); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
-.modal-input:focus { color: var(--primary-color); box-shadow: inset 6px 6px 12px rgba(163, 177, 198, 0.5), inset -6px -6px 12px rgba(255, 255, 255, 0.6); }
-.dark-mode .modal-input:focus { border-color: var(--primary-color); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5); }
-.modal-btn { width: 100%; padding: 14px; background: var(--primary-color); border: none; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; box-shadow: 4px 4px 10px rgba(0, 255, 157, 0.3); transition: all 0.2s; }
-.modal-btn:hover { transform: translateY(-2px); box-shadow: 6px 6px 15px rgba(0, 255, 157, 0.4); }
-.modal-btn:active { transform: translateY(0); }
-/* =========================================
-   弹窗顶部的管理员大图标样式
-   ========================================= */
-.admin-login-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: #00bcd4; /* 登录前：青色背景 */
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  margin: 0 auto 20px auto; /* 居中并与下方文字留白 */
-  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带弹性的动画效果 */
-}
-
-.admin-login-icon.logged-in {
-  background-color: #ff4d4f; /* 登录后：红色背景 */
-  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.6);
-  transform: rotate(360deg) scale(1.1); /* 旋转一圈并稍微放大 */
-}
-
-  
-/* Footer & Responsive */
+/* ===== Footer ===== */
 .footer { text-align: center; opacity: 0.6; padding: 20px; font-size: 13px; font-weight: 500; }
-@media (max-width: 768px) {
-  .site-title { display: none; }
-  .header-fixed { padding: 0 16px; }
-  .header-inner { padding: 0; }
-  .home-container { padding-top: 70px; }
-  .modal-content { padding: 30px 20px; }
-  
-  .header-inner, 
-  .content-area { padding-left: 12px !important; padding-right: 12px !important; }
+
+/* ================================================================
+   弹窗私有样式（glass-theme.css 提供主体样式）
+   ================================================================ */
+
+/* 登录弹窗 */
+.login-glass-dialog {
+  border-radius: 24px; 
+  width: 90%;       /* 📱 手机端占屏幕宽度的 90% */
+  max-width: 360px; /* 💻 电脑端/大屏最大宽度为 360px */
+  padding: 40px;
+  padding-top: 36px;  /* 顶部空白加大 */
+
+ }
+ .login-glass-dialog .glass-form-group {
+ margin-bottom: 28px;  
 }
 
-/* =========== 进度条样式 =========== */
-.import-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;
+.login-glass-dialog .glass-actions {
+  margin-top: 38px;  /* 输入框和按钮条之间的距离 */
 }
-.import-box {
-  background: var(--card-bg); color: var(--text-color); width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; border: 1px solid rgba(255,255,255,0.1);
+.login-glass-dialog h3 {
+  margin: 0 0 30px;  text-align: center;
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--glass-text-color);
 }
-.import-box h3 { margin: 0 0 20px 0; font-size: 1.2rem; color: var(--primary-color); }
+.login-btn { width: 100%; margin-top: 8px; }
+.login-glass-dialog .admin-login-icon {
+  margin: 0 auto 28px auto;  /* 头像下方间距也加大一点 */
+}
+/* admin 图标 */
+.admin-login-icon {
+  margin: 0 auto 20px auto;
+  margin-top: 10px; /* 距离上方元素 10px */
+  padding: 14px;    /* 按钮自身高度的上下内边距为 14px */
+  width: 64px; height: 64px; border-radius: 50%;
+  background-color: #00bcd4; color: #ffffff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin: 0 auto 20px auto;
+  box-shadow: 0 4px 15px rgba(0,188,212,0.4);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.admin-login-icon.logged-in {
+  background-color: #ff4d4f;
+  box-shadow: 0 4px 20px rgba(255,77,79,0.6);
+  transform: rotate(360deg) scale(1.1);
+}
+
+
+/* 用户管理弹窗 */
+.large-glass-dialog { max-width: 900px; width: 95%; max-height: 85vh; }
+.dialog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.dialog-header h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--glass-text-color); }
+.dialog-close-btn {
+  background: transparent; border: none; font-size: 20px; cursor: pointer;
+  color: var(--glass-label-color); width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; transition: all 0.2s;
+}
+.dialog-close-btn:hover { background: var(--glass-icon-btn-bg); color: var(--glass-text-color); }
+
+/* 恢复进度弹窗 */
+.import-glass-dialog { max-width: 400px; text-align: center; }
+.import-title {
+  margin: 0 0 24px 0; font-size: 1.1rem; font-weight: 700;
+  color: var(--glass-primary); text-align: center;
+}
 .progress-track {
-  width: 100%; height: 10px; background: rgba(120, 120, 120, 0.2); border-radius: 10px; overflow: hidden; margin-bottom: 15px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+  width: 100%; height: 10px;
+  background: var(--glass-input-bg);
+  border: 1px solid var(--glass-input-border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 15px;
 }
 .progress-fill {
-  height: 100%; background: var(--primary-color); width: 0%; border-radius: 10px; transition: width 0.3s ease-out; box-shadow: 0 0 10px var(--primary-color);
+  height: 100%; background: var(--glass-primary); width: 0%;
+  border-radius: 10px; transition: width 0.3s ease-out;
+  box-shadow: 0 0 10px var(--glass-primary);
 }
-.import-status {
-  display: flex; justify-content: space-between; font-size: 13px; color: var(--text-desc); font-weight: 500;
+.import-status { display: flex; justify-content: space-between; font-size: 13px; color: var(--glass-label-color); font-weight: 500; }
+.percent-num { font-weight: bold; color: var(--glass-text-color); }
+
+/* 添加菜单弹窗 label */
+label {
+  display: block; margin-bottom: 8px;
+  font-size: 13px; font-weight: 600;
+  color: var(--glass-label-color);
 }
-.percent-num { font-weight: bold; color: var(--text-color); }
 
-/* 大号弹窗样式 */
-.large-modal { width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; padding: 25px; }
-@media (max-width: 768px) { .large-modal { width: 95%; padding: 15px; } }
-
-/* 移动端滑动优化 */
-.content-area { transition: opacity 0.3s ease; touch-action: pan-y; }
-@media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
+/* 动画 */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
-
-
-
-
-
-
-
-

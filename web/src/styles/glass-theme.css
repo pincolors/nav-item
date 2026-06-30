@@ -1,0 +1,263 @@
+/* ============================================================
+   glass-theme.css —— 全局玻璃拟态设计令牌 & 通用组件样式
+   用法：在 main.js/main.ts 里 import './styles/glass-theme.css'
+   ============================================================ */
+
+/* ===== 亮色令牌 ===== */
+:root {
+  --glass-text-color:         #1a1a2e;
+  --glass-label-color:        rgba(0, 0, 0, 0.40);
+  --glass-tip-color:          rgba(0, 0, 0, 0.30);
+  --glass-scrollbar-thumb:    rgba(0, 0, 0, 0.10);
+
+  --glass-dialog-bg:          rgba(255, 255, 255, 0.40);
+  --glass-dialog-border:      rgba(255, 255, 255, 0.70);
+  --glass-dialog-shadow:      0 20px 60px rgba(0, 0, 0, 0.10),
+                              inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  --glass-dialog-blur:        blur(32px) saturate(160%);
+
+  --glass-overlay-bg:         rgba(0, 0, 0, 0.15);
+  --glass-overlay-blur:       blur(12px);
+
+  --glass-input-bg:           transparent;
+  --glass-input-border:       rgba(0, 0, 0, 0.08);
+  --glass-input-color:        #1a1a2e;
+  --glass-input-placeholder:  rgba(0, 0, 0, 0.22);
+  --glass-input-focus-border: rgba(0, 163, 114, 0.50);
+  --glass-input-focus-shadow: 0 0 0 3px rgba(0, 163, 114, 0.10);
+  --glass-input-focus-bg:     rgba(255, 255, 255, 0.25);
+
+  --glass-icon-btn-bg:        rgba(255, 255, 255, 0.35);
+  --glass-icon-btn-border:    rgba(0, 0, 0, 0.08);
+  --glass-icon-btn-hover-bg:  rgba(255, 255, 255, 0.85);
+  --glass-icon-btn-color:     rgba(0, 0, 0, 0.55);
+
+  --glass-icon-bar-bg:        transparent;
+  --glass-icon-bar-border:    rgba(0, 0, 0, 0.06);
+
+  --glass-primary:            #00c87a;
+  --glass-primary-hover:      #00e68a;
+  --glass-primary-shadow:     rgba(0, 200, 122, 0.30);
+  --glass-primary-shadow-hover: rgba(0, 200, 122, 0.45);
+}
+
+/* ===== 暗色令牌 ===== */
+.dark-mode {
+  --glass-text-color:         #ffffff;
+  --glass-label-color:        rgba(255, 255, 255, 0.50);
+  --glass-tip-color:          rgba(255, 255, 255, 0.30);
+  --glass-scrollbar-thumb:    rgba(255, 255, 255, 0.15);
+
+  --glass-dialog-bg:          rgba(30, 32, 40, 0.45);
+  --glass-dialog-border:      rgba(255, 255, 255, 0.12);
+  --glass-dialog-shadow:      0 20px 60px rgba(0, 0, 0, 0.50),
+                              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-dialog-blur:        blur(28px) saturate(180%);
+
+  --glass-overlay-bg:         rgba(0, 0, 0, 0.30);
+  --glass-overlay-blur:       blur(12px);
+
+  --glass-input-bg:           rgba(255, 255, 255, 0.08);
+  --glass-input-border:       rgba(255, 255, 255, 0.14);
+  --glass-input-color:        #ffffff;
+  --glass-input-placeholder:  rgba(255, 255, 255, 0.25);
+  --glass-input-focus-border: rgba(0, 255, 157, 0.50);
+  --glass-input-focus-shadow: 0 0 0 3px rgba(0, 255, 157, 0.10);
+  --glass-input-focus-bg:     rgba(255, 255, 255, 0.12);
+
+  --glass-icon-btn-bg:        rgba(255, 255, 255, 0.10);
+  --glass-icon-btn-border:    rgba(255, 255, 255, 0.15);
+  --glass-icon-btn-hover-bg:  rgba(255, 255, 255, 0.20);
+  --glass-icon-btn-color:     rgba(255, 255, 255, 0.75);
+
+  --glass-icon-bar-bg:        rgba(255, 255, 255, 0.05);
+  --glass-icon-bar-border:    rgba(255, 255, 255, 0.10);
+
+  --glass-primary:            #00c87a;
+  --glass-primary-hover:      #00e68a;
+  --glass-primary-shadow:     rgba(0, 200, 122, 0.35);
+  --glass-primary-shadow-hover: rgba(0, 200, 122, 0.50);
+}
+
+/* ============================================================
+   通用组件类
+   ============================================================ */
+
+.glass-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--glass-overlay-bg);
+  backdrop-filter: var(--glass-overlay-blur);
+  -webkit-backdrop-filter: var(--glass-overlay-blur);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glass-dialog {
+  background: var(--glass-dialog-bg);
+  backdrop-filter: var(--glass-dialog-blur);
+  -webkit-backdrop-filter: var(--glass-dialog-blur);
+  border: 1px solid var(--glass-dialog-border);
+  border-radius: 20px;
+  box-shadow: var(--glass-dialog-shadow);
+  /* 关键：用 --glass-text-color 而不是 --glass-input-color */
+  color: var(--glass-text-color);
+  padding: 28px 28px 32px 28px;
+  width: 90%;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: relative;
+}
+
+.glass-dialog::-webkit-scrollbar { width: 5px; }
+.glass-dialog::-webkit-scrollbar-track { background: transparent; }
+.glass-dialog::-webkit-scrollbar-thumb {
+  background: var(--glass-scrollbar-thumb);
+  border-radius: 10px;
+}
+
+.glass-dialog-title {
+  margin: 0 0 24px 0;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--glass-text-color);
+  letter-spacing: 0.02em;
+}
+
+.glass-form-group { margin-bottom: 18px; }
+
+.glass-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--glass-label-color);
+  letter-spacing: 0.03em;
+}
+
+.glass-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--glass-input-bg);
+  border: 1px solid var(--glass-input-border);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--glass-input-color);
+  box-sizing: border-box;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.glass-input::placeholder { color: var(--glass-input-placeholder); }
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--glass-input-focus-border);
+  background: var(--glass-input-focus-bg);
+  box-shadow: var(--glass-input-focus-shadow);
+}
+
+.glass-select { cursor: pointer; appearance: auto; }
+.glass-select option { background: #f0f0f0; color: #1a1a2e; }
+.dark-mode .glass-select option { background: #2a2d3a; color: #e8e8e8; }
+
+.glass-textarea { resize: vertical; min-height: 80px; }
+
+.glass-icon-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: var(--glass-icon-bar-bg);
+  border: 1px solid var(--glass-icon-bar-border);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.glass-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--glass-icon-btn-bg);
+  border: 1px solid var(--glass-icon-btn-border);
+  color: var(--glass-icon-btn-color);
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.glass-icon-btn:hover {
+  background: var(--glass-icon-btn-hover-bg);
+  transform: translateY(-1px);
+}
+
+.glass-icon-btn:active { transform: translateY(0); }
+
+.glass-tip {
+  font-size: 11px;
+  color: var(--glass-tip-color);
+  margin-top: 6px;
+  display: block;
+}
+
+.glass-error {
+  color: #ff4d4f;
+  font-size: 13px;
+  text-align: center;
+  margin-top: -8px;
+}
+
+.glass-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.glass-btn-cancel {
+  flex: 1;
+  padding: 13px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--glass-label-color);
+  transition: color 0.2s;
+}
+
+.glass-btn-cancel:hover { color: var(--glass-text-color); }
+
+.glass-btn-primary {
+  flex: 2;
+  padding: 13px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  background: var(--glass-primary);
+  color: #ffffff;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px var(--glass-primary-shadow);
+}
+
+.glass-btn-primary:hover {
+  background: var(--glass-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px var(--glass-primary-shadow-hover);
+}
+
+.glass-btn-primary:active,
+.glass-btn-cancel:active { transform: translateY(1px); }

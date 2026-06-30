@@ -1,11 +1,11 @@
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="modal-overlay" @click.self="close">
-      <div class="modal-content settings-modal" :class="{ 'dark-mode': isDarkMode }">
-        
-        <div class="modal-header">
+    <div v-if="visible" class="glass-overlay" :class="{ 'dark-mode': isDarkMode }" @click.self="close">
+      <div class="glass-dialog settings-dialog" @click.stop>
+
+        <div class="dialog-header">
           <h3>⚙️ 系统设置</h3>
-          <button @click="close" class="close-btn">✕</button>
+          <button @click="close" class="dialog-close-btn">✕</button>
         </div>
 
         <div class="settings-body">
@@ -13,40 +13,29 @@
           <!-- 基础设置 -->
           <div class="settings-section">
             <div class="section-title">🌐 基础设置</div>
-            
-            <div class="form-group">
+            <div class="glass-form-group">
               <label>底部版权文字</label>
-              <input v-model="form.copyright" class="settings-input" placeholder="Copyright © 2026 Nav-Item" />
+              <input v-model="form.copyright" class="glass-input" placeholder="Copyright © 2026 Nav-Item" />
             </div>
           </div>
 
           <!-- 显示设置 -->
           <div class="settings-section">
             <div class="section-title">🖥️ 显示设置</div>
-            
-            <div class="form-group">
+            <div class="glass-form-group">
               <label>电脑端每行列数</label>
               <div class="btn-group">
-                <button 
-                  v-for="n in [4, 5, 6, 7, 8]" 
-                  :key="n"
-                  :class="{ active: form.desktopColumns == n }"
-                  @click="form.desktopColumns = n"
-                  class="col-btn"
-                >{{ n }}列</button>
+                <button v-for="n in [4,5,6,7,8]" :key="n"
+                  :class="['col-btn', { active: form.desktopColumns == n }]"
+                  @click="form.desktopColumns = n">{{ n }}列</button>
               </div>
             </div>
-
-            <div class="form-group">
+            <div class="glass-form-group">
               <label>手机端每行列数</label>
               <div class="btn-group">
-                <button 
-                  v-for="n in [2, 3]" 
-                  :key="n"
-                  :class="{ active: form.mobileColumns == n }"
-                  @click="form.mobileColumns = n"
-                  class="col-btn"
-                >{{ n }}列</button>
+                <button v-for="n in [2,3]" :key="n"
+                  :class="['col-btn', { active: form.mobileColumns == n }]"
+                  @click="form.mobileColumns = n">{{ n }}列</button>
               </div>
             </div>
           </div>
@@ -54,17 +43,12 @@
           <!-- 搜索设置 -->
           <div class="settings-section">
             <div class="section-title">🔍 搜索设置</div>
-            
-            <div class="form-group">
+            <div class="glass-form-group">
               <label>默认搜索引擎</label>
               <div class="btn-group">
-                <button
-                  v-for="engine in searchEngines"
-                  :key="engine.name"
-                  :class="{ active: form.defaultEngine === engine.name }"
-                  @click="form.defaultEngine = engine.name"
-                  class="col-btn"
-                >{{ engine.label }}</button>
+                <button v-for="engine in searchEngines" :key="engine.name"
+                  :class="['col-btn', { active: form.defaultEngine === engine.name }]"
+                  @click="form.defaultEngine = engine.name">{{ engine.label }}</button>
               </div>
             </div>
           </div>
@@ -72,43 +56,33 @@
           <!-- 背景壁纸 -->
           <div class="settings-section">
             <div class="section-title">🖼️ 背景壁纸</div>
-            
-            <div class="form-group">
+            <div class="glass-form-group">
               <label>壁纸链接（留空则无壁纸）</label>
-              <input v-model="form.backgroundImage" class="settings-input" placeholder="https://.../wallpaper.jpg" />
+              <input v-model="form.backgroundImage" class="glass-input" placeholder="https://.../wallpaper.jpg" />
             </div>
-
-            <div class="form-group" v-if="form.backgroundImage">
+            <div class="glass-form-group" v-if="form.backgroundImage">
               <label>壁纸透明度：{{ Math.round(form.backgroundOpacity * 100) }}%</label>
-              <input 
-                v-model="form.backgroundOpacity" 
-                type="range" min="0.05" max="1" step="0.05"
-                class="range-input"
-              />
+              <input v-model="form.backgroundOpacity" type="range" min="0.05" max="1" step="0.05" class="range-input" />
             </div>
-
-            <div v-if="form.backgroundImage" class="bg-preview" :style="{ backgroundImage: `url(${form.backgroundImage})`, opacity: form.backgroundOpacity }"></div>
+            <div v-if="form.backgroundImage" class="bg-preview"
+              :style="{ backgroundImage: `url(${form.backgroundImage})`, opacity: form.backgroundOpacity }">
+            </div>
           </div>
 
           <!-- 危险操作 -->
-          <div class="settings-section danger-section">
-            <div class="section-title">⚠️ 危险操作</div>
-            
+          <div class="settings-section">
+            <div class="section-title danger-title">⚠️ 危险操作</div>
             <div class="danger-buttons">
-              <button @click="handleClearAll" class="danger-btn">
-                🗑️ 清空所有数据
-              </button>
-              <button @click="handleReset" class="danger-btn">
-                🔄 重置为默认设置
-              </button>
+              <button @click="handleClearAll" class="danger-btn">🗑️ 清空所有数据</button>
+              <button @click="handleReset" class="danger-btn">🔄 重置为默认设置</button>
             </div>
           </div>
 
         </div>
 
-        <div class="modal-actions">
-          <button @click="close" class="btn-cancel">取消</button>
-          <button @click="save" class="btn-save">💾 保存设置</button>
+        <div class="settings-footer">
+          <button @click="close" class="glass-btn-cancel">取消</button>
+          <button @click="save" class="glass-btn-primary">💾 保存设置</button>
         </div>
 
       </div>
@@ -120,31 +94,21 @@
 import { ref, watch } from 'vue';
 import { getConfigs, saveConfigs, clearAllData } from '../api';
 
-const props = defineProps({
-  visible: Boolean,
-  isDarkMode: Boolean
-});
-
+const props = defineProps({ visible: Boolean, isDarkMode: Boolean });
 const emit = defineEmits(['update:visible', 'saved']);
 
 const searchEngines = [
-  { name: 'site', label: '站内' },
-  { name: 'google', label: 'Google' },
-  { name: 'baidu', label: '百度' },
-  { name: 'bing', label: 'Bing' },
+  { name: 'site', label: '站内' }, { name: 'google', label: 'Google' },
+  { name: 'baidu', label: '百度' }, { name: 'bing', label: 'Bing' },
   { name: 'github', label: 'GitHub' },
 ];
 
 const form = ref({
   copyright: 'Copyright © 2026 Nav-Item',
-  desktopColumns: 6,
-  mobileColumns: 2,
-  defaultEngine: 'site',
-  backgroundImage: '',
-  backgroundOpacity: 0.15,
+  desktopColumns: 6, mobileColumns: 2, defaultEngine: 'site',
+  backgroundImage: '', backgroundOpacity: 0.15,
 });
 
-// 加载配置
 async function loadConfigs() {
   try {
     const res = await getConfigs();
@@ -155,16 +119,11 @@ async function loadConfigs() {
     if (c['site.defaultEngine']) form.value.defaultEngine = c['site.defaultEngine'];
     if (c['site.backgroundImage']) form.value.backgroundImage = c['site.backgroundImage'];
     if (c['site.backgroundOpacity']) form.value.backgroundOpacity = parseFloat(c['site.backgroundOpacity']);
-  } catch (e) {
-    console.error('加载配置失败:', e);
-  }
+  } catch (e) { console.error('加载配置失败:', e); }
 }
 
-watch(() => props.visible, (v) => {
-  if (v) loadConfigs();
-});
+watch(() => props.visible, (v) => { if (v) loadConfigs(); });
 
-// 保存
 async function save() {
   try {
     await saveConfigs({
@@ -179,12 +138,9 @@ async function save() {
     emit('saved', form.value);
     close();
     setTimeout(() => window.location.reload(), 500);
-  } catch (e) {
-    alert('保存失败: ' + e.message);
-  }
+  } catch (e) { alert('保存失败: ' + e.message); }
 }
 
-// 清空数据
 async function handleClearAll() {
   if (!confirm('⚠️ 确定要清空所有菜单和卡片数据吗？此操作不可恢复！')) return;
   if (!confirm('⚠️ 再次确认：所有数据将被永久删除！')) return;
@@ -193,203 +149,151 @@ async function handleClearAll() {
     alert('✅ 所有数据已清空');
     close();
     setTimeout(() => window.location.reload(), 500);
-  } catch (e) {
-    alert('清空失败: ' + e.message);
-  }
+  } catch (e) { alert('清空失败: ' + e.message); }
 }
 
-// 重置默认设置
 async function handleReset() {
   if (!confirm('确定要重置所有设置为默认值吗？')) return;
   try {
     await saveConfigs({
       'site.copyright': 'Copyright © 2026 Nav-Item',
-      'site.desktopColumns': '6',
-      'site.mobileColumns': '2',
-      'site.defaultEngine': 'site',
-      'site.backgroundImage': '',
+      'site.desktopColumns': '6', 'site.mobileColumns': '2',
+      'site.defaultEngine': 'site', 'site.backgroundImage': '',
       'site.backgroundOpacity': '0.15',
     });
     alert('✅ 已重置为默认设置');
     close();
     setTimeout(() => window.location.reload(), 500);
-  } catch (e) {
-    alert('重置失败: ' + e.message);
-  }
+  } catch (e) { alert('重置失败: ' + e.message); }
 }
 
-function close() {
-  emit('update:visible', false);
-}
+function close() { emit('update:visible', false); }
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(8px);
-  z-index: 3000;
-  display: flex; align-items: center; justify-content: center;
+/* Teleport 脱离 dark-mode 容器，通过 :class 手动传入 dark-mode */
+.glass-overlay.dark-mode {
+  --glass-text-color:         #ffffff;
+  --glass-label-color:        rgba(255, 255, 255, 0.50);
+  --glass-dialog-bg:          rgba(30, 32, 40, 0.60);
+  --glass-dialog-border:      rgba(255, 255, 255, 0.12);
+  --glass-dialog-shadow:      0 20px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08);
+  --glass-dialog-blur:        blur(28px) saturate(180%);
+  --glass-overlay-bg:         rgba(0, 0, 0, 0.30);
+  --glass-input-bg:           rgba(255, 255, 255, 0.08);
+  --glass-input-border:       rgba(255, 255, 255, 0.14);
+  --glass-input-color:        #ffffff;
+  --glass-input-placeholder:  rgba(255, 255, 255, 0.25);
+  --glass-input-focus-border: rgba(0, 255, 157, 0.50);
+  --glass-input-focus-shadow: 0 0 0 3px rgba(0, 255, 157, 0.10);
+  --glass-input-focus-bg:     rgba(255, 255, 255, 0.12);
+  --glass-icon-btn-bg:        rgba(255, 255, 255, 0.10);
+  --glass-icon-bar-bg:        rgba(255, 255, 255, 0.05);
+  --glass-icon-bar-border:    rgba(255, 255, 255, 0.10);
+  --glass-scrollbar-thumb:    rgba(255, 255, 255, 0.15);
+  --glass-primary:            #00c87a;
+  --glass-primary-hover:      #00e68a;
+  --glass-primary-shadow:     rgba(0, 200, 122, 0.35);
+  --glass-primary-shadow-hover: rgba(0, 200, 122, 0.50);
 }
 
-.settings-modal {
-  background: #e0e5ec;
-  color: #4a5568;
-  width: 90%; max-width: 520px;
+/* 设置弹窗专属尺寸 */
+.settings-dialog {
+  max-width: 520px;
+  width: 90%;
   max-height: 85vh;
-  border-radius: 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  display: flex; flex-direction: column;
-  box-shadow: 15px 15px 30px rgba(163,177,198,0.6), -15px -15px 30px rgba(255,255,255,0.6);
-  animation: slideUp 0.3s ease;
 }
 
-.settings-modal.dark-mode {
-  background: #25262b;
-  color: #e0e0e0;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
+/* 顶部标题栏 */
+.dialog-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 24px 28px 16px;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--glass-input-border);
+  flex-shrink: 0;
 }
 
-.dark-mode .modal-header { border-bottom-color: rgba(255,255,255,0.08); }
+.dialog-header h3 {
+  margin: 0; font-size: 1.2rem; font-weight: 800;
+  color: var(--glass-text-color);
+}
 
-.modal-header h3 { margin: 0; font-size: 20px; font-weight: 800; }
-
-.close-btn {
-  background: transparent; border: none; font-size: 20px;
-  cursor: pointer; color: inherit; opacity: 0.6;
-  width: 32px; height: 32px; border-radius: 8px;
+.dialog-close-btn {
+  background: transparent; border: none; font-size: 20px; cursor: pointer;
+  color: var(--glass-label-color); width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+  border-radius: 8px; transition: all 0.2s;
 }
-.close-btn:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+.dialog-close-btn:hover { background: var(--glass-icon-btn-bg); color: var(--glass-text-color); }
 
+/* 滚动内容区 */
 .settings-body {
   flex: 1; overflow-y: auto; padding: 20px 28px;
   scrollbar-width: none;
 }
 .settings-body::-webkit-scrollbar { display: none; }
 
-.settings-section {
-  margin-bottom: 28px;
-}
+.settings-section { margin-bottom: 28px; }
 
 .section-title {
-  font-size: 13px; font-weight: 800;
-  opacity: 0.5; margin-bottom: 14px;
-  letter-spacing: 0.5px; text-transform: uppercase;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--glass-label-color);
+  margin-bottom: 14px;
 }
 
-.form-group { margin-bottom: 16px; }
+.danger-title { color: rgba(255, 77, 79, 0.7); }
 
-.form-group label {
+label {
   display: block; margin-bottom: 8px;
   font-size: 14px; font-weight: 600;
+  color: var(--glass-label-color);
 }
 
-.settings-input {
-  width: 100%; padding: 12px 14px;
-  background: #e0e5ec;
-  border: none; border-radius: 12px;
-  color: #4a5568; font-size: 14px;
-  box-shadow: inset 4px 4px 8px rgba(163,177,198,0.4), inset -4px -4px 8px rgba(255,255,255,0.5);
-  box-sizing: border-box; outline: none;
-}
-
-.dark-mode .settings-input {
-  background: rgba(0,0,0,0.2);
-  color: #e0e0e0;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.settings-input:focus { color: #00ff9d; }
-
-.btn-group {
-  display: flex; flex-wrap: wrap; gap: 8px;
-}
+/* 列数/引擎选择按钮 */
+.btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .col-btn {
-  padding: 8px 16px; border-radius: 10px; border: none;
+  padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-input-border);
   cursor: pointer; font-size: 13px; font-weight: 700;
-  background: #e0e5ec; color: #4a5568;
-  box-shadow: 4px 4px 8px rgba(163,177,198,0.4), -4px -4px 8px rgba(255,255,255,0.5);
+  background: var(--glass-input-bg); color: var(--glass-text-color);
   transition: all 0.2s;
 }
-
-.dark-mode .col-btn {
-  background: rgba(255,255,255,0.08);
-  color: #e0e0e0;
-  box-shadow: none;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
+.col-btn:hover { background: var(--glass-icon-btn-bg); }
 .col-btn.active {
-  background: #00ff9d; color: #1a1b1e;
-  box-shadow: 0 4px 12px rgba(0,255,157,0.4);
+  background: var(--glass-primary); color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px var(--glass-primary-shadow);
 }
 
-.range-input {
-  width: 100%; accent-color: #00ff9d; cursor: pointer;
-}
+/* 滑块 */
+.range-input { width: 100%; accent-color: var(--glass-primary); cursor: pointer; }
 
+/* 壁纸预览 */
 .bg-preview {
-  width: 100%; height: 80px;
-  border-radius: 12px;
-  background-size: cover; background-position: center;
-  margin-top: 8px;
+  width: 100%; height: 80px; border-radius: 12px;
+  background-size: cover; background-position: center; margin-top: 8px;
+  border: 1px solid var(--glass-input-border);
 }
 
-.danger-section { }
-
-.danger-buttons {
-  display: flex; gap: 12px; flex-wrap: wrap;
-}
-
+/* 危险按钮 */
+.danger-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
 .danger-btn {
-  padding: 10px 16px; border-radius: 10px; border: none;
-  cursor: pointer; font-size: 13px; font-weight: 700;
-  background: rgba(255,77,79,0.1); color: #ff4d4f;
+  padding: 10px 16px; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 700;
+  background: rgba(255,77,79,0.08);
+  color: #ff4d4f;
   border: 1px solid rgba(255,77,79,0.2);
   transition: all 0.2s;
 }
+.danger-btn:hover { background: rgba(255,77,79,0.18); transform: translateY(-1px); }
 
-.danger-btn:hover {
-  background: rgba(255,77,79,0.2);
-  transform: translateY(-1px);
-}
-
-.modal-actions {
+/* 底部按钮栏 */
+.settings-footer {
   display: flex; gap: 12px; padding: 16px 28px 24px;
-  border-top: 1px solid rgba(0,0,0,0.06);
+  border-top: 1px solid var(--glass-input-border);
+  flex-shrink: 0;
 }
-
-.dark-mode .modal-actions { border-top-color: rgba(255,255,255,0.08); }
-
-.btn-cancel, .btn-save {
-  flex: 1; padding: 12px; border-radius: 12px;
-  border: none; cursor: pointer; font-size: 15px; font-weight: 700;
-  transition: all 0.2s;
-}
-
-.btn-cancel {
-  background: transparent; color: inherit; opacity: 0.6;
-}
-.btn-cancel:hover { opacity: 1; background: rgba(0,0,0,0.05); }
-
-.btn-save {
-  background: #00ff9d; color: #1a1b1e;
-  box-shadow: 0 4px 12px rgba(0,255,157,0.3);
-}
-.btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,157,0.4); }
 </style>

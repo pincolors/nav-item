@@ -1,118 +1,76 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="close">
-    <div class="modal-content" @click.stop>
+  <div v-if="visible" class="glass-overlay" @click="close">
+    <div class="glass-dialog" @click.stop>
       <h3>{{ isEdit ? '编辑站点' : '添加新站点' }}</h3>
 
       <div class="form-container">
-       <div class="form-group">
+       <div class="glass-form-group">
   <label>标题 <span class="required">*</span></label>
-  <input
-    v-model="formData.title"
-    class="neumorphic-input"
-    placeholder="例如：Google"
-    v-focus
-  />
+  <input v-model="formData.title" class="glass-input" placeholder="例如：Google" v-focus />
 </div>
 
-       <div class="form-group">
+       <div class="glass-form-group">
   <label>链接 URL <span class="required">*</span></label>
-  <input
-    v-model="formData.url"
-    class="neumorphic-input"
-    placeholder="https://..."
+  <input v-model="formData.url" class="glass-input" placeholder="https://..."
     @compositionend="formData.url = $event.target.value"
-    @change="formData.url = $event.target.value"
-  />
+    @change="formData.url = $event.target.value" />
 </div>
 
-        <div class="form-group">
+        <div class="glass-form-group">
           <label>Logo 图片链接（可选）</label>
-                    <div class="icon-quick-select" v-if="domain">
-           <!-- <span class="select-label">源：</span> -->
-            
-            <div class="icon-option" @click="selectIcon(googleIcon)" title="Google API">
-              <img :src="googleIcon" loading="lazy" />
-              <span class="src-name">Google</span>
+          <div class="glass-icon-bar" v-if="domain">
+            <div class="glass-icon-btn" @click="selectIcon(googleIcon)" title="Google API">
+              <img :src="googleIcon" loading="lazy" /><span>Google</span>
             </div>
-
-            <div class="icon-option" @click="selectIcon(ddgIcon)" title="DuckDuckGo">
-              <img :src="ddgIcon" loading="lazy" />
-              <span class="src-name">DDG</span>
+            <div class="glass-icon-btn" @click="selectIcon(ddgIcon)" title="DuckDuckGo">
+              <img :src="ddgIcon" loading="lazy" /><span>DDG</span>
             </div>
-
-            <div class="icon-option" @click="selectIcon(horseIcon)" title="Icon Horse (强力扫描)">
-              <img :src="horseIcon" loading="lazy" />
-              <span class="src-name">Horse</span>
+            <div class="glass-icon-btn" @click="selectIcon(horseIcon)" title="Icon Horse">
+              <img :src="horseIcon" loading="lazy" /><span>Horse</span>
             </div>
-
-            <div class="icon-option" @click="selectIcon(directIcon)" title="网站根目录直连">
-              <img :src="directIcon" loading="lazy" />
-              <span class="src-name">Direct</span>
+            <div class="glass-icon-btn" @click="selectIcon(directIcon)" title="直连">
+              <img :src="directIcon" loading="lazy" /><span>Direct</span>
             </div>
-            
-            <div class="icon-option" @click="selectIcon(textIcon)" title="文字兜底">
-              <img :src="textIcon" loading="lazy" />
-              <span class="src-name">Text</span>
+            <div class="glass-icon-btn" @click="selectIcon(textIcon)" title="文字兜底">
+              <img :src="textIcon" loading="lazy" /><span>Text</span>
             </div>
           </div>
-         
           <div class="logo-input-wrapper">
-            <input
-              v-model="formData.logo_url"
-              class="neumorphic-input"
-              placeholder="https://.../logo.png"
-            />
+            <input v-model="formData.logo_url" class="glass-input" placeholder="https://.../logo.png" />
             <div class="logo-preview">
-              <img
-                v-if="formData.logo_url"
-                :src="formData.logo_url"
-                @error="handleImgError"
-              />
+              <img v-if="formData.logo_url" :src="formData.logo_url" @error="handleImgError" />
               <span v-else class="placeholder">?</span>
             </div>
           </div>
-          <small class="tip">点击上方推荐图标可直接填入，或留空自动获取</small>
-        </div>                
+          <small class="glass-tip">点击上方推荐图标可直接填入，或留空自动获取</small>
+        </div>
 
-        <!-- 🔥 新增：菜单选择器 -->        
-<div class="form-group">
-  <label>所属主菜单</label>
-  <select v-model="formData.menu_id" class="neumorphic-select">
-    <option v-for="menu in props.menus" :key="menu.id" :value="menu.id">
-      {{ menu.name }}
-    </option>
-  </select>
-</div>
-
-        <div class="form-group" v-if="availableSubMenus.length > 0">
-          <label>所属子菜单</label>
-          <select v-model="formData.sub_menu_id" class="neumorphic-select">
-            <option :value="null">主菜单</option>
-            <option v-for="sub in availableSubMenus" :key="sub.id" :value="sub.id">
-              {{ sub.name }}
-            </option>
+        <div class="glass-form-group">
+          <label>所属主菜单</label>
+          <select v-model="formData.menu_id" class="glass-input glass-select">
+            <option v-for="menu in props.menus" :key="menu.id" :value="menu.id">{{ menu.name }}</option>
           </select>
         </div>
 
-        <p v-if="errorMsg" class="form-error">{{ errorMsg }}</p>
-
-      </div>
-      
-      <div class="form-group">
-          <label>描述（可选）</label>
-          <textarea
-            v-model="formData.desc"
-            class="neumorphic-input textarea"
-            placeholder="简短描述..."
-            rows="3"
-          />
+        <div class="glass-form-group" v-if="availableSubMenus.length > 0">
+          <label>所属子菜单</label>
+          <select v-model="formData.sub_menu_id" class="glass-input glass-select">
+            <option :value="null">主菜单</option>
+            <option v-for="sub in availableSubMenus" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
+          </select>
         </div>
 
-      <div class="modal-actions">
-        <button class="neumorphic-btn cancel" @click="close">取消</button>
-        <button class="neumorphic-btn save" @click="save">
-          {{ isEdit ? '保存修改' : '立即添加' }}
-        </button>
+        <p v-if="errorMsg" class="glass-error">{{ errorMsg }}</p>
+      </div>
+
+      <div class="glass-form-group">
+        <label>描述（可选）</label>
+        <textarea v-model="formData.desc" class="glass-input glass-textarea" placeholder="简短描述..." rows="3" />
+      </div>
+
+      <div class="glass-actions">
+        <button class="glass-btn-cancel" @click="close">取消</button>
+        <button class="glass-btn-primary" @click="save">{{ isEdit ? '保存修改' : '立即添加' }}</button>
       </div>
     </div>
   </div>
@@ -120,504 +78,152 @@
 
 <script setup>
 import { reactive, ref, watch, computed } from 'vue';
-import { getSubMenus } from '../api';  // 🔥 新增：导入 API
+import { getSubMenus } from '../api';
 
 const props = defineProps({
   visible: Boolean,
   isEdit: Boolean,
   initialData: Object,
-  currentMenuId: Number,  // 🔥 新增：当前菜单 ID
-  menus: { type: Array, default: () => [] }  // 👈 新增
+  currentMenuId: Number,
+  menus: { type: Array, default: () => [] }
 });
 
 const emit = defineEmits(['update:visible', 'save']);
 
-const formData = reactive({
-  id: null,
-  title: '',
-  url: '',
-  logo_url: '',
-  desc: '',
-  menu_id: null,      // 👈 新增
-  sub_menu_id: null
-});
-
+const formData = reactive({ id: null, title: '', url: '', logo_url: '', desc: '', menu_id: null, sub_menu_id: null });
 const errorMsg = ref('');
-const availableSubMenus = ref([]);  // 🔥 新增：可用子菜单列表
+const availableSubMenus = ref([]);
 
-/* =========== ⭐ 新增逻辑：图标源计算 =========== */
-
-// 1. 动态提取域名
 const domain = computed(() => {
   try {
     let u = formData.url;
     if (!u) return '';
     if (!u.startsWith('http') && !u.startsWith('//')) u = `https://${u}`;
     return new URL(u).hostname;
-  } catch {
-    return '';
-  }
+  } catch { return ''; }
 });
 
-// 2. 定义图标源 URL
 const googleIcon = computed(() => `https://www.google.com/s2/favicons?domain=${domain.value}&sz=128`);
 const ddgIcon = computed(() => `https://icons.duckduckgo.com/ip3/${domain.value}.ico`);
 const textIcon = computed(() => `https://ui-avatars.com/api/?background=random&name=${domain.value.substring(0, 2).toUpperCase()}`);
 const directIcon = computed(() => `https://${domain.value}/favicon.ico`);
 const horseIcon = computed(() => `https://icon.horse/icon/${domain.value}`);
 
-// 3. 选择图标动作
-function selectIcon(url) {
-  formData.logo_url = url;
-}
-/* =========================================== */
+function selectIcon(url) { formData.logo_url = url; }
 
-/* 🔥 新增：加载子菜单 */
 async function loadSubMenusById(menuId) {
-  try {
-    const response = await getSubMenus(menuId);
-    availableSubMenus.value = response.data || [];
-  } catch (error) {
-    availableSubMenus.value = [];
-  }
+  try { availableSubMenus.value = (await getSubMenus(menuId)).data || []; }
+  catch { availableSubMenus.value = []; }
 }
 
 async function loadSubMenus() {
   const menuId = formData.menu_id || props.currentMenuId;
-  if (!menuId) {
-    availableSubMenus.value = [];
-    return;
-  }
+  if (!menuId) { availableSubMenus.value = []; return; }
   await loadSubMenusById(menuId);
 }
 
-watch(() => formData.menu_id, (newMenuId) => {
-  if (newMenuId) {
-    formData.sub_menu_id = null;
-    loadSubMenusById(newMenuId);
-  }
-});
+watch(() => formData.menu_id, (id) => { if (id) { formData.sub_menu_id = null; loadSubMenusById(id); } });
 
-
-/* 初始化表单 */
 function resetForm(data = null) {
   formData.id = data?.id ?? null;
   formData.title = data?.title ?? '';
   formData.url = data?.url ?? '';
   formData.logo_url = data?.logo_url ?? '';
   formData.desc = data?.desc ?? '';
-  formData.menu_id = data?.menu_id ?? props.currentMenuId ?? null;  // 👈 新增
+  formData.menu_id = data?.menu_id ?? props.currentMenuId ?? null;
   formData.sub_menu_id = data?.sub_menu_id ?? null;
   errorMsg.value = '';
 }
+
 watch(() => props.visible, (visible) => {
-  if (visible) {
-    resetForm(props.isEdit ? props.initialData : null);
-    loadSubMenus();
-    window.addEventListener('keydown', handleKeydown);
-  } else {
-    window.removeEventListener('keydown', handleKeydown);
-  }
+  if (visible) { resetForm(props.isEdit ? props.initialData : null); loadSubMenus(); window.addEventListener('keydown', handleKeydown); }
+  else { window.removeEventListener('keydown', handleKeydown); }
 });
 
-/* 关闭 */
-function close() {
-  emit('update:visible', false);
-}
+function close() { emit('update:visible', false); }
 
-/* URL 校验 */
 function isValidUrl(url) {
-  try {
-    let u = url;
-    if (!u.startsWith('http')) u = `https://${u}`;
-    new URL(u);
-    return true;
-  } catch {
-    return false;
-  }
+  try { new URL(url.startsWith('http') ? url : `https://${url}`); return true; }
+  catch { return false; }
 }
 
 function save() {
-  console.log('🔴 save formData:', JSON.stringify({ ...formData }));
-
-         
-  if (!formData.title || !formData.url) {
-    errorMsg.value = '标题和链接是必填项';
-    return;
-  }
-  if (!isValidUrl(formData.url)) {
-    errorMsg.value = '请输入合法的 URL';
-    return;
-  }
-
+  if (!formData.title || !formData.url) { errorMsg.value = '标题和链接是必填项'; return; }
+  if (!isValidUrl(formData.url)) { errorMsg.value = '请输入合法的 URL'; return; }
   emit('save', { ...formData });
   close();
 }
 
-/* logo 加载失败回退 */
-function handleImgError() {
-  formData.logo_url = ''; 
-}
-
-/* 键盘快捷键 */
+function handleImgError() { formData.logo_url = ''; }
 function handleKeydown(e) {
   if (e.key === 'Escape') close();
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') save();
 }
 
-/* 自动聚焦指令 */
-const vFocus = {
-  mounted(el) {
-    requestAnimationFrame(() => el.focus());
-  }
-};
+const vFocus = { mounted(el) { requestAnimationFrame(() => el.focus()); } };
 </script>
 
-
 <style scoped>
-/* 遮罩层 */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(10px);
-  z-index: 3000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* ===== 组件私有样式，不覆盖全局变量 ===== */
 
-/* Modal 主体 */
-.modal-content {
-  background: var(--bg-color, #e0e5ec);
-  color: var(--text-color, #333);
-   /* 🛠️ 核心修改：顺序是 [上] [右] [下] [左] */
-  padding: 16px 32px 32px 32px; /* 👈 把顶部的 32px 缩减到了 18px */
-  border-radius: 24px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow:
-    15px 15px 30px rgba(163,177,198,0.6),
-    -15px -15px 30px rgba(255,255,255,0.6);
-  /* 🛠️ 核心增加以下 3 行： */
-  max-height: 80vh;      /* 限制弹窗最高只能占整个屏幕高度的 80% */
-  overflow-y: auto;      /* 当内容超出 80% 时，白框内部自动出现滚动条 */
-  position: relative;    /* 保证内部元素（如滚动条）定位正常 */
-  /* 🛠️ 核心增加这一行：彻底阻止滚动穿透 */
-  overscroll-behavior: contain; 
-}
-
-/* 暗色模式 Modal */
-:global(.dark-mode) .modal-content {
-  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.08);
-  max-height: 80vh;      /* 限制弹窗最高只能占整个屏幕高度的 80% */
-  overflow-y: auto;      /* 当内容超出 80% 时，白框内部自动出现滚动条 */
-  position: relative;    /* 保证内部元素（如滚动条）定位正常 */
-  /* 🛠️ 核心增加这一行：彻底阻止滚动穿透 */
-  overscroll-behavior: contain;
-}
-
-/* ☀️ 浅色（白色）背景下的标题样式 */
+/* 标题：直接继承 .glass-dialog 的 color，无需重写 */
 h3 {
-  margin-bottom: 24px;
+  margin: 0 0 24px 0;
   text-align: center;
-  font-size: 1.4rem;
-  font-weight: 800;
-  
-  /* 🛠️ 核心修改：在白色背景下，使用高对比度的深蓝灰色（或者纯黑 #111111），保证清晰度 */
-  color: #2c3e50; 
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  /* 继承父元素 .glass-dialog 的 color: var(--glass-text-color) */
 }
 
-/* 🌙 暗色（黑色）背景下的标题样式 */
-:global(.dark-mode) h3 {
-  /* 🛠️ 当切换到暗色模式时，再变回原本亮眼的荧光绿 */
-  color: #00ff9d; 
-}
-/* ✨ 为弹窗内容大框定制的丝滑滚动条 */
-.modal-content::-webkit-scrollbar {
-  width: 6px; /* 把滚动条宽度缩窄到 6px，显得精致 */
-}
-
-.modal-content::-webkit-scrollbar-track {
-  background: transparent; /* 轨道完全透明，不破坏你的浅灰色/暗色背景 */
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15); /* 浅色模式下，轻微的灰色滑块 */
-  border-radius: 10px;
-}
-
-/* 暗色模式下的滚动条滑块 */
-:global(.dark-mode) .modal-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2); /* 暗色模式下，带有一点点亮光的滑块 */
-}
-
-
-/* 表单 */
-.form-group { margin-bottom: 20px; }
-
+/* label：用全局变量，不硬编码颜色 */
 label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 800;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--glass-label-color);  /* ✅ 跟随主题变量 */
 }
 
 .required { color: #ff4d4f; }
 
-.neumorphic-input {
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-color, #e0e5ec);
-  border-radius: 12px;
-  border: none;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-color);
-  box-shadow:
-    inset 5px 5px 10px rgba(163,177,198,0.5),
-    inset -5px -5px 10px rgba(255,255,255,0.8);
-}
-
-.neumorphic-input:focus {
-  outline: none;
-  color: var(--primary-color);
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.tip {
-  font-size: 12px;
-  opacity: 0.5;
-  margin-top: 6px;
-  display: block; /* 确保换行 */
-}
-
 .logo-input-wrapper {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
 
 .logo-preview {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--bg-color);
-  box-shadow:
-    5px 5px 10px rgba(163,177,198,0.5),
-    -5px -5px 10px rgba(255,255,255,0.6);
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: var(--glass-input-bg);
+  border: 1px solid var(--glass-input-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0; /* 防止被挤压 */
+  flex-shrink: 0;
 }
 
 .logo-preview img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 4px; /* 稍微留点白边 */
+  padding: 4px;
+  border-radius: 8px;
 }
 
 .placeholder {
-  opacity: 0.3;
+  opacity: 0.25;
   font-weight: bold;
+  font-size: 18px;
+  color: var(--glass-text-color);
 }
 
-/* 错误提示 */
-.form-error {
-  color: #ff4d4f;
-  font-size: 13px;
-  text-align: center;
-  margin-top: -8px;
-}
-
-/* 操作按钮 */
-.modal-actions {
-  display: flex;
-  gap: 20px;
-  margin-top: 36px;
-}
-
-.neumorphic-btn {
-  flex: 1;
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-}
-
-/* 主按钮 */
-/* ☀️ 浅色模式（精准定位到保存按钮） */
-.save {
-  background: #00a372;
-  color: #ffffff;
-  transition: all 0.2s ease; /* 👈 核心：告诉浏览器在 0.2 秒内丝滑过渡所有变化 */
-}
-
-/* 🌙 暗色模式（同样精准定位到保存按钮） */
-:global(.dark-mode) .save {
-  background: #00ff9d;
-  color: #111111;
-  /* 推荐加上这一行，让暗色下的立体感更好 */
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); 
-}
-/* ==================== 🖱️ 保存按钮悬浮效果 ==================== */
-
-/* ☀️ 浅色模式 - 保存按钮悬浮 */
-.save:hover {
-  background: #00be85;       /* 稍微变亮一点的青色 */
-  transform: translateY(-1px); /* 向上轻微浮动 1 像素，显得有弹性 */
-  box-shadow: 0 4px 12px rgba(0, 163, 114, 0.3); /* 增加一层柔和的投影 */
-}
-
-/* 🌙 暗色模式 - 保存按钮悬浮 */
-:global(.dark-mode) .save:hover {
-  background: #26ffb0;       /* 变成更亮、更有光感的极光绿 */
-  transform: translateY(-1px); 
-  box-shadow: 0 0 25px rgba(0, 255, 157, 0.6); /* 霓虹外发光能量加强！ */
-}
-
-/* 取消按钮（亮色模式） */
-
-.cancel {
-  background: #e0e5ec; /* 跟新古典主义背景融为一体 */
-  color: #666666;      /* 柔和的灰色字 */
-  transition: all 0.2s ease; /* 👈 核心：告诉浏览器在 0.2 秒内丝滑过渡所有变化 */
-}
-
-/* 🌙 暗色模式下的取消按钮 */
-:global(.dark-mode) .cancel {
-  background: #2d3748; /* 深灰背景 */
-  color: #a0aec0;      /* 浅灰字 */
-}
-
-/* 当用户真正用鼠标按下去（Active）的那一瞬间，按钮往下沉，模拟机械按键感 */
-.save:active, .cancel:active {
-  transform: translateY(1px); /* 按下去时下沉 */
-  box-shadow: none;           /* 消失投影，感觉像是贴在地面上 */
-}
-
-/* ⭐ 新增样式：图标快速选择栏 ⭐ */
-.icon-quick-select {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 8px 12px;
-  background: rgba(0,0,0,0.03); 
-  border-radius: 12px;
-  overflow-x: auto; /* 防止小屏幕溢出 */
-}
-
-:global(.dark-mode) .icon-quick-select {
-  background: rgba(255,255,255,0.05);
-}
-
-.select-label {
-  font-size: 12px;
-  opacity: 0.6;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.icon-option {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: var(--bg-color);
-  /* 小号的新拟态效果 */
-  box-shadow: 
-    3px 3px 6px rgba(163,177,198,0.4), 
-    -3px -3px 6px rgba(255,255,255,0.5);
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  flex-shrink: 0;
-}
-
-:global(.dark-mode) .icon-option {
-  box-shadow: 
-    3px 3px 6px rgba(0,0,0,0.3), 
-    -3px -3px 6px rgba(255,255,255,0.05);
-}
-
-.icon-option:hover {
-  transform: translateY(-1px);
-  border-color: var(--primary-color);
-}
-
-.icon-option:active {
-  box-shadow: inset 2px 2px 5px rgba(163,177,198,0.4);
-  transform: translateY(0);
-}
-
-:global(.dark-mode) .icon-option:active {
-  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5);
-}
-
-.icon-option img {
+.glass-icon-btn img {
   width: 18px;
   height: 18px;
   border-radius: 3px;
   object-fit: contain;
 }
-
-.src-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-color);
-}
-
-/* 🔥 新增：select 下拉框样式 */
-.neumorphic-select {
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-color, #e0e5ec);
-  border-radius: 12px;
-  border: none;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-color);
-  cursor: pointer;
-  box-shadow:
-    inset 5px 5px 10px rgba(163,177,198,0.5),
-    inset -5px -5px 10px rgba(255,255,255,0.8);
-  transition: all 0.2s ease;
-}
-
-.neumorphic-select:focus {
-  outline: none;
-  color: var(--primary-color);
-  box-shadow:
-    inset 6px 6px 12px rgba(163,177,198,0.6),
-    inset -6px -6px 12px rgba(255,255,255,0.9);
-}
-
-.neumorphic-select option {
-  background: var(--bg-color);
-  color: var(--text-color);
-  padding: 10px;
-}
-
-/* 暗色模式下的 select */
-:global(.dark-mode) .neumorphic-select {
-  box-shadow:
-    inset 3px 3px 6px rgba(0,0,0,0.4),
-    inset -3px -3px 6px rgba(255,255,255,0.05);
-}
-
-:global(.dark-mode) .neumorphic-select option {
-  background: #25262b;
-  color: #e0e0e0;
-}
-           
 </style>
