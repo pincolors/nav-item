@@ -10,11 +10,11 @@
   --glass-tip-color:          rgba(0, 0, 0, 0.30);
   --glass-scrollbar-thumb:    rgba(0, 0, 0, 0.10);
 
-  --glass-dialog-bg:          rgba(255, 255, 255, 0.40);
+  --glass-dialog-bg:          rgba(255, 255, 255, 0.32);
   --glass-dialog-border:      rgba(255, 255, 255, 0.70);
   --glass-dialog-shadow:      0 20px 60px rgba(0, 0, 0, 0.10),
                               inset 0 1px 0 rgba(255, 255, 255, 0.80);
-  --glass-dialog-blur:        blur(32px) saturate(160%);
+  --glass-dialog-blur:        blur(18px) saturate(160%);
 
   --glass-overlay-bg:         rgba(0, 0, 0, 0.15);
   --glass-overlay-blur:       blur(12px);
@@ -48,11 +48,11 @@
   --glass-tip-color:          rgba(255, 255, 255, 0.30);
   --glass-scrollbar-thumb:    rgba(255, 255, 255, 0.15);
 
-  --glass-dialog-bg:          rgba(30, 32, 40, 0.45);
+  --glass-dialog-bg:          rgba(30, 32, 40, 0.32);
   --glass-dialog-border:      rgba(255, 255, 255, 0.12);
   --glass-dialog-shadow:      0 20px 60px rgba(0, 0, 0, 0.50),
                               inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --glass-dialog-blur:        blur(28px) saturate(180%);
+  --glass-dialog-blur:        blur(18px) saturate(180%);
 
   --glass-overlay-bg:         rgba(0, 0, 0, 0.30);
   --glass-overlay-blur:       blur(12px);

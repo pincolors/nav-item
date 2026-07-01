@@ -209,13 +209,6 @@
         <button class="glass-btn-primary login-btn" :class="{ 'btn-empty': !canLogin }" @click="doLogin">登录</button>
       </template>
 
-      <template v-else>
-        <div class="glass-actions">
-          <button class="glass-btn-cancel" @click="showLoginModal = false">取消</button>
-          <button class="glass-btn-primary logout-btn" @click="doLogout">确认退出</button>
-        </div>
-      </template>
-
     </div>
   </div>
 </Teleport>
@@ -1217,16 +1210,32 @@ onMounted(async () => {
 
 /* 登录弹窗 */
 .login-glass-dialog {
+  padding: 40px; 
   border-radius: 24px; 
-  width: 90%;       /* 📱 手机端占屏幕宽度的 90% */
-  max-width: 360px; /* 💻 电脑端/大屏最大宽度为 360px */
-  padding: 40px;
-  padding-top: 36px;  /* 顶部空白加大 */
+  width: 90%;                 /* 手机端自适应宽度 */
+  max-width: 360px;           /* 电脑端最大限制宽度 */
+  
+  border: none; 
+  animation: slideUp 0.3s ease; /* 从下方滑入的动画 */
+  h3 { margin: 0 0 30px; text-align: center; font-size: 1.5rem;
+  }
 
  }
  .login-glass-dialog .glass-form-group {
  margin-bottom: 28px;  
 }
+.login-glass-dialog .glass-input { 
+  width: 100%;
+  padding: 14px; 
+  background: var(--bg-color); 
+  border-radius: 12px; 
+  color: var(--text-color); 
+  border: none; 
+  box-sizing: border-box; 
+  outline: none;
+  
+  font-size: 15px;
+ }
 
 .login-glass-dialog .glass-actions {
   margin-top: 38px;  /* 输入框和按钮条之间的距离 */
@@ -1236,26 +1245,53 @@ onMounted(async () => {
   font-size: 1.4rem; font-weight: 700;
   color: var(--glass-text-color);
 }
-.login-btn { width: 100%; margin-top: 8px; }
+.login-btn { 
+  width: 100%; 
+  padding: 14px; 
+  background: var(--primary-color);
+  border: none; 
+  border-radius: 12px; 
+  color: #fff; 
+  font-weight: bold; 
+  cursor: pointer; 
+  margin-top: 10px; 
+  font-size: 16px;
+  box-shadow: 4px 4px 10px rgba(0, 255, 157, 0.3); 
+  transition: all 0.2s; }
 .login-glass-dialog .admin-login-icon {
   margin: 0 auto 28px auto;  /* 头像下方间距也加大一点 */
 }
+.login-btn:hover { transform: translateY(-2px); box-shadow: 6px 6px 15px rgba(0, 255, 157, 0.4); }
+.modal-btn:active { transform: translateY(0); }
+
 /* admin 图标 */
 .admin-login-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #00bcd4;                           /* 登录前：青色 */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
   margin: 0 auto 20px auto;
-  margin-top: 10px; /* 距离上方元素 10px */
-  padding: 14px;    /* 按钮自身高度的上下内边距为 14px */
-  width: 64px; height: 64px; border-radius: 50%;
-  background-color: #00bcd4; color: #ffffff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 32px; margin: 0 auto 20px auto;
-  box-shadow: 0 4px 15px rgba(0,188,212,0.4);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* 具有弹性的过渡 */
+
 }
 .admin-login-icon.logged-in {
-  background-color: #ff4d4f;
-  box-shadow: 0 4px 20px rgba(255,77,79,0.6);
-  transform: rotate(360deg) scale(1.1);
+  background-color: #ff4d4f;                          /* 登录后：红色 */
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.6);
+  transform: rotate(360deg) scale(1.1);               /* 旋转360°并轻微放大 */
+}
+/* 9. 遮罩层及弹窗出现的逐帧渐变动画 */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 10. 手机端对弹窗尺寸的收缩适配 */
+@media (max-width: 768px) {
+  .modal-content { padding: 30px 20px; }
 }
 
 
