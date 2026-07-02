@@ -7,7 +7,7 @@
   :style="{ 
     backgroundImage: `url(${siteConfig.backgroundImage})`,
     opacity: siteConfig.backgroundOpacity 
-  }"dologin
+  }"
 ></div>
 
 
@@ -25,7 +25,7 @@
             </span>
           </div>
         </div>
-
+</div>
         <div class="header-right">
                  
           <div class="user-menu-container">
@@ -41,9 +41,10 @@
   <Icon name="user-cog" style="font-size: 20px;" />
 </button>
 
-            
-          <transition name="fade">
+          
+     <Transition name="fade">
   <div v-if="showUserMenu && isLoggedIn" class="dropdown-menu" v-click-outside="closeUserMenu">
+    
     <div class="menu-header-label">{{ isAdmin ? '管理员菜单' : '普通用户 (只读)' }}</div>
     
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(openQuickImport)">
@@ -55,32 +56,37 @@
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(openSystemSettings)">
       <span class="menu-icon">⚙️</span> 系统设置
     </div>
-    
+
     <div class="menu-divider"></div>
-    
+
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(exportData)">
       <span class="menu-icon">📤</span> 备份数据
     </div>
-    
+
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }">
-      <label :for="isAdmin ? 'importFile' : ''" style="display:flex; align-items:center; width:100%" :style="{ cursor: isAdmin ? 'pointer' : 'not-allowed' }" @click="!isAdmin && handleAdminAction()">
+      <label :for="isAdmin ? 'importFile' : ''" style="display:flex; align-items:center; width:100%"
+             :style="{ cursor: isAdmin ? 'pointer' : 'not-allowed' }"
+             @click="!isAdmin && handleAdminAction()">
         <span class="menu-icon">📥</span> 恢复数据
       </label>
       <input v-if="isAdmin" type="file" id="importFile" style="display:none" @change="importData" accept=".json"/>
     </div>
-    
+
     <div class="menu-divider"></div>
-    <div class="menu-item logout" @click="logout"><span class="menu-icon">🚪</span> 退出登录</div>
-  </div>
-</transition>
-          </div>
-           <button class="icon-btn" @click="toggleTheme" title="切换主题">
+
+    <div class="menu-item logout" @click="showLogoutConfirm = true">
+      <span class="menu-icon">🚪</span> 退出登录
+    </div>
+
+  </div>  <!-- ← dropdown-menu 在这里闭合 -->
+</Transition>
+</div>
+ <button class="icon-btn" @click="toggleTheme" title="切换主题">
             <Icon :name="isDarkMode ? 'sun' : 'moon'" style="font-size: 26px;" />
           </button>
         </div>
-      </div>
+      
     </header>
-     
     <div class="menu-wrapper">
       <MenuBar 
         :menus="menus" 
@@ -192,9 +198,12 @@
        @click="showLoginModal = false">
     <div class="glass-dialog login-glass-dialog" @click.stop>
 
-      <div class="admin-login-icon" :class="{ 'logged-in': loginSuccess }">
-        <Icon name="user-cog" />
-      </div>
+      <div class="admin-login-icon" :class="{ 
+  'logged-in-admin': loginSuccess && userRole === 'admin',
+  'logged-in-user': loginSuccess && userRole !== 'admin'
+}">
+  <Icon name="user-cog" />
+</div>
 
       <h3>{{ loginSuccess ? '登录成功' : '管理员登录' }}</h3>
 
@@ -207,12 +216,31 @@
                  class="glass-input" @keyup.enter="doLogin" />
         </div>
         <button class="glass-btn-primary login-btn" :class="{ 'btn-empty': !canLogin }" @click="doLogin">登录</button>
+
+       
+
       </template>
 
     </div>
   </div>
 </Teleport>
+ <div v-if="showLogoutConfirm" class="glass-overlay" 
+     :class="{ 'dark-mode': isDarkMode }"
+     @click.self="showLogoutConfirm = false">
+  <div class="glass-dialog logout-dialog" @click.stop>
 
+    <div class="admin-login-icon logged-in-admin">
+      <Icon name="user-cog" />
+    </div>
+
+    <h3>确认退出登录？</h3>
+
+    <div class="glass-actions">
+      <button class="glass-btn-cancel" @click="showLogoutConfirm = false; showUserMenu = false">取消</button>
+      <button class="glass-btn-primary logout-btn" @click="doLogout">退出</button>
+    </div>
+  </div>
+</div>
 
 <footer class="footer">
   <div class="footer-content">
@@ -337,7 +365,7 @@ const doLogin = async () => {
       localStorage.setItem('userRole', res.data.user.role || 'admin');
       isLoggedIn.value = true;
       userRole.value = res.data.user.role || 'admin';
-
+      showUserMenu.value = false; // ← 加这一行，确保登录后菜单是关闭的
       loginSuccess.value = true; // 触发图标变红转圈
 
       setTimeout(() => {
@@ -365,15 +393,20 @@ const siteConfig = ref({
 const userRole = ref(localStorage.getItem('userRole') || 'user');
 const isAdmin = computed(() => isLoggedIn.value && userRole.value === 'admin');
 
-const logout = () => {
-  if (confirm('确定退出登录？')) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');  // 👈 加这行
-    isLoggedIn.value = false;
-    userRole.value = 'user';              // 👈 加这行
-    showUserMenu.value = false;
-  }
-};
+const showLogoutConfirm = ref(false);
+
+function confirmLogout() {
+  showLogoutConfirm.value = true;
+}
+
+function doLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userRole');
+  isLoggedIn.value = false;
+  userRole.value = '';
+  showLogoutConfirm.value = false;
+  showUserMenu.value = false;
+}
 
 const closeUserMenu = () => {
   showUserMenu.value = false;
@@ -1280,10 +1313,17 @@ onMounted(async () => {
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* 具有弹性的过渡 */
 
 }
-.admin-login-icon.logged-in {
+/* 管理员：红色旋转 */
+.admin-login-icon.logged-in-admin {
   background-color: #ff4d4f;                          /* 登录后：红色 */
   box-shadow: 0 4px 20px rgba(255, 77, 79, 0.6);
   transform: rotate(360deg) scale(1.1);               /* 旋转360°并轻微放大 */
+}
+/* 普通用户：灰色旋转 */
+.admin-login-icon.logged-in-user {
+  background-color: #6b7280;
+  box-shadow: 0 4px 20px rgba(107, 114, 128, 0.5);
+  transform: rotate(360deg) scale(1.1);
 }
 /* 9. 遮罩层及弹窗出现的逐帧渐变动画 */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -1293,7 +1333,32 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .modal-content { padding: 30px 20px; }
 }
+.logout-dialog {
+  max-width: 300px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.25) !important;
+}
 
+.dark-mode .logout-dialog {
+  background: rgba(30, 32, 40, 0.40) !important;
+}
+
+.logout-dialog h3 {
+  margin: 16px 0 24px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--glass-text-color);
+}
+
+.logout-btn {
+  background: #ff4d4f !important;
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.3) !important;
+}
+
+.logout-btn:hover {
+  background: #ff7875 !important;
+  box-shadow: 0 6px 24px rgba(255, 77, 79, 0.45) !important;
+}
 
 /* 用户管理弹窗 */
 .large-glass-dialog { max-width: 900px; width: 95%; max-height: 85vh; }
