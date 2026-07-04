@@ -59,10 +59,11 @@
 
     <div class="menu-divider"></div>
 
-    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(exportData)">
-      <span class="menu-icon">📤</span> 备份数据
-    </div>
-
+    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" 
+     @click="handleAdminAction(confirmexportData)">
+  <span class="menu-icon">📤</span> 备份数据
+</div>
+    
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }">
       <label :for="isAdmin ? 'importFile' : ''" style="display:flex; align-items:center; width:100%"
              :style="{ cursor: isAdmin ? 'pointer' : 'not-allowed' }"
@@ -97,7 +98,7 @@
         @select="handleMenuSelect"
         @update:menus="handleMenuSort"
         @add="addMenu"
-        @delete="deleteMenu"
+        @delete="confirmDeleteMenu"
       />
     </div>
 
@@ -160,7 +161,7 @@
   :mobile-columns="siteConfig.mobileColumns"
   @update:cards="handleCardSort"
   @edit="openEditModal"
-  @delete="deleteCard"
+  @delete="confirmdeleteCard"
   @add="openAddModal"
 />
     </div> 
@@ -241,6 +242,38 @@
     </div>
   </div>
 </div>
+<ConfirmDialog
+  v-model:visible="showDeleteMenuConfirm"
+  :is-dark-mode="isDarkMode"
+  icon="🗑️"
+  icon-type="danger"
+  title="确定删除此菜单及内容？"
+  description="此操作不可恢复"
+  confirm-text="删除"
+  confirm-type="danger"
+  @confirm="deleteMenu"
+/>
+<ConfirmDialog
+  v-model:visible="showdeleteCardConfirm"
+  :is-dark-mode="isDarkMode"
+  icon="🗑️"
+  icon-type="danger"
+  title="确定删除此站点？"
+  description="此操作不可恢复"
+  confirm-text="删除"
+  confirm-type="danger"
+  @confirm="deleteCard"
+/>
+<ConfirmDialog
+  v-model:visible="showexportDataConfirm"
+  :is-dark-mode="isDarkMode"
+  icon="📤"
+  icon-type="success"
+  title="确认备份数据？"
+  description="将导出所有菜单和卡片数据为 JSON 文件"
+  confirm-text="开始备份"
+  @confirm="exportData"
+/>
 
 <footer class="footer">
   <div class="footer-content">
@@ -254,7 +287,42 @@
   @saved="handleSettingsSaved"
 />
 
-    <div v-if="importState.visible" class="glass-overlay">
+   <div v-if="showImportConfirm" class="glass-overlay" 
+     :class="{ 'dark-mode': isDarkMode }"
+     @click.self="showImportConfirm = false">
+  <div class="glass-dialog import-preview-dialog" @click.stop>
+
+    <div class="confirm-icon icon-warning">📥</div>
+    <h3>确认恢复数据？</h3>
+    <p class="confirm-desc">即将从备份文件导入以下内容：</p>
+
+    <div class="result-stats">
+      <div class="stat-item">
+        <span class="stat-num">{{ importPreview.menuCount }}</span>
+        <span class="stat-label">个菜单</span>
+      </div>
+      <div class="stat-item" v-if="importPreview.subMenuCount">
+        <span class="stat-num">{{ importPreview.subMenuCount }}</span>
+        <span class="stat-label">个子菜单</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">{{ importPreview.cardCount }}</span>
+        <span class="stat-label">个站点</span>
+      </div>
+    </div>
+
+    <div class="glass-actions">
+      <button class="glass-btn-cancel" @click="showImportConfirm = false">取消</button>
+      <button class="glass-btn-primary" @click="showImportConfirm = false; startImport()">开始恢复</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+  【2】恢复进度弹窗 - 保持原有的进度条样式
+  ============================================================ -->
+<div v-if="importState.visible" class="glass-overlay" :class="{ 'dark-mode': isDarkMode }">
   <div class="glass-dialog import-glass-dialog">
     <h3 class="import-title">正在恢复数据...</h3>
 
@@ -266,6 +334,33 @@
       <span>{{ importState.text }}</span>
       <span class="percent-num">{{ importState.percent }}%</span>
     </div>
+  </div>
+</div>
+<div v-if="showImportResult" class="glass-overlay" 
+     :class="{ 'dark-mode': isDarkMode }"
+     @click.self="finishImport">
+  <div class="glass-dialog import-preview-dialog" @click.stop>
+
+    <div class="confirm-icon icon-success">🎉</div>
+    <h3>恢复完成</h3>
+    <p class="confirm-desc">数据已成功导入</p>
+
+    <div class="result-stats">
+      <div class="stat-item">
+        <span class="stat-num">{{ importResult.menuCount }}</span>
+        <span class="stat-label">个菜单</span>
+      </div>
+      <div class="stat-item" v-if="importResult.subMenuCount">
+        <span class="stat-num">{{ importResult.subMenuCount }}</span>
+        <span class="stat-label">个子菜单</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">{{ importResult.cardCount }}</span>
+        <span class="stat-label">个站点</span>
+      </div>
+    </div>
+
+    <button class="glass-btn-primary result-confirm-btn" @click="finishImport">完成</button>
   </div>
 </div>
   <div v-if="showAddMenuDialog" class="glass-overlay" @click.self="showAddMenuDialog = false">
@@ -314,6 +409,7 @@ import SiteModal from '../components/SiteModal.vue';
 import QuickImportModal from '../components/QuickImportModal.vue';
 import UserManage from '../components/UserManage.vue';
 import SystemSettings from '../components/SystemSettings.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import { getConfigs, saveConfigs, clearAllData } from '../api';
 
 // 👇 引入刚封装的图标组件
@@ -492,9 +588,16 @@ const confirmAddMenu = async () => {
     alert('添加菜单失败: ' + e.message);
   }
 };
+const pendingDeleteMenuId = ref(null);
+const showDeleteMenuConfirm = ref(false);
+function confirmDeleteMenu(id) {
+  pendingDeleteMenuId.value = id;
+  showDeleteMenuConfirm.value = true;
+}
 
-const deleteMenu = async (id) => {
-  if (!confirm("确定删除此菜单及内容？")) return;
+const deleteMenu = async () => {
+  const id = pendingDeleteMenuId.value;
+  if (!id) return;
   try {
     await apiDeleteMenu(id);
     if (activeMenu.value?.id === id) {
@@ -502,10 +605,12 @@ const deleteMenu = async (id) => {
       activeSubMenu.value = null;
     }
     await loadMenus();
+    pendingDeleteMenuId.value = null;
   } catch (e) {
     alert('删除菜单失败: ' + e.message);
   }
 };
+
 
 // ==================== 卡片管理 ====================
 const cards = ref([]);
@@ -652,11 +757,20 @@ const handleSiteSave = async (formData) => {
   }
 };
 
-const deleteCard = async (id) => {
-  if (!confirm("确定删除此卡片？")) return;
+const pendingdeleteCardId = ref(null);
+const showdeleteCardConfirm = ref(false);
+
+function confirmdeleteCard(id) {
+  pendingdeleteCardId.value = id;
+  showdeleteCardConfirm.value = true;
+}
+const deleteCard = async () => {
+  const id = pendingdeleteCardId.value;
+  if (!id) return;
   try {
     await apiDeleteCard(id);
     cards.value = cards.value.filter(c => c.id !== id);
+    pendingdeleteCardId.value = null;
     console.log('🟢 删除成功');
   } catch (e) {
     alert('删除失败: ' + e.message);
@@ -744,8 +858,14 @@ const handleSearch = () => {
 };
 
 // ==================== 数据备份与恢复 ====================
+const showexportDataConfirm = ref(false);
+function confirmexportData() {
+  showexportDataConfirm  .value = true;
+  showUserMenu.value = false; 
+}
+
 const exportData = async () => {
-  if (!confirm('确定要导出当前所有数据吗？')) return;
+  
   try {
     const fullData = { version: '2.0', date: new Date().toISOString(), menus: [] };
     
@@ -793,125 +913,167 @@ const exportData = async () => {
 };
 
 /* =========== 进度条状态和逻辑 =========== */
+// ============================================================
+// 恢复数据相关状态（替换原来的 importState 单个变量声明处）
+// ============================================================
 const importState = reactive({
   visible: false,
   percent: 0,
   text: '准备中...'
 });
 
+// 导入前确认弹窗
+const showImportConfirm = ref(false);
+const pendingImportData = ref(null);
+const importPreview = reactive({ menuCount: 0, subMenuCount: 0, cardCount: 0 });
+
+// 导入完成结果弹窗
+const showImportResult = ref(false);
+const importResult = reactive({ menuCount: 0, subMenuCount: 0, cardCount: 0 });
+
+
+// ============================================================
+// importData：替换原来的整个函数
+// ============================================================
 const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = async (e) => {
+  reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.menus) throw new Error('无效的备份文件');
 
-      // 计算总数（菜单 + 子菜单 + 所有卡片）
-      let totalItems = 0;
+      // 统计菜单数 / 子菜单数 / 卡片数
+      let menuCount = 0, subMenuCount = 0, cardCount = 0;
       data.menus.forEach(m => {
-        totalItems += 1; // 主菜单本身
+        menuCount += 1;
+        if (m.cards?.length) cardCount += m.cards.length;
         if (m.subMenus?.length) {
-          totalItems += m.subMenus.length; // 子菜单
+          subMenuCount += m.subMenus.length;
           m.subMenus.forEach(sub => {
-            if (sub.cards?.length) totalItems += sub.cards.length; // 子菜单卡片
+            if (sub.cards?.length) cardCount += sub.cards.length;
           });
         }
-        if (m.cards?.length) totalItems += m.cards.length; // 主菜单卡片
       });
 
-      if (!confirm(`解析成功！共 ${totalItems} 个项目。\n确定开始恢复吗？`)) {
-        event.target.value = '';
-        return;
+      importPreview.menuCount = menuCount;
+      importPreview.subMenuCount = subMenuCount;
+      importPreview.cardCount = cardCount;
+
+      pendingImportData.value = data;
+      showImportConfirm.value = true; // 打开玻璃确认弹窗，替代原来的 confirm()
+
+    } catch (err) {
+      alert('❌ 文件解析失败: ' + err.message);
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+};
+
+
+// ============================================================
+// 用户在确认弹窗里点击"开始恢复"后执行
+// ============================================================
+const startImport = async () => {
+  const data = pendingImportData.value;
+  if (!data) return;
+
+  showUserMenu.value = false;
+  importState.visible = true;
+  importState.percent = 0;
+
+  const totalItems = importPreview.menuCount + importPreview.subMenuCount + importPreview.cardCount;
+  let processedCount = 0;
+
+  const updateProgress = (msg) => {
+    processedCount++;
+    importState.percent = Math.min(Math.floor((processedCount / totalItems) * 100), 99);
+    importState.text = msg;
+  };
+
+  try {
+    for (const menu of data.menus) {
+      const menuRes = await apiAddMenu({ name: menu.name, order: 9999 });
+      const newMenuId = menuRes.data.id;
+      updateProgress(`正在创建菜单: ${menu.name}`);
+
+      if (menu.cards?.length) {
+        for (const card of menu.cards) {
+          await apiAddCard({
+            menu_id: newMenuId,
+            sub_menu_id: null,
+            title: card.title,
+            url: card.url,
+            description: card.description || card.desc || '',
+            logo_url: card.logo_url || '',
+            custom_logo_path: card.custom_logo_path || '',
+            sort_order: card.sort_order || card.order || 0
+          });
+          updateProgress(`正在导入: ${card.title}`);
+        }
       }
 
-      importState.visible = true;
-      importState.percent = 0;
-      let processedCount = 0;
+      if (menu.subMenus?.length) {
+        for (const sub of menu.subMenus) {
+          const subRes = await addSubMenu(newMenuId, {
+            name: sub.name,
+            order_num: sub.order_num || 0
+          });
+          const newSubId = subRes.data.id;
+          updateProgress(`正在创建子菜单: ${sub.name}`);
 
-      const updateProgress = (msg) => {
-        processedCount++;
-        importState.percent = Math.min(Math.floor((processedCount / totalItems) * 100), 99);
-        importState.text = msg;
-      };
-
-      for (const menu of data.menus) {
-        // 1. 创建主菜单
-        const menuRes = await apiAddMenu({ 
-          name: menu.name, 
-          order: 9999 
-        });
-        const newMenuId = menuRes.data.id;
-        updateProgress(`正在创建菜单: ${menu.name}`);
-
-        // 2. 恢复主菜单下的卡片
-        if (menu.cards?.length) {
-          for (const card of menu.cards) {
-            await apiAddCard({
-              menu_id: newMenuId,
-              sub_menu_id: null,
-              title: card.title,
-              url: card.url,
-              description: card.description || card.desc || '',
-              logo_url: card.logo_url || '',
-              custom_logo_path: card.custom_logo_path || '',
-              sort_order: card.sort_order || card.order || 0
-            });
-            updateProgress(`正在导入: ${card.title}`);
-          }
-        }
-
-        // 3. 恢复子菜单及其卡片
-        if (menu.subMenus?.length) {
-          for (const sub of menu.subMenus) {
-            // 创建子菜单
-            const subRes = await addSubMenu(newMenuId, {
-              name: sub.name,
-              order_num: sub.order_num || 0
-            });
-            const newSubId = subRes.data.id;
-            updateProgress(`正在创建子菜单: ${sub.name}`);
-
-            // 恢复子菜单下的卡片
-            if (sub.cards?.length) {
-              for (const card of sub.cards) {
-                await apiAddCard({
-                  menu_id: newMenuId,
-                  sub_menu_id: newSubId,
-                  title: card.title,
-                  url: card.url,
-                  description: card.description || card.desc || '',
-                  logo_url: card.logo_url || '',
-                  custom_logo_path: card.custom_logo_path || '',
-                  sort_order: card.sort_order || card.order || 0
-                });
-                updateProgress(`正在导入: ${card.title}`);
-              }
+          if (sub.cards?.length) {
+            for (const card of sub.cards) {
+              await apiAddCard({
+                menu_id: newMenuId,
+                sub_menu_id: newSubId,
+                title: card.title,
+                url: card.url,
+                description: card.description || card.desc || '',
+                logo_url: card.logo_url || '',
+                custom_logo_path: card.custom_logo_path || '',
+                sort_order: card.sort_order || card.order || 0
+              });
+              updateProgress(`正在导入: ${card.title}`);
             }
           }
         }
       }
-
-      importState.text = '恢复完成！即将刷新...';
-      importState.percent = 100;
-      
-      setTimeout(() => {
-        alert('🎉 数据恢复成功！');
-        window.location.reload();
-      }, 500);
-
-    } catch (err) {
-      console.error(err);
-      alert('❌ 恢复失败: ' + err.message);
-      importState.visible = false;
-    } finally {
-      event.target.value = '';
-      showUserMenu.value = false;
     }
-  };
-  reader.readAsText(file);
+
+    importState.text = '恢复完成！';
+    importState.percent = 100;
+
+    // 记录最终结果，用于结果弹窗展示
+    importResult.menuCount = importPreview.menuCount;
+    importResult.subMenuCount = importPreview.subMenuCount;
+    importResult.cardCount = importPreview.cardCount;
+
+    setTimeout(() => {
+      importState.visible = false;
+      showImportResult.value = true; // 打开玻璃结果弹窗，替代原来的 alert()
+    }, 400);
+
+  } catch (err) {
+    console.error(err);
+    importState.visible = false;
+    alert('❌ 恢复失败: ' + err.message);
+  } finally {
+    pendingImportData.value = null;
+  }
+};
+
+
+// ============================================================
+// 结果弹窗点击"完成"后刷新页面
+// ============================================================
+const finishImport = () => {
+  showImportResult.value = false;
+  window.location.reload();
 };
 
 const handleLogoError = (e) => e.target.style.display = 'none';
@@ -1372,25 +1534,84 @@ onMounted(async () => {
 }
 .dialog-close-btn:hover { background: var(--glass-icon-btn-bg); color: var(--glass-text-color); }
 
-/* 恢复进度弹窗 */
-.import-glass-dialog { max-width: 400px; text-align: center; }
-.import-title {
-  margin: 0 0 24px 0; font-size: 1.1rem; font-weight: 700;
-  color: var(--glass-primary); text-align: center;
+/* ===== 导入确认/结果弹窗 ===== */
+.import-preview-dialog {
+  max-width: 340px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.30) !important;
+  padding: 32px 28px 28px;
 }
-.progress-track {
-  width: 100%; height: 10px;
-  background: var(--glass-input-bg);
-  border: 1px solid var(--glass-input-border);
-  border-radius: 10px; overflow: hidden; margin-bottom: 15px;
+
+.dark-mode .import-preview-dialog {
+  background: rgba(30, 32, 40, 0.55) !important;
 }
-.progress-fill {
-  height: 100%; background: var(--glass-primary); width: 0%;
-  border-radius: 10px; transition: width 0.3s ease-out;
-  box-shadow: 0 0 10px var(--glass-primary);
+
+.import-preview-dialog h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--glass-text-color);
 }
-.import-status { display: flex; justify-content: space-between; font-size: 13px; color: var(--glass-label-color); font-weight: 500; }
-.percent-num { font-weight: bold; color: var(--glass-text-color); }
+
+.confirm-desc {
+  margin: 0 0 20px 0;
+  font-size: 13px;
+  color: var(--glass-label-color);
+}
+
+/* 统计数字展示 */
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--glass-icon-bar-bg);
+  border: 1px solid var(--glass-icon-bar-border);
+  border-radius: 14px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--glass-primary);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--glass-label-color);
+  font-weight: 500;
+}
+
+.result-confirm-btn {
+  width: 100%;
+}
+
+/* 复用之前 ConfirmDialog 里的图标样式 */
+.confirm-icon {
+  width: 60px; height: 60px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 16px auto;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.confirm-icon.icon-warning {
+  background: rgba(255, 165, 0, 0.15);
+  border-color: rgba(255, 165, 0, 0.3);
+}
+.confirm-icon.icon-success {
+  background: rgba(0, 200, 122, 0.15);
+  border-color: rgba(0, 200, 122, 0.3);
+}
+
 
 /* 添加菜单弹窗 label */
 label {
