@@ -1590,6 +1590,22 @@ onMounted(async () => {
   color: var(--glass-label-color);
   font-weight: 500;
 }
+.progress-track {
+  width: 100%; height: 10px;
+  background: var(--glass-input-bg);
+  border: 1px solid var(--glass-input-border);
+  border-radius: 10px; overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--glass-primary);
+  width: 0%;
+  border-radius: 10px;
+  transition: width 0.3s ease-out;
+  box-shadow: 0 0 10px var(--glass-primary);
+}
 
 .result-confirm-btn {
   width: 100%;
