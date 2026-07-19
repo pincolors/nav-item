@@ -56,7 +56,7 @@
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" @click="handleAdminAction(openSystemSettings)">
       <span class="menu-icon">⚙️</span> 系统设置
     </div>
-
+ 
     <div class="menu-divider"></div>
 
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" 
@@ -185,7 +185,7 @@
     <div v-if="showUserManageModal" class="glass-overlay" @click.self="showUserManageModal = false">
   <div class="glass-dialog large-glass-dialog">
       <div class="dialog-header">
-      <h3>用户管理</h3>
+      <h3>👥 用户管理</h3>
       <button class="dialog-close-btn" @click="showUserManageModal = false">✕</button>
     </div>
     <UserManage />
@@ -365,7 +365,7 @@
 </div>
   <div v-if="showAddMenuDialog" class="glass-overlay" @click.self="showAddMenuDialog = false">
   <div class="glass-dialog glass-dialog-sm" @click.stop>
-    <h3>添加菜单</h3>
+    <h3>✨ 添加菜单</h3>
     <div class="glass-form-group">
       <label>菜单名称</label>
       <input
@@ -933,7 +933,8 @@ const importResult = reactive({ menuCount: 0, subMenuCount: 0, cardCount: 0 });
 
 
 // ============================================================
-// importData：替换原来的整个函数
+// importData：支持新格式（menus）和旧格式（groups + sites，
+// 子菜单通过 group.parent_id 指向父菜单）
 // ============================================================
 const importData = (event) => {
   const file = event.target.files[0];
@@ -942,10 +943,11 @@ const importData = (event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!data.menus) throw new Error('无效的备份文件');
+      const raw = JSON.parse(e.target.result);
+      const data = normalizeImportData(raw);
 
-      // 统计菜单数 / 子菜单数 / 卡片数
+      if (!data.menus || !data.menus.length) throw new Error('无效的备份文件：未找到菜单数据');
+
       let menuCount = 0, subMenuCount = 0, cardCount = 0;
       data.menus.forEach(m => {
         menuCount += 1;
@@ -963,7 +965,7 @@ const importData = (event) => {
       importPreview.cardCount = cardCount;
 
       pendingImportData.value = data;
-      showImportConfirm.value = true; // 打开玻璃确认弹窗，替代原来的 confirm()
+      showImportConfirm.value = true;
 
     } catch (err) {
       alert('❌ 文件解析失败: ' + err.message);
@@ -973,6 +975,95 @@ const importData = (event) => {
   };
   reader.readAsText(file);
 };
+
+// ============================================================
+// 格式转换：groups（含 parent_id）+ sites（平铺）→ menus 嵌套结构
+// ============================================================
+function normalizeImportData(raw) {
+  // 新格式：已经是 menus 嵌套结构，直接返回
+  if (raw.menus) {
+    return raw;
+  }
+
+  // 旧格式：groups + sites，子菜单用 parent_id 标记归属
+  if (raw.groups && raw.sites) {
+    // 1. 拆分顶层菜单和子菜单
+    const topGroups = raw.groups.filter(g => !g.parent_id);
+    const subGroups = raw.groups.filter(g => g.parent_id);
+
+    // 2. 按 group_id 把站点分组，方便查找
+    const sitesByGroupId = {};
+    raw.sites.forEach(site => {
+      const gid = site.group_id;
+      if (!sitesByGroupId[gid]) sitesByGroupId[gid] = [];
+      sitesByGroupId[gid].push(site);
+    });
+
+    const toCard = (site) => ({
+      title: site.name,
+      url: site.url,
+      logo_url: site.icon || '',
+      description: site.description || site.notes || '',
+      sort_order: site.order_num || 0
+    });
+
+    // 3. 重建 menus 嵌套结构
+    const menus = topGroups
+      .sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
+      .map(group => {
+        // 该顶层菜单直属的站点
+        const directSites = (sitesByGroupId[group.id] || [])
+          .sort((a, b) => (a.order_num || 0) - (b.order_num || 0));
+
+        // 属于该顶层菜单的子菜单
+        const children = subGroups
+          .filter(sub => sub.parent_id === group.id)
+          .sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
+          .map(sub => {
+            const subSites = (sitesByGroupId[sub.id] || [])
+              .sort((a, b) => (a.order_num || 0) - (b.order_num || 0));
+            return {
+              name: sub.name,
+              order_num: sub.order_num || 0,
+              cards: subSites.map(toCard)
+            };
+          });
+
+        return {
+          name: group.name,
+          order: group.order_num || 0,
+          subMenus: children,
+          cards: directSites.map(toCard)
+        };
+      });
+
+    return {
+      version: raw.version ? String(raw.version) + '-legacy' : '1.1-legacy',
+      menus,
+      configs: raw.configs || null
+    };
+  }
+
+  throw new Error('无法识别的备份文件格式');
+}
+
+// ============================================================
+// 补充：如果备份带有 configs，导入完成后可选择一并恢复系统设置
+// 在 startImport 成功导入菜单/卡片之后，加上这段：
+// ============================================================
+/*
+    if (data.configs && restoreConfigsToo.value) {
+      try {
+        await saveConfigs(data.configs);
+      } catch (e) {
+        console.warn('系统设置恢复失败，但菜单数据已成功导入:', e);
+      }
+    }
+*/
+
+// 需要在 importPreview 附近新增一个开关状态：
+// const restoreConfigsToo = ref(true);
+// const hasConfigsInBackup = computed(() => !!pendingImportData.value?.configs);
 
 
 // ============================================================
@@ -1523,16 +1614,65 @@ onMounted(async () => {
 }
 
 /* 用户管理弹窗 */
-.large-glass-dialog { max-width: 900px; width: 95%; max-height: 85vh; }
-.dialog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.dialog-header h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--glass-text-color); }
-.dialog-close-btn {
-  background: transparent; border: none; font-size: 20px; cursor: pointer;
-  color: var(--glass-label-color); width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; transition: all 0.2s;
+.large-glass-dialog { 
+  max-width: 900px; 
+  width: 95%; 
+  max-height: 85vh; 
+  position: relative; /* 关键：让关闭按钮相对于整个弹窗定位，而不是 header */
+  padding-top: 24px;  /* 顶部分开一些距离，给右上角的按钮和标题留出呼吸空间 */
 }
-.dialog-close-btn:hover { background: var(--glass-icon-btn-bg); color: var(--glass-text-color); }
+.dialog-header { 
+  display: flex; 
+  justify-content: center; /* 完美的水平居中 */
+  align-items: center; 
+  margin-bottom: 20px; 
+}
+
+
+.dialog-header h3 { 
+  margin: 0; 
+  font-size: 1.2rem; 
+  font-weight: 700; 
+  color: var(--glass-text-color); 
+}
+
+.dialog-close-btn {
+  background: transparent; 
+  border: none; 
+  font-size: 18px; 
+  cursor: pointer;
+  color: var(--glass-label-color); 
+  
+  /* 稍微加大一点宽高，更符合 Windows 现代关闭按钮的比例 */
+  width: 46px; 
+  height: 32px; 
+  
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  
+  /* 完美的右上角绝对定位 */
+  position: absolute; 
+  top: 0; 
+  right: 0; 
+  
+  /* 如果你的弹窗有圆角，按钮右上角也需要圆角，否则悬浮变红时会超出边界 */
+  border-top-right-radius: 12px; /* 这里的数值建议跟 .large-glass-dialog 的圆角大小保持一致 */
+  border-bottom-left-radius: 4px;
+  
+  transition: background-color 0.15s, color 0.15s;
+}
+/* 悬浮状态：Windows 经典的红底白字 */
+.dialog-close-btn:hover { 
+  background-color: #e81123; /* Windows 官方标准的关闭红 */
+  color: #ffffff;            /* 文字或图标变纯白 */
+}
+
+/* 按下状态（可选）：Windows 点击时变深红 */
+.dialog-close-btn:active {
+  background-color: #f1707a;
+  color: #ffffff;
+}
 
 /* ===== 导入确认/结果弹窗 ===== */
 .import-preview-dialog {

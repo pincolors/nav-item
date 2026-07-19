@@ -1,7 +1,15 @@
 <template>
   <div v-if="visible" class="glass-overlay" @click="close">
     <div class="glass-dialog" @click.stop>
-      <h3>{{ isEdit ? '编辑站点' : '添加新站点' }}</h3>
+      <h3>
+        <span
+  class="title-icon"
+  :style="{ '--icon-color': isEdit ? '99, 102, 241' : '34, 197, 94' }"
+>
+  {{ isEdit ? '✍️' : '✨' }}
+</span>
+  {{ isEdit ? '编辑站点' : '添加新站点' }}
+</h3>
 
       <div class="form-container">
        <div class="glass-form-group">
@@ -173,9 +181,32 @@ h3 {
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  /* 继承父元素 .glass-dialog 的 color: var(--glass-text-color) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
+.title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  background: rgba(var(--icon-color), 0.5);
+  border: 1px solid rgba(var(--icon-color), 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.icon-edit {
+  background: rgba(99, 102, 241, 0.15);   /* 蓝紫色,编辑语义 */
+  border-color: rgba(99, 102, 241, 0.3);
+}
+.icon-add {
+  background: rgba(34, 197, 94, 0.15);    /* 绿色,新增语义 */
+  border-color: rgba(34, 197, 94, 0.3);
+}
 /* label：用全局变量，不硬编码颜色 */
 label {
   display: block;

@@ -114,7 +114,7 @@
     <!-- ===== 编辑菜单弹窗 ===== -->
     <div v-if="showEditDialog" class="glass-overlay" @click.self="closeEditDialog">
       <div class="glass-dialog" @click.stop>
-        <h3>编辑菜单</h3>
+        <h3>✍️ 编辑菜单</h3>
 
         <div class="glass-form-group">
           <label>菜单名称</label>

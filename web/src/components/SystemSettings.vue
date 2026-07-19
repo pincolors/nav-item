@@ -204,30 +204,65 @@ function close() { emit('update:visible', false); }
   max-height: 85vh;
   padding: 0;
   display: flex;
+  position: relative; /* 关键：让关闭按钮相对于整个弹窗定位，而不是 header */
+  padding-top: 24px;  /* 顶部分开一些距离，给右上角的按钮和标题留出呼吸空间 */
+
   flex-direction: column;
   overflow: hidden;
 }
 
 /* 顶部标题栏 */
 .dialog-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 24px 28px 16px;
-  border-bottom: 1px solid var(--glass-input-border);
-  flex-shrink: 0;
+  display: flex; 
+  justify-content: center; /* 完美的水平居中 */
+  align-items: center; 
+  margin-bottom: 20px;
 }
 
 .dialog-header h3 {
-  margin: 0; font-size: 1.2rem; font-weight: 800;
+ margin: 0; 
+  font-size: 1.2rem; 
+  font-weight: 700; 
   color: var(--glass-text-color);
 }
-
 .dialog-close-btn {
-  background: transparent; border: none; font-size: 20px; cursor: pointer;
-  color: var(--glass-label-color); width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; transition: all 0.2s;
+background: transparent; 
+  border: none; 
+  font-size: 18px; 
+  cursor: pointer;
+  color: var(--glass-label-color); 
+  
+  /* 稍微加大一点宽高，更符合 Windows 现代关闭按钮的比例 */
+  width: 46px; 
+  height: 32px; 
+  
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  
+  /* 完美的右上角绝对定位 */
+  position: absolute; 
+  top: 0; 
+  right: 0; 
+  
+  /* 如果你的弹窗有圆角，按钮右上角也需要圆角，否则悬浮变红时会超出边界 */
+  border-top-right-radius: 12px; /* 这里的数值建议跟 .large-glass-dialog 的圆角大小保持一致 */
+  border-bottom-left-radius: 4px;
+  
+  transition: background-color 0.15s, color 0.15s;
 }
-.dialog-close-btn:hover { background: var(--glass-icon-btn-bg); color: var(--glass-text-color); }
+
+/* 悬浮状态：Windows 经典的红底白字 */
+.dialog-close-btn:hover { 
+  background-color: #e81123; /* Windows 官方标准的关闭红 */
+  color: #ffffff;            /* 文字或图标变纯白 */
+}
+
+/* 按下状态（可选）：Windows 点击时变深红 */
+.dialog-close-btn:active {
+  background-color: #f1707a;
+  color: #ffffff;
+}
 
 /* 滚动内容区 */
 .settings-body {
