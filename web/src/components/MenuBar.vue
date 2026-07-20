@@ -366,7 +366,9 @@ function closeSubMenuDialog() {
 
 /* ===== 布局 ===== */
 .menu-outer {
-  width: 100%; display: flex; justify-content: center;
+  width: 100%; display: flex; 
+  justify-content: center;       /* 兜底,老内核浏览器用这个 */
+  justify-content: safe center;  /* 支持的浏览器会覆盖上一行,自动判断是否溢出 */
   overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; scroll-behavior: smooth;
