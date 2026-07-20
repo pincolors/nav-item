@@ -1271,21 +1271,7 @@ onMounted(async () => {
     if (c['site.backgroundOpacity']) siteConfig.value.backgroundOpacity = parseFloat(c['site.backgroundOpacity']);
   } catch (e) {
     console.error('加载配置失败:', e);
-  }
-
- // if (activeMenu.value) {
-   // await loadCards();
-  //  setTimeout(() => {
-  //    const activeMenuItem = document.querySelector('.menu-item.active');
-  //    if (activeMenuItem) {
-  //      activeMenuItem.scrollIntoView({
-  //        behavior: 'smooth',
-  //        block: 'nearest',
-  //        inline: 'center'
- //       });
- //     }
- //   }, 300);
-//  }
+  } 
  });
 
 </script>
