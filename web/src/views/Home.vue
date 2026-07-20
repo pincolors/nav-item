@@ -1273,20 +1273,20 @@ onMounted(async () => {
     console.error('加载配置失败:', e);
   }
 
-  if (activeMenu.value) {
-    await loadCards();
-    setTimeout(() => {
-      const activeMenuItem = document.querySelector('.menu-item.active');
-      if (activeMenuItem) {
-        activeMenuItem.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
-        });
-      }
-    }, 300);
-  }
-});
+ // if (activeMenu.value) {
+   // await loadCards();
+  //  setTimeout(() => {
+  //    const activeMenuItem = document.querySelector('.menu-item.active');
+  //    if (activeMenuItem) {
+  //      activeMenuItem.scrollIntoView({
+  //        behavior: 'smooth',
+  //        block: 'nearest',
+  //        inline: 'center'
+ //       });
+ //     }
+ //   }, 300);
+//  }
+// });
 
 </script>
 
