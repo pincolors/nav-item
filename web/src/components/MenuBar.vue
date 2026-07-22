@@ -114,7 +114,15 @@
     <!-- ===== 编辑菜单弹窗 ===== -->
     <div v-if="showEditDialog" class="glass-overlay" @click.self="closeEditDialog">
       <div class="glass-dialog" @click.stop>
-        <h3>✍️ 编辑菜单</h3>
+        <h3>
+  <span 
+    class="title-icon" 
+    :style="{ '--icon-color': '99, 102, 241' }"
+  >
+    ✍️
+  </span>
+ 编辑菜单
+</h3>
 
         <div class="glass-form-group">
           <label>菜单名称</label>
@@ -536,7 +544,18 @@ h3 {
   font-size: 1.2rem;
   font-weight: 700;
 }
-
+.title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  background: rgba(var(--icon-color), 0.5);
+  border: 1px solid rgba(var(--icon-color), 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 label {
   display: block;
   margin-bottom: 8px;

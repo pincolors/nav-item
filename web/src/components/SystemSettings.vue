@@ -73,8 +73,8 @@
           <div class="settings-section">
             <div class="section-title danger-title">⚠️ 危险操作</div>
             <div class="danger-buttons">
-              <button @click="handleClearAll" class="danger-btn">🗑️ 清空所有数据</button>
-              <button @click="handleReset" class="danger-btn">🔄 重置为默认设置</button>
+              <button @click="requestClearAll" class="danger-btn">🗑️ 清空所有数据</button>
+              <button @click="requestReset" class="danger-btn">🔄 重置为默认设置</button>
             </div>
           </div>
 
@@ -88,11 +88,50 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- 清空数据：第一次确认 -->
+  <ConfirmDialog
+    v-model:visible="showClearStep1"
+    :is-dark-mode="isDarkMode"
+    icon="🗑️"
+    icon-type="danger"
+    title="确定要清空所有数据吗？"
+    description="所有菜单和卡片数据将被清空"
+    confirm-text="继续"
+    confirm-type="danger"
+    @confirm="showClearStep2 = true"
+  />
+
+  <!-- 清空数据：第二次确认 -->
+  <ConfirmDialog
+    v-model:visible="showClearStep2"
+    :is-dark-mode="isDarkMode"
+    icon="⚠️"
+    icon-type="danger"
+    title="再次确认：永久删除？"
+    description="此操作不可恢复，所有数据将被永久删除"
+    confirm-text="确认清空"
+    confirm-type="danger"
+    @confirm="doClearAll"
+  />
+
+  <!-- 重置设置确认 -->
+  <ConfirmDialog
+    v-model:visible="showResetConfirm"
+    :is-dark-mode="isDarkMode"
+    icon="🔄"
+    icon-type="warning"
+    title="确定要重置所有设置吗？"
+    description="将恢复为默认设置值"
+    confirm-text="重置"
+    @confirm="doReset"
+  />
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
 import { getConfigs, saveConfigs, clearAllData } from '../api';
+import ConfirmDialog from './ConfirmDialog.vue';
 
 const props = defineProps({ visible: Boolean, isDarkMode: Boolean });
 const emit = defineEmits(['update:visible', 'saved']);
@@ -108,6 +147,12 @@ const form = ref({
   desktopColumns: 6, mobileColumns: 2, defaultEngine: 'site',
   backgroundImage: '', backgroundOpacity: 0.15,
 });
+
+// 清空数据两步确认状态
+const showClearStep1 = ref(false);
+const showClearStep2 = ref(false);
+// 重置设置确认状态
+const showResetConfirm = ref(false);
 
 async function loadConfigs() {
   try {
@@ -141,9 +186,13 @@ async function save() {
   } catch (e) { alert('保存失败: ' + e.message); }
 }
 
-async function handleClearAll() {
-  if (!confirm('⚠️ 确定要清空所有菜单和卡片数据吗？此操作不可恢复！')) return;
-  if (!confirm('⚠️ 再次确认：所有数据将被永久删除！')) return;
+// 触发清空流程（打开第一步确认弹窗）
+function requestClearAll() {
+  showClearStep1.value = true;
+}
+
+// 用户完成两步确认后，真正执行清空
+async function doClearAll() {
   try {
     await clearAllData();
     alert('✅ 所有数据已清空');
@@ -152,8 +201,13 @@ async function handleClearAll() {
   } catch (e) { alert('清空失败: ' + e.message); }
 }
 
-async function handleReset() {
-  if (!confirm('确定要重置所有设置为默认值吗？')) return;
+// 触发重置确认
+function requestReset() {
+  showResetConfirm.value = true;
+}
+
+// 确认后执行重置
+async function doReset() {
   try {
     await saveConfigs({
       'site.copyright': 'Copyright © 2026 Nav-Item',
@@ -197,74 +251,61 @@ function close() { emit('update:visible', false); }
   --glass-primary-shadow-hover: rgba(0, 200, 122, 0.50);
 }
 
-/* 设置弹窗专属尺寸 */
 .settings-dialog {
   max-width: 520px;
   width: 90%;
   max-height: 85vh;
   padding: 0;
   display: flex;
-  position: relative; /* 关键：让关闭按钮相对于整个弹窗定位，而不是 header */
-  padding-top: 24px;  /* 顶部分开一些距离，给右上角的按钮和标题留出呼吸空间 */
-
+  position: relative;
+  padding-top: 24px;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* 顶部标题栏 */
 .dialog-header {
   display: flex; 
-  justify-content: center; /* 完美的水平居中 */
+  justify-content: center;
   align-items: center; 
   margin-bottom: 20px;
 }
 
 .dialog-header h3 {
- margin: 0; 
+  margin: 0; 
   font-size: 1.2rem; 
   font-weight: 700; 
   color: var(--glass-text-color);
 }
+
 .dialog-close-btn {
-background: transparent; 
+  background: transparent; 
   border: none; 
   font-size: 18px; 
   cursor: pointer;
   color: var(--glass-label-color); 
-  
-  /* 稍微加大一点宽高，更符合 Windows 现代关闭按钮的比例 */
   width: 46px; 
   height: 32px; 
-  
   display: flex; 
   align-items: center; 
   justify-content: center;
-  
-  /* 完美的右上角绝对定位 */
   position: absolute; 
   top: 0; 
   right: 0; 
-  
-  /* 如果你的弹窗有圆角，按钮右上角也需要圆角，否则悬浮变红时会超出边界 */
-  border-top-right-radius: 12px; /* 这里的数值建议跟 .large-glass-dialog 的圆角大小保持一致 */
+  border-top-right-radius: 12px;
   border-bottom-left-radius: 4px;
-  
   transition: background-color 0.15s, color 0.15s;
 }
 
-/* 悬浮状态：Windows 经典的红底白字 */
 .dialog-close-btn:hover { 
-  background-color: #e81123; /* Windows 官方标准的关闭红 */
-  color: #ffffff;            /* 文字或图标变纯白 */
+  background-color: #e81123;
+  color: #ffffff;
 }
 
-/* 按下状态（可选）：Windows 点击时变深红 */
 .dialog-close-btn:active {
   background-color: #f1707a;
   color: #ffffff;
 }
 
-/* 滚动内容区 */
 .settings-body {
   flex: 1; overflow-y: auto; padding: 20px 28px;
   scrollbar-width: none;
@@ -287,7 +328,6 @@ label {
   color: var(--glass-label-color);
 }
 
-/* 列数/引擎选择按钮 */
 .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .col-btn {
@@ -303,17 +343,14 @@ label {
   box-shadow: 0 4px 12px var(--glass-primary-shadow);
 }
 
-/* 滑块 */
 .range-input { width: 100%; accent-color: var(--glass-primary); cursor: pointer; }
 
-/* 壁纸预览 */
 .bg-preview {
   width: 100%; height: 80px; border-radius: 12px;
   background-size: cover; background-position: center; margin-top: 8px;
   border: 1px solid var(--glass-input-border);
 }
 
-/* 危险按钮 */
 .danger-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
 .danger-btn {
   padding: 10px 16px; border-radius: 10px; cursor: pointer;
@@ -325,7 +362,6 @@ label {
 }
 .danger-btn:hover { background: rgba(255,77,79,0.18); transform: translateY(-1px); }
 
-/* 底部按钮栏 */
 .settings-footer {
   display: flex; gap: 12px; padding: 16px 28px 24px;
   border-top: 1px solid var(--glass-input-border);

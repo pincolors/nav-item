@@ -65,13 +65,13 @@
 </div>
     
     <div class="menu-item" :class="{ 'is-disabled': !isAdmin }">
-      <label :for="isAdmin ? 'importFile' : ''" style="display:flex; align-items:center; width:100%"
-             :style="{ cursor: isAdmin ? 'pointer' : 'not-allowed' }"
-             @click="!isAdmin && handleAdminAction()">
-        <span class="menu-icon">📥</span> 恢复数据
-      </label>
-      <input v-if="isAdmin" type="file" id="importFile" style="display:none" @change="importData" accept=".json"/>
-    </div>
+  <label :for="isAdmin ? 'importFile' : ''" class="import-menu-label"
+         :style="{ cursor: isAdmin ? 'pointer' : 'not-allowed' }"
+         @click="!isAdmin && handleAdminAction()">
+    <span class="menu-icon">📥</span> 恢复数据
+  </label>
+  <input v-if="isAdmin" type="file" id="importFile" style="display:none" @change="importData" accept=".json"/>
+</div>
 
     <div class="menu-divider"></div>
 
@@ -365,7 +365,16 @@
 </div>
   <div v-if="showAddMenuDialog" class="glass-overlay" @click.self="showAddMenuDialog = false">
   <div class="glass-dialog glass-dialog-sm" @click.stop>
-    <h3>✨ 添加菜单</h3>
+    <h3>
+  <span 
+    class="title-icon" 
+    :style="{ '--icon-color': '34, 197, 94' }"
+  >
+    ✨
+  </span>
+  添加菜单
+</h3>
+
     <div class="glass-form-group">
       <label>菜单名称</label>
       <input
@@ -1380,7 +1389,7 @@ onMounted(async () => {
   box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.5), -6px -6px 12px rgba(255,255,255,0.5);
 }
 .dark-mode .dropdown-menu { background: #25262b; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
-.menu-header-label { padding: 8px 20px; font-size: 12px; color: var(--text-color); opacity: 0.5; font-weight: bold; }
+.menu-header-label { padding: 8px 20px; font-size: 14px; color: var(--primary-color); opacity: 1; font-weight: bold; }
 .menu-item { padding: 12px 20px; color: var(--text-color); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: all 0.2s; }
 .menu-icon { font-size: 16px; min-width: 20px; text-align: center; }
 .menu-item:hover { color: var(--primary-color); background: rgba(0,0,0,0.02); }
@@ -1397,6 +1406,12 @@ onMounted(async () => {
 .logout-btn:hover {
   background: #ff7875 !important;
   box-shadow: 0 6px 24px rgba(255, 77, 79, 0.45) !important;
+}
+.import-menu-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
 }
 /* ===== Sections ===== */
 .menu-wrapper { margin: 0 0 20px; }
@@ -1754,9 +1769,34 @@ onMounted(async () => {
   border-color: rgba(0, 200, 122, 0.3);
 }
 
+/* 添加菜单弹窗标题居中 */
+.glass-dialog-sm h3 {
+   margin: 0 0 24px 0;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  background: rgba(var(--icon-color), 0.5);
+  border: 1px solid rgba(var(--icon-color), 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 
 /* 添加菜单弹窗 label */
-label {
+.glass-dialog-sm label {
   display: block; margin-bottom: 8px;
   font-size: 13px; font-weight: 600;
   color: var(--glass-label-color);
