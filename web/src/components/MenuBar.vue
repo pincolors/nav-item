@@ -1,4 +1,5 @@
 <template>
+
   <div class="menu-scroll-wrapper" :class="{ 'dark-theme': isDarkMode }">
     <div class="menu-outer" ref="menuOuterRef">
       <draggable 
@@ -78,6 +79,7 @@
                 type="button"
                 aria-label="删除菜单"
               >✕</button>
+              
             </div>
           </div>
         </template>
@@ -112,53 +114,57 @@
     </div>
 
     <!-- ===== 编辑菜单弹窗 ===== -->
-    <div v-if="showEditDialog" class="glass-overlay" @click.self="closeEditDialog">
-      <div class="glass-dialog" @click.stop>
-        <h3>
-  <span 
-    class="title-icon" 
-    :style="{ '--icon-color': '99, 102, 241' }"
-  >
-    ✍️
-  </span>
- 编辑菜单
-</h3>
+<Teleport to="body">
+  <div v-if="showEditDialog" class="glass-overlay" :class="{ 'dark-mode': isDarkMode }" @click.self="closeEditDialog">
+    <div class="glass-dialog" @click.stop>
+      <h3>
+        <span 
+          class="title-icon" 
+          :style="{ '--icon-color': '99, 102, 241' }"
+        >
+          ✍️
+        </span>
+        编辑菜单
+      </h3>
+      
+      <div class="glass-form-group">
+        <label>菜单名称</label>
+        <input v-model="editForm.name" type="text" class="glass-input" placeholder="请输入菜单名称" />
+      </div>
 
-        <div class="glass-form-group">
-          <label>菜单名称</label>
-          <input v-model="editForm.name" type="text" class="glass-input" placeholder="请输入菜单名称" />
+      <!-- 子菜单管理 -->
+      <div class="submenu-section">
+        <div class="submenu-header">
+          <span class="submenu-title">子菜单管理</span>
+          <button @click="showAddSubMenuDialog" class="glass-btn-primary btn-add-sub">
+            ➕ 添加子菜单
+          </button>
         </div>
 
-        <!-- 子菜单管理 -->
-        <div class="submenu-section">
-          <div class="submenu-header">
-            <span class="submenu-title">子菜单管理</span>
-            <button @click="showAddSubMenuDialog" class="glass-btn-primary btn-add-sub">
-              ➕ 添加子菜单
-            </button>
-          </div>
-
-          <div v-if="subMenus.length > 0" class="submenu-list">
-            <div v-for="sub in subMenus" :key="sub.id" class="submenu-item">
-              <span class="submenu-name">{{ sub.name }}</span>
-              <div class="submenu-actions">
-                <button @click="editSubMenu(sub)" class="btn-icon">✏️</button>
-                <button @click="deleteSubMenuAction(sub)" class="btn-icon btn-icon-danger">🗑️</button>
-              </div>
+        <div v-if="subMenus.length > 0" class="submenu-list">
+          <div v-for="sub in subMenus" :key="sub.id" class="submenu-item">
+            <span class="submenu-name">{{ sub.name }}</span>
+            <div class="submenu-actions">
+              <button @click="editSubMenu(sub)" class="btn-icon">✏️</button>
+              <button class="submenu-del" @click="deleteSubMenuAction(sub)">🗑️</button>
             </div>
           </div>
-          <div v-else class="empty-state">暂无子菜单</div>
         </div>
-
-        <div class="glass-actions">
-          <button @click="closeEditDialog" class="glass-btn-cancel">取消</button>
-          <button @click="saveMenu" class="glass-btn-primary">保存</button>
-        </div>
+        <div v-else class="empty-state">暂无子菜单</div>
       </div>
-    </div>
+
+      <div class="glass-actions">
+        <button @click="closeEditDialog" class="glass-btn-cancel">取消</button>
+        <button @click="saveMenu" class="glass-btn-primary">保存</button>
+      </div>
+    </div>    
+  </div>
+</Teleport>
 
     <!-- ===== 添加/编辑子菜单弹窗 ===== -->
-    <div v-if="showSubMenuDialog" class="glass-overlay" @click.self="closeSubMenuDialog">
+     <Teleport to="body">
+    <div v-if="showSubMenuDialog" class="glass-overlay" :class="{ 'dark-mode': isDarkMode }"
+@click.self="closeSubMenuDialog">
       <div class="glass-dialog glass-dialog-sm" @click.stop>
         <h3>{{ isEditingSubMenu ? '编辑子菜单' : '添加子菜单' }}</h3>
 
@@ -176,13 +182,28 @@
         <div class="glass-actions">
           <button @click="closeSubMenuDialog" class="glass-btn-cancel">取消</button>
           <button @click="saveSubMenu" class="glass-btn-primary">保存</button>
-        </div>
-      </div>
-    </div>
+        </div>        
+      </div>   
+    </div> 
+    <ConfirmDialog
+  v-model:visible="showDeleteConfirm"
+  :is-dark-mode="isDarkMode"
+  title="删除子菜单确认"
+  :description="`确定要删除子菜单“${pendingDeleteSubMenu?.name}”吗？此操作不可撤销。`"
+  icon="🗑️"
+  icon-type="danger"
+  confirm-text="删除"
+  confirm-type="danger"
+  @confirm="confirmDeleteSubMenu"  
+/>
+
+       </Teleport>   
   </div>
+ 
 </template>
 
 <script setup>
+import ConfirmDialog from './ConfirmDialog.vue';
 import { computed, ref } from 'vue';
 import draggable from 'vuedraggable';
 import { updateMenu, getSubMenus, addSubMenu, updateSubMenu, deleteSubMenu } from '../api.js';
@@ -195,7 +216,7 @@ const props = defineProps({
   isDarkMode: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['select', 'update:menus', 'add', 'delete']);
+const emit = defineEmits(['select', 'update:menus', 'add', 'delete', 'refresh']);
 
 const menuOuterRef = ref(null);
 const isDragging = ref(false);
@@ -272,7 +293,7 @@ async function saveMenu() {
     const target = newMenus.find(m => m.id === editForm.value.id);
     if (target) { target.name = editForm.value.name; emit('update:menus', newMenus); }
     closeEditDialog();
-    alert('菜单保存成功');
+  //  alert('菜单保存成功');
   } catch (error) {
     alert('保存失败: ' + (error.response?.data?.error || error.message));
   }
@@ -301,32 +322,48 @@ async function saveSubMenu() {
   try {
     if (isEditingSubMenu.value) {
       await updateSubMenu(subMenuForm.value.id, { name: subMenuForm.value.name, order_num: subMenuForm.value.order_num });
-      alert('子菜单更新成功');
+     
+    //  alert('子菜单更新成功');
     } else {
       await addSubMenu(editForm.value.id, { name: subMenuForm.value.name, order_num: subMenuForm.value.order_num });
-      alert('子菜单创建成功');
+    //  alert('子菜单创建成功');
     }
     await loadSubMenus(editForm.value.id);
+    emit('refresh'); // 新增：通知父组件重新拉取菜单数据
     closeSubMenuDialog();
   } catch (error) {
     alert('保存失败: ' + (error.response?.data?.error || error.message));
   }
 }
 
-async function deleteSubMenuAction(subMenu) {
-  if (!confirm(`确定要删除子菜单"${subMenu.name}"吗？`)) return;
-  try {
-    await deleteSubMenu(subMenu.id);
-    alert('子菜单删除成功');
-    await loadSubMenus(editForm.value.id);
-  } catch (error) {
-    alert('删除失败: ' + (error.response?.data?.error || error.message));
-  }
-}
+
 
 function closeSubMenuDialog() {
   showSubMenuDialog.value = false;
   subMenuForm.value = { id: null, name: '', order_num: 0 };
+}
+
+const showDeleteConfirm = ref(false);
+const pendingDeleteSubMenu = ref(null);
+function deleteSubMenuAction(subMenu) {
+  pendingDeleteSubMenu.value = subMenu;
+  showDeleteConfirm.value = true;
+}
+
+async function confirmDeleteSubMenu() {
+  const subMenu = pendingDeleteSubMenu.value;
+  if (!subMenu) return;
+  try {
+    await deleteSubMenu(subMenu.id);
+ //   alert('子菜单删除成功');
+    await loadSubMenus(editForm.value.id);
+   emit('refresh'); // 新增：通知父组件重新拉取菜单数据
+ 
+  } catch (error) {
+    alert('删除失败: ' + (error.response?.data?.error || error.message));
+  } finally {
+    pendingDeleteSubMenu.value = null;
+  }
 }
 </script>
 
@@ -514,6 +551,14 @@ function closeSubMenuDialog() {
 }
 
 /* ===== 子菜单栏 ===== */
+.submenu-del {
+  background: #ff4d4f !important; color: white !important;
+  -webkit-text-fill-color: white !important;
+  border: none; border-radius: 50%; width: 25px; height: 25px;
+  
+  box-shadow: 0 2px 8px rgba(255,77,79,0.4); z-index: 10; cursor: pointer; padding: 0;
+}
+.submenu-del:hover { background: #ff7875 !important; transform: scale(1.15) !important; }
 .sub-menu-outer {
   width: 100%; display: flex; justify-content: center;
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none;

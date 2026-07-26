@@ -1,5 +1,6 @@
 <template>
   <div class="home-container" :class="{ 'dark-mode': isDarkMode }">
+   :style="{ paddingTop: headerHeight + 'px' }"> 
     <!-- 在 header 前面加上背景层 -->
 <div 
   v-if="siteConfig.backgroundImage" 
@@ -10,8 +11,8 @@
   }"
 ></div>
 
-
     <header class="header-fixed">
+      <!-- 第一行 -->
       <div class="header-inner">
         <div class="header-left">
           <img :src="currentLogo" alt="WebNavHub" class="site-logo" @error="handleLogoError" />
@@ -24,7 +25,7 @@
               Your Organized Internet Gateway
             </span>
           </div>
-        </div>
+        
 </div>
         <div class="header-right">
                  
@@ -57,9 +58,9 @@
       <span class="menu-icon">⚙️</span> 系统设置
     </div>
  
-    <div class="menu-divider"></div>
+    
 
-    <div class="menu-item" :class="{ 'is-disabled': !isAdmin }" 
+    <div class="header-menu-item" :class="{ 'is-disabled': !isAdmin }" 
      @click="handleAdminAction(confirmexportData)">
   <span class="menu-icon">📤</span> 备份数据
 </div>
@@ -86,9 +87,10 @@
             <Icon :name="isDarkMode ? 'sun' : 'moon'" style="font-size: 26px;" />
           </button>
         </div>
-      
-    </header>
-    <div class="menu-wrapper">
+        </div>
+   <!-- 第二行 -->   
+  <!--<div class="header-menu">--> 
+    <div class="header-menu">
       <MenuBar 
         :menus="menus" 
         :activeId="activeMenu?.id" 
@@ -99,8 +101,12 @@
         @update:menus="handleMenuSort"
         @add="addMenu"
         @delete="confirmDeleteMenu"
+        @refresh="reloadMenus"
       />
     </div>
+    <div class="menu-divider"></div>
+   
+ </header>
 
     <div class="search-section">
       <div class="search-box-wrapper">
@@ -396,7 +402,7 @@
 
 <script setup>
 
-import { ref, computed, reactive, onMounted, watch } from 'vue';
+import { ref, computed, reactive, onMounted, watch,  nextTick} from 'vue';
 import { 
   getMenus, 
   getCards, 
@@ -516,8 +522,21 @@ function doLogout() {
 const closeUserMenu = () => {
   showUserMenu.value = false;
 };
+// ==================== 头部高度管理====================
+const headerHeight = ref(70);
 
-// ==================== 菜单管理 ====================
+function updateHeaderHeight() {
+  const headerEl = document.querySelector('.header-fixed');
+  if (headerEl) {
+    headerHeight.value = headerEl.offsetHeight;
+  }
+}
+
+onMounted(() => {
+  nextTick(updateHeaderHeight);
+  window.addEventListener('resize', updateHeaderHeight);
+});
+
 // ==================== 菜单管理 ====================
 const menus = ref([]);
 const activeMenu = ref(null);
@@ -1313,12 +1332,28 @@ onMounted(async () => {
 
 /* Header */
 .header-fixed {
-  position: fixed; top: 0; left: 0; right: 0; height: 64px;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;      /* 加上这行，让 header-inner 横向居中 
+ / height: v-bind('headerHeight') + 'px';*/
+  position: fixed; top: 0; left: 0; right: 0; 
   background: var(--header-bg); backdrop-filter: blur(20px);
-  display: flex; justify-content: center; padding: 0 32px; z-index: 1000;
+  padding: 12px 32px;        /* 改成上下留白，别再用 justify-content: center 撑 64px 高度了 */
+  z-index: 1000;
   box-shadow: 0 1px 0 rgba(0,0,0,0.05);
 }
-.header-inner { width: 100%; max-width: 1400px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+
+.header-inner {
+  width: 100%;
+  max-width: 1400px;
+  margin:0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing:border-box;
+}
 .header-left { display: flex; align-items: center; gap: 12px; }
 .site-logo { height: 40px; width: auto; }
 .site-title { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px; color: var(--text-color); }
@@ -1381,6 +1416,20 @@ onMounted(async () => {
   background-color: #ff7875;
   box-shadow: 0 6px 16px rgba(255, 77, 79, 0.5);
 }
+.header-menu{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    border-top:1px solid rgba(255,255,255,.06);
+    padding:0;
+}
+.header-menu :deep(.menu-wrapper){
+    width:100%;
+    max-width:1400px;
+    margin:0 auto;
+}
+
+
 /* ===== Dropdown ===== */
 .user-menu-container { position: relative; }
 .dropdown-menu {
@@ -1414,9 +1463,9 @@ onMounted(async () => {
   width: 100%;
 }
 /* ===== Sections ===== */
-.menu-wrapper { margin: 0 0 20px; }
+.menu-wrapper { margin: 10px 0 0; }
 .search-section {
-  padding: 0 20px 30px; display: flex; justify-content: center;
+  padding:  40px 20px 30px; display: flex; justify-content: center;
   overflow: visible; position: relative; z-index: 100;
 }
 .search-box-wrapper { width: 100%; max-width: 640px; }
