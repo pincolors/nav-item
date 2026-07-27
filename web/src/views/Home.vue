@@ -1,7 +1,7 @@
 <template>
-  <div class="home-container" :class="{ 'dark-mode': isDarkMode }">
-   :style="{ paddingTop: headerHeight + 'px' }"> 
-    <!-- 在 header 前面加上背景层 -->
+ <div class="home-container" :class="{ 'dark-mode': isDarkMode }" :style="{ paddingTop: headerHeight + 'px' }">
+   
+  <!-- 在 header 前面加上背景层 -->
 <div 
   v-if="siteConfig.backgroundImage" 
   class="bg-wallpaper"
@@ -153,7 +153,7 @@
       </div>
     </div>    
   
-      <div <class="content-area"
+      <div class="content-area"
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
