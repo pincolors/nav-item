@@ -1426,7 +1426,7 @@ onMounted(async () => {
 .header-menu :deep(.menu-wrapper){
     width:100%;
     max-width:1400px;
-    margin:0 auto;
+   margin: 0 0 20px;
 }
 
 
@@ -1476,7 +1476,7 @@ onMounted(async () => {
 /* ===== Search ===== */
 .search-container {
   display: flex; align-items: center; background: var(--card-bg);
-  border-radius: 16px; padding: 6px 12px; width: 100%;
+  border-radius: 16px; padding: 6px 12px; width: 100%; margin: 8px 0 0;
   border: 1px solid var(--card-border);
   box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
   backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
