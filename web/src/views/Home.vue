@@ -151,10 +151,9 @@
           </button>
         </div>
       </div>
-    </div>
-    
-   <div 
-      class="content-area"
+    </div>    
+  
+      <div <class="content-area"
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
@@ -1352,7 +1351,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-sizing:border-box;
+ 
 }
 .header-left { display: flex; align-items: center; gap: 12px; }
 .site-logo { height: 40px; width: auto; }
@@ -1530,7 +1529,7 @@ onMounted(async () => {
   .header-inner { padding: 0; }
   .home-container { padding-top: 70px; }
   .header-inner, .content-area { padding-left: 12px !important; padding-right: 12px !important; }
-  .search-section { margin:20px 0 0; padding: 0 16px 24px; }
+  .search-section { margin:0px 0 0; padding: 0 16px 24px; }
   .search-container { padding: 6px 10px; }
   .search-input { padding: 12px 8px; font-size: 15px; }
   .search-btn { width: 40px; height: 40px; }
