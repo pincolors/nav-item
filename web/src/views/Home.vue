@@ -1465,7 +1465,7 @@ onMounted(async () => {
 /* ===== Sections ===== */
 .menu-wrapper { margin:0 0 20px; }
 .search-section {
-  padding:  40px 20px 30px; display: flex; justify-content: center;
+ margin:10px 0 0; padding:  40px 20px 30px; display: flex; justify-content: center;
   overflow: visible; position: relative; z-index: 100;
 }
 .search-box-wrapper { width: 100%; max-width: 640px; }
