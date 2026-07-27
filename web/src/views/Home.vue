@@ -1465,7 +1465,7 @@ onMounted(async () => {
 /* ===== Sections ===== */
 .menu-wrapper { margin:0 0 20px; }
 .search-section {
- margin:10px 0 0; padding:  40px 20px 30px; display: flex; justify-content: center;
+ padding:  40px 20px 30px; display: flex; justify-content: center;
   overflow: visible; position: relative; z-index: 100;
 }
 .search-box-wrapper { width: 100%; max-width: 640px; }
@@ -1530,7 +1530,7 @@ onMounted(async () => {
   .header-inner { padding: 0; }
   .home-container { padding-top: 70px; }
   .header-inner, .content-area { padding-left: 12px !important; padding-right: 12px !important; }
-  .search-section { padding: 0 16px 24px; }
+  .search-section { margin:10px 0 0; padding: 0 16px 24px; }
   .search-container { padding: 6px 10px; }
   .search-input { padding: 12px 8px; font-size: 15px; }
   .search-btn { width: 40px; height: 40px; }
