@@ -1332,14 +1332,14 @@ onMounted(async () => {
 
 /* Header */
 .header-fixed {
-  position: fixed;
+ position: fixed; top: 0; left: 0; right: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;      /* 加上这行，让 header-inner 横向居中 
+  /* align-items: center;      加上这行，让 header-inner 横向居中 
  / height: v-bind('headerHeight') + 'px';*/
   position: fixed; top: 0; left: 0; right: 0; 
   background: var(--header-bg); backdrop-filter: blur(20px);
-  padding: 12px 32px;        /* 改成上下留白，别再用 justify-content: center 撑 64px 高度了 */
+  padding: 0 32px;        /* 改成上下留白，别再用 justify-content: center 撑 64px 高度了 */
   z-index: 1000;
   box-shadow: 0 1px 0 rgba(0,0,0,0.05);
 }
@@ -1463,7 +1463,7 @@ onMounted(async () => {
   width: 100%;
 }
 /* ===== Sections ===== */
-.menu-wrapper { margin: 10px 0 0; }
+.menu-wrapper { margin:0 0 20px; }
 .search-section {
   padding:  40px 20px 30px; display: flex; justify-content: center;
   overflow: visible; position: relative; z-index: 100;
