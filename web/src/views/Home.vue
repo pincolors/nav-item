@@ -1351,6 +1351,7 @@ onMounted(async () => {
 }
 
 .header-inner {
+  box-sizing: border-box;   /* 加这一行 */
   width: 100%;
   max-width: 1400px;
   margin:0 auto;
