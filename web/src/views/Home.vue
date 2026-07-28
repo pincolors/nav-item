@@ -401,7 +401,7 @@
 
 <script setup>
 
-import { ref, computed, reactive, onMounted, watch,  nextTick} from 'vue';
+import { ref, computed, reactive, onMounted, onUnmounted, watch,  nextTick} from 'vue';
 import { 
   getMenus, 
   getCards, 
@@ -534,6 +534,13 @@ function updateHeaderHeight() {
 onMounted(() => {
   nextTick(updateHeaderHeight);
   window.addEventListener('resize', updateHeaderHeight);
+
+  const headerEl = document.querySelector('.header-fixed');
+  if (headerEl && window.ResizeObserver) {
+    const ro = new ResizeObserver(updateHeaderHeight);
+    ro.observe(headerEl);
+    onUnmounted(() => ro.disconnect());
+  }
 });
 
 // ==================== 菜单管理 ====================
@@ -1425,7 +1432,7 @@ onMounted(async () => {
 .header-menu :deep(.menu-wrapper){
     width:100%;
     max-width:1400px;
-   margin: 0 0 20px;
+  margin: 0 0 12px;
 }
 
 
@@ -1464,7 +1471,7 @@ onMounted(async () => {
 /* ===== Sections ===== */
 .menu-wrapper { margin:0 0 20px; }
 .search-section {
- padding:  40px 20px 30px; display: flex; justify-content: center;
+ padding: 16px 20px 30px; display: flex; justify-content: center;
   overflow: visible; position: relative; z-index: 100;
 }
 .search-box-wrapper { width: 100%; max-width: 640px; }
