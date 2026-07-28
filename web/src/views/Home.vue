@@ -1340,10 +1340,7 @@ onMounted(async () => {
 .header-fixed {
  position: fixed; top: 0; left: 0; right: 0;
   display: flex;
-  flex-direction: column;
-  /* align-items: center;      加上这行，让 header-inner 横向居中 
- / height: v-bind('headerHeight') + 'px';*/
-  position: fixed; top: 0; left: 0; right: 0; 
+  flex-direction: column;   
   background: var(--header-bg); backdrop-filter: blur(20px);
   padding: 0 32px;        /* 改成上下留白，别再用 justify-content: center 撑 64px 高度了 */
   z-index: 1000;
@@ -1477,7 +1474,7 @@ onMounted(async () => {
 }
 .search-box-wrapper { width: 100%; max-width: 640px; }
 .content-area { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 50px 60px; box-sizing: border-box; overflow-x: hidden; transition: opacity 0.3s ease; touch-action: pan-y; }
-@media (max-width: 768px) { .content-area { padding: 0 16px 60px; } }
+@media (max-width: 768px) { .content-area { padding: 0 60px; } }
 @media (max-width: 768px) { .content-area:active { opacity: 0.95; } }
 
 /* ===== Search ===== */
@@ -1533,8 +1530,7 @@ onMounted(async () => {
 
 @media (max-width: 768px) {
   .site-title { display: none; }
-  .header-fixed { padding: 0 16px; }
-  .header-inner { padding: 0; }
+  .header-fixed { padding: 0 4px; }  
   .home-container { padding-top: 70px; }
   .header-inner, .content-area { padding-left: 12px !important; padding-right: 12px !important; }
   .search-section { margin:0px 0 0; padding: 0 16px 24px; }
