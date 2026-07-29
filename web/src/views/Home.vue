@@ -1530,7 +1530,7 @@ onMounted(async () => {
 
 @media (max-width: 768px) {
   .site-title { display: none; }
-  .header-fixed { padding: 0 4px; }  
+  .header-fixed { padding: 0 auto; }  
   .home-container { padding-top: 70px; }
   .header-inner, .content-area { padding-left: 12px !important; padding-right: 12px !important; }
   .search-section { margin:0px 0 0; padding: 0 16px 24px; }
