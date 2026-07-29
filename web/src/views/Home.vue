@@ -21,7 +21,7 @@
             <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 20px;">
               WebNav <span style="color: #FF6B6B; margin-left: 2px;">Hub</span>
             </span>
-            <span style="display: block !important; font-size: 14px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
+            <span style="display: block !important; font-size: 12px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
               Your Organized Web Gateway
             </span>
           </div>
