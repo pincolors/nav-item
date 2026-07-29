@@ -21,8 +21,8 @@
             <span class="site-title" style="display: flex !important; margin: 0; align-items: center; font-size: 20px;">
               WebNav <span style="color: #FF6B6B; margin-left: 2px;">Hub</span>
             </span>
-            <span style="display: block !important; font-size: 12px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
-              Your Organized Internet Gateway
+            <span style="display: block !important; font-size: 14px; color: #9ca3af; font-weight: normal; letter-spacing: 0.5px; white-space: nowrap; transform: scale(0.9); transform-origin: left;">
+              Your Organized Web Gateway
             </span>
           </div>
         
@@ -1530,7 +1530,7 @@ onMounted(async () => {
 
 @media (max-width: 768px) {
   .site-title { display: none; }
-  .header-fixed { padding: 0 auto; }  
+  .header-fixed { padding: 0 16px; }  
   .home-container { padding-top: 70px; }
   .header-inner, .content-area { padding-left: 12px !important; padding-right: 12px !important; }
   .search-section { margin:0px 0 0; padding: 0 16px 24px; }
